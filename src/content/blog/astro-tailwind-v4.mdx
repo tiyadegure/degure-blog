@@ -1,0 +1,27 @@
+---
+title: 'Building This Blog with Astro + Tailwind v4'
+description: 'How I set up this blog with the latest tools.'
+pubDate: 2026-05-20
+tags: ['tech', 'astro']
+---
+
+I wanted a fast, simple blog that's easy to maintain. Here's the stack I went with and why.
+
+**Astro** is the foundation. It ships zero JavaScript by default, which means pages load fast. Content lives in MDX files, so I can write in Markdown and sprinkle in components when needed. **Tailwind v4** handles styling — it's the latest version with a new CSS-first config approach. No more `tailwind.config.js`. You just import it directly:
+
+```css
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #3b82f6;
+  --font-sans: 'Inter', sans-serif;
+}
+```
+
+For content management, I'm using **Keystatic** — a Git-based CMS that reads and writes to the same repo. It gives me a nice admin UI without needing a database. Everything stays in version control.
+
+**Pagefind** handles search. It runs as a post-build step and creates a static search index, so there's no external service or JavaScript runtime needed for search to work.
+
+Deployment is on **Cloudflare Pages**. Free, fast, and the edge network means the blog loads quickly from anywhere. The build command runs `astro build && npx pagefind --site dist` and Cloudflare handles the rest.
+
+The whole setup is pretty lean — no heavy frameworks, no databases, no complex infrastructure. Just files, Git, and a CDN.

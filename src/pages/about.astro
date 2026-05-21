@@ -1,0 +1,27 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_TITLE } from '../consts';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title={`About | ${SITE_TITLE}`} description="About Degure" />
+  </head>
+  <body>
+    <Header />
+    <main>
+      <h1 class="text-2xl font-bold text-gray-900 mb-6">About</h1>
+      <p class="mb-4">
+        Hi, I'm Degure. This is my corner of the internet where I write about code, crypto,
+        and whatever else catches my eye.
+      </p>
+      <p class="mb-4">
+        I'm interested in open source, decentralized systems, and building things that matter.
+      </p>
+    </main>
+    <Footer />
+  </body>
+</html>
