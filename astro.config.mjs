@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  site: 'https://blog.degrue.me',
+  site: 'https://blog.degure.me',
   integrations: [
     mdx(),
     sitemap(),
