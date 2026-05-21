@@ -1,0 +1,115 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const { frontmatter } = Astro.props;
+---
+
+<html lang="zh-CN">
+  <head>
+    <BaseHead title={frontmatter.title} description={frontmatter.description} />
+    <style is:global>
+      .subtitle { color: #6b7280; font-size: .95rem; margin: .3rem 0 2rem; }
+      
+      .overview-bar {
+        display: flex; gap: 0; margin-bottom: 2.5rem;
+        border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden;
+        font-size: .75rem; text-align: center;
+      }
+      .ov-item { flex: 1; padding: .6rem .3rem; border-right: 1px solid #e5e7eb; transition: background .15s; }
+      .ov-item:last-child { border-right: none; }
+      .ov-item:hover { background: #f9fafb; }
+      .ov-item .ov-n { display: block; font-weight: 700; font-size: 1rem; margin-bottom: .15rem; }
+      .ov-item .ov-l { color: #6b7280; }
+      
+      .phase-divider {
+        display: flex; align-items: center; gap: .6rem;
+        margin: 2.5rem 0 1.5rem; font-size: .72rem;
+        text-transform: uppercase; letter-spacing: .08em;
+        color: #9ca3af; font-weight: 600;
+      }
+      .phase-divider::after { content: ''; flex: 1; height: 1px; background: #e5e7eb; }
+      
+      .step-card {
+        border: 1px solid #e5e7eb; border-radius: 8px;
+        padding: 1.2rem 1.3rem; margin-bottom: .8rem;
+        transition: box-shadow .2s;
+      }
+      .step-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+      
+      .step-head {
+        display: flex; align-items: center; gap: .65rem;
+        margin-bottom: .5rem;
+      }
+      .step-num {
+        flex-shrink: 0; width: 1.7rem; height: 1.7rem;
+        border: 1.5px solid #111; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .82rem; font-weight: 700;
+      }
+      .step-title { font-size: 1rem; font-weight: 600; }
+      .step-when { font-size: .78rem; color: #9ca3af; margin-bottom: .65rem; padding-left: 2.35rem; }
+      
+      .act { margin-bottom: .6rem; }
+      .act-label {
+        font-size: .68rem; text-transform: uppercase; letter-spacing: .06em;
+        color: #9ca3af; margin-bottom: .25rem; font-weight: 600;
+      }
+      .act-row {
+        display: flex; align-items: flex-start; gap: .5rem; font-size: .87rem;
+      }
+      .act-icon {
+        flex-shrink: 0; width: 1.7rem; text-align: center;
+        font-size: .82rem; padding-top: .15rem; color: #6b7280;
+        font-weight: 600;
+      }
+      .act-text { flex: 1; line-height: 1.6; }
+      
+      .prompt-box {
+        display: block;
+        background: #f9fafb; border: 1px solid #e5e7eb;
+        border-radius: 6px; padding: .4rem .7rem;
+        font-size: .83rem; color: #374151;
+        margin-top: .3rem; line-height: 1.6;
+        white-space: pre-line;
+      }
+      
+      .outcome {
+        font-size: .83rem; color: #6b7280;
+        border-top: 1px solid #f3f4f6;
+        padding-top: .55rem; margin-top: .6rem;
+      }
+      .outcome strong { color: #374151; font-weight: 600; }
+      
+      .arrow-down {
+        text-align: center; color: #d1d5db;
+        font-size: 1.1rem; margin: -.2rem 0; user-select: none;
+      }
+      
+      .pills { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .35rem; }
+      .pill {
+        font-size: .73rem; border: 1px solid #d1d5db; border-radius: 4px;
+        padding: .08em .5em; color: #374151; transition: background .15s;
+      }
+      .pill:hover { background: #f3f4f6; }
+      
+      .post-footer {
+        margin-top: 2.5rem; padding-top: 1rem;
+        border-top: 1px solid #e5e7eb;
+        font-size: .78rem; color: #9ca3af;
+      }
+      .post-footer a { color: #2563eb; text-decoration: none; }
+      .post-footer a:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <Header />
+    <main>
+      <article>
+        <slot />
+      </article>
+    </main>
+    <Footer />
+  </body>
+</html>

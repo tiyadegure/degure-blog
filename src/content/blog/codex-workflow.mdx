@@ -3,201 +3,326 @@ title: 'Codex 个人使用流程'
 description: '9 步上手 Codex，从第一句对话到全自动运行。'
 pubDate: 2026-05-21
 tags: ['tools', 'codex', 'workflow']
+layout: '../../layouts/CodexWorkflow.astro'
 ---
 
-> 9 步上手，从第一句对话到全自动运行。
+<h1 style="font-size:1.5rem;font-weight:700;letter-spacing:-.02em;">Codex 个人使用流程</h1>
+<p class="subtitle">9 步上手，从第一句对话到全自动运行</p>
 
-## 一、搭建环境 — 只需做一次
+<div class="overview-bar">
+  <div class="ov-item"><span class="ov-n">1-2</span><span class="ov-l">搭建环境</span></div>
+  <div class="ov-item"><span class="ov-n">3-4</span><span class="ov-l">发起任务</span></div>
+  <div class="ov-item"><span class="ov-n">5-6</span><span class="ov-l">在线协作</span></div>
+  <div class="ov-item"><span class="ov-n">7-8</span><span class="ov-l">离线自动</span></div>
+  <div class="ov-item"><span class="ov-n">9</span><span class="ov-l">移动跟进</span></div>
+</div>
 
-### 1. 创建并置顶持久线程
+{/* Phase 1 */}
+<div class="phase-divider">搭建环境 - 只需做一次</div>
 
-**第一次打开 Codex 时**
+<div class="step-card">
+  <div class="step-head">
+    <div class="step-num">1</div>
+    <div class="step-title">创建并置顶持久线程</div>
+  </div>
+  <div class="step-when">第一次打开 Codex 时</div>
 
- 新建线程 → 输入名称（如「日常助手」）→ 点击线程标题旁的 **Pin** 按钮置顶
+  <div class="act">
+    <div class="act-label">你要做</div>
+    <div class="act-row">
+      <div class="act-icon">[1]</div>
+      <div class="act-text">新建线程 → 输入名称（如「日常助手」）→ 点击线程标题旁的 <strong>Pin</strong> 按钮置顶</div>
+    </div>
+    <div class="act-row">
+      <div class="act-icon">[2]</div>
+      <div class="act-text">之后用 <code>Cmd+1</code> ~ <code>Cmd+9</code> 直接跳到对应置顶线程</div>
+    </div>
+  </div>
+  <div class="act">
+    <div class="act-label">建议置顶的线程类型</div>
+    <div class="pills">
+      <span class="pill">Chief of Staff</span>
+      <span class="pill">发布线程</span>
+      <span class="pill">文档审阅</span>
+      <span class="pill">外部监控</span>
+    </div>
+  </div>
+  <div class="outcome"><strong>效果：</strong>Codex 在这个线程里保留你所有的决策、偏好和上下文，下次打开不用从头解释。</div>
+</div>
 
- 之后用 `Cmd+1` ~ `Cmd+9` 直接跳到对应置顶线程
+<div class="arrow-down">&#x25BE;</div>
 
-**建议置顶的线程类型：**
-- Chief of Staff
-- 发布线程
-- 文档审阅
-- 外部监控
+<div class="step-card">
+  <div class="step-head">
+    <div class="step-num">2</div>
+    <div class="step-title">设置共享记忆 &amp; AGENTS.md</div>
+  </div>
+  <div class="step-when">置顶线程之后</div>
 
-**效果：** Codex 在这个线程里保留你所有的决策、偏好和上下文，下次打开不用从头解释。
-
----
-
-### 2. 设置共享记忆 & AGENTS.md
-
-**置顶线程之后**
-
- 本地建文件夹 `~/vault`，结构如下：
-
-```
-vault/
+  <div class="act">
+    <div class="act-label">你要做</div>
+    <div class="act-row">
+      <div class="act-icon">[3]</div>
+      <div class="act-text">本地建文件夹 <code>~/vault</code>，结构如下：</div>
+    </div>
+    <div class="prompt-box">vault/
 ├── AGENTS.md
 ├── TODO.md
 ├── people/
 ├── projects/
-└── notes/
-```
-
-**在 AGENTS.md 里写：**
-
-> 把 `~/vault` 当作持久工作记忆。记录：人员、项目、决策、待办、阻塞项。优先维护已有笔记，不要制造笔记膨胀。没有实质变化时不要改动 vault。
-
-**同时开启：**
-
- Settings → Personalization → Memories，开启 Codex 内置记忆（偏好、常用流程、已知坑）。再开启 **Chronicle** 让 Codex 从屏幕上下文自动学习。
-
-**效果：** 重要信息写进文件夹 + Codex 自带记忆双保险，换线程、换设备都能接上。
-
----
-
-## 二、发起任务 — 每次工作开始时
-
-### 3. 用语音输入说出想法
-
-**有模糊想法、懒得打字时**
-
- 点击 Codex 输入框旁的**麦克风图标**，直接说话（支持 2-3 分钟连续口述）
-
-**示例：**
-
-> 我记得 Ben 在 Slack 里提过一个关于登录页的事，具体记不清了，帮我去翻一下相关讨论。
-
-也可以用  粘贴一段会议转录或口述笔记作为输入，比摘要保留更多细节。
-
-**效果：** Codex 拿到原始思路后自动搜索 Slack、Gmail、Calendar，整理结果汇报给你。
-
----
-
-### 4. 用 `$browser` / `@chrome` / `@computer` 接上工具
-
-**任务涉及代码以外的操作时**
-
-在输入框里用 `@` 或 `$` 调用：
-
-| 指令 | 功能 |
-|------|------|
-| `$browser` | 在 Codex 侧边栏内打开网页，Codex 可以审查、标注、操控页面 |
-| `@chrome` | 复用你 Chrome 已登录的状态，操作需要登录的网站 |
-| `@computer` | 操控桌面 GUI 应用（只通过界面才能完成的工作） |
-
-**MCP 连接器：** Slack / Gmail / Calendar
-
-**示例：**
-
-> 用 `$browser` 打开 staging.example.com，截图审查首页样式。
-
- **可复用的 Skills：** 把常用工作流打包成 Skill，之后 Codex 可以直接重跑，不用每次重新教。
-
-**效果：** Codex 从"只能写代码"变成"能操作整个电脑和外部服务"。
-
----
-
-## 三、在线协作 — 你在屏幕前时
-
-### 5. Steering 打断 & Queuing 排队
-
-**Codex 正在执行任务时**
-
-**Steering** — 在侧边栏标注或在输入框打字，打断当前动作
-
- Codex 正在审网页时，直接在侧边栏的页面上点击标注，或在底部输入框输入修正：
-
-> make this smaller / 这两个元素间距太大了 / 这段文案不对，改成…
-
-**Queuing** — 在输入框里追加下一条指令，不打断当前任务
-
- 当前任务继续跑，你输入的内容排到队列，等当前步骤完成后自动执行：
-
-> 等这步做完，把预览链接发到 Slack #design 频道。
-
-**效果：** Steering = 当场转弯 · Queuing = 设下一个目的地。你始终掌控节奏，不用等 Codex 跑完才能介入。
-
----
-
-### 6. 在侧边栏审查 & 标注产出
-
-**Codex 产出代码、网页、文档后**
-
- 侧边栏自动弹出产出物 → 直接在上面点击、标注 → Codex 读取标注后立刻修改
-
-**侧边栏支持审查的内容：**
-- 代码 diff / Markdown / 数据表格 / PDF / 幻灯片 / 网页（`$browser`）
-
-**特别好用的审查场景：**
-- `index.html` 静态原型
-- Storybook 组件
-- Remotion 动画
-- 数据分析 App
-
-**效果：** 不用导出、不用切窗口。标注即修改，审查和修正在同一个循环里闭环。
-
----
-
-## 四、离线自动 — 你离开座位时
-
-### 7. 用 Automations 设置定时 / 线程自动任务
-
-**有重复性工作时**
-
-**Scheduled Automation** — 每次全新开始
-
- 进入 **Automations** 面板 → 新建 → 选 Schedule → 设时间（如每天 9:00）
-
-> 每天早上 9 点检查仓库 CI 状态，失败的汇总成报告。
-
-**Thread Automation** — 定期唤醒同一线程，延续上下文
-
- 在置顶线程里进入 **Automations** → 选 Thread Automation → 设间隔（如每 30 分钟）
-
-> 每 30 分钟检查 Slack 和 Gmail，筛选需要我回复的消息，调研背景并草拟回复，但不要发送。
-
-**线程自动化还能做的：**
-- 监听 PR 评论 / Google Docs 评论 / Slack 回复 → 自动跟进
-
-**效果：** 你回来时，信息已收集好、回复已草拟好。你只负责审核和发送。
-
----
-
-### 8. 用 Goals 设定可验证的完成标准
-
-**复杂任务、需要持续执行时**
-
- 差的指令（没有终点）：
-
-> 把这个模块用 Rust 重写一下。
-
- 好的指令（Goal + Verifier）：
-
-> 用 Rust 重写 `src/auth` 模块。完成标准：全部现有单元测试通过。如果测试失败，继续修直到通过为止。
-
-**可用的 Verifier 类型：**
-- 测试套件 / 性能基准 / Bug 复现用例 / 验证矩阵 / E2E 流程
-
-**效果：** Codex 持续推进直到验证器通过。有明确终点，而不是无限改下去。
-
----
-
-## 五、移动跟进 — 你在路上时
-
-### 9. 用 Codex 移动端查看进度、拍板决策
-
-**离开电脑但 Codex 还在跑时**
-
- 打开 **Codex 移动端 App** → 进入线程 → 查看产出 → 回复 / 批准 / 用语音重新引导
-
-**示例：**
-
-> 方案 A 就行，继续往下走。
-> 等等，先看一下方案 B 的测试结果再决定。
-
- **关键点：** Mac 上的文件、权限、本地环境全部保留不动 — 手机只是远程遥控器。
-
-**效果：** 你的决定即时生效。回到电脑前时，进度已经推进了。
-
----
-
-*基于 @jxnlco 的 Codex 指南整理 · 2026-05-21*
+└── notes/</div>
+  </div>
+  <div class="act">
+    <div class="act-label">在 AGENTS.md 里写</div>
+    <div class="prompt-box">把 ~/vault 当作持久工作记忆。记录：人员、项目、决策、待办、阻塞项。优先维护已有笔记，不要制造笔记膨胀。没有实质变化时不要改动 vault。</div>
+  </div>
+  <div class="act">
+    <div class="act-label">同时开启</div>
+    <div class="act-row">
+      <div class="act-icon">[4]</div>
+      <div class="act-text"><strong>Settings → Personalization → Memories</strong>，开启 Codex 内置记忆（偏好、常用流程、已知坑）。再开启 <strong>Chronicle</strong> 让 Codex 从屏幕上下文自动学习。</div>
+    </div>
+  </div>
+  <div class="outcome"><strong>效果：</strong>重要信息写进文件夹 + Codex 自带记忆双保险，换线程、换设备都能接上。</div>
+</div>
+
+{/* Phase 2 */}
+<div class="phase-divider">发起任务 - 每次工作开始时</div>
+
+<div class="step-card">
+  <div class="step-head">
+    <div class="step-num">3</div>
+    <div class="step-title">用语音输入说出想法</div>
+  </div>
+  <div class="step-when">有模糊想法、懒得打字时</div>
+
+  <div class="act">
+    <div class="act-label">你要做</div>
+    <div class="act-row">
+      <div class="act-icon">[5]</div>
+      <div class="act-text">点击 Codex 输入框旁的 <strong>麦克风图标</strong>，直接说话（支持 2-3 分钟连续口述）</div>
+    </div>
+  </div>
+  <div class="act">
+    <div class="act-label">示例（直接说）</div>
+    <div class="prompt-box">我记得 Ben 在 Slack 里提过一个关于登录页的事，具体记不清了，帮我去翻一下相关讨论。</div>
+  </div>
+  <div class="act">
+    <div class="act-label">也可以用</div>
+    <div class="act-row">
+      <div class="act-icon">[6]</div>
+      <div class="act-text">粘贴一段会议转录或口述笔记作为输入，比摘要保留更多细节</div>
+    </div>
+  </div>
+  <div class="outcome"><strong>效果：</strong>Codex 拿到原始思路后自动搜索 Slack、Gmail、Calendar，整理结果汇报给你。</div>
+</div>
+
+<div class="arrow-down">&#x25BE;</div>
+
+<div class="step-card">
+  <div class="step-head">
+    <div class="step-num">4</div>
+    <div class="step-title">用 $browser / @chrome / @computer 接上工具</div>
+  </div>
+  <div class="step-when">任务涉及代码以外的操作时</div>
+
+  <div class="act">
+    <div class="act-label">在输入框里用 @ 或 $ 调用</div>
+    <div class="act-row">
+      <div class="act-icon">[7]</div>
+      <div class="act-text"><code>$browser</code> → 在 Codex 侧边栏内打开网页，Codex 可以审查、标注、操控页面</div>
+    </div>
+    <div class="act-row">
+      <div class="act-icon">[8]</div>
+      <div class="act-text"><code>@chrome</code> → 复用你 Chrome 已登录的状态，操作需要登录的网站</div>
+    </div>
+    <div class="act-row">
+      <div class="act-icon">[9]</div>
+      <div class="act-text"><code>@computer</code> → 操控桌面 GUI 应用（只通过界面才能完成的工作）</div>
+    </div>
+  </div>
+  <div class="act">
+    <div class="act-label">MCP 连接器</div>
+    <div class="pills">
+      <span class="pill">Slack</span>
+      <span class="pill">Gmail</span>
+      <span class="pill">Calendar</span>
+    </div>
+    <div class="prompt-box">用 $browser 打开 staging.example.com，截图审查首页样式。</div>
+  </div>
+  <div class="act">
+    <div class="act-label">可复用的 Skills</div>
+    <div class="act-row">
+      <div class="act-icon">[10]</div>
+      <div class="act-text">把常用工作流 <strong>打包成 Skill</strong>，之后 Codex 可以直接重跑，不用每次重新教</div>
+    </div>
+  </div>
+  <div class="outcome"><strong>效果：</strong>Codex 从"只能写代码"变成"能操作整个电脑和外部服务"。</div>
+</div>
+
+{/* Phase 3 */}
+<div class="phase-divider">在线协作 - 你在屏幕前时</div>
+
+<div class="step-card">
+  <div class="step-head">
+    <div class="step-num">5</div>
+    <div class="step-title">Steering 打断 &amp; Queuing 排队</div>
+  </div>
+  <div class="step-when">Codex 正在执行任务时</div>
+
+  <div class="act">
+    <div class="act-label">Steering — 在侧边栏标注或在输入框打字，打断当前动作</div>
+    <div class="act-row">
+      <div class="act-icon">[11]</div>
+      <div class="act-text">Codex 正在审网页时，<strong>直接在侧边栏的页面上点击标注</strong>，或在底部输入框输入修正</div>
+    </div>
+    <div class="prompt-box">make this smaller / 这两个元素间距太大了 / 这段文案不对，改成…</div>
+  </div>
+  <div class="act">
+    <div class="act-label">Queuing — 在输入框里追加下一条指令，不打断当前任务</div>
+    <div class="act-row">
+      <div class="act-icon">[12]</div>
+      <div class="act-text">当前任务继续跑，你输入的内容排到队列，等当前步骤完成后自动执行</div>
+    </div>
+    <div class="prompt-box">等这步做完，把预览链接发到 Slack #design 频道。</div>
+  </div>
+  <div class="outcome"><strong>效果：</strong>Steering = 当场转弯 · Queuing = 设下一个目的地。你始终掌控节奏，不用等 Codex 跑完才能介入。</div>
+</div>
+
+<div class="arrow-down">&#x25BE;</div>
+
+<div class="step-card">
+  <div class="step-head">
+    <div class="step-num">6</div>
+    <div class="step-title">在侧边栏审查 &amp; 标注产出</div>
+  </div>
+  <div class="step-when">Codex 产出代码、网页、文档后</div>
+
+  <div class="act">
+    <div class="act-label">你要做</div>
+    <div class="act-row">
+      <div class="act-icon">[13]</div>
+      <div class="act-text">侧边栏自动弹出产出物 → <strong>直接在上面点击、标注</strong> → Codex 读取标注后立刻修改</div>
+    </div>
+  </div>
+  <div class="act">
+    <div class="act-label">侧边栏支持审查的内容</div>
+    <div class="pills">
+      <span class="pill">代码 diff</span>
+      <span class="pill">Markdown</span>
+      <span class="pill">数据表格</span>
+      <span class="pill">PDF</span>
+      <span class="pill">幻灯片</span>
+      <span class="pill">网页（$browser）</span>
+    </div>
+  </div>
+  <div class="act">
+    <div class="act-label">特别好用的审查场景</div>
+    <div class="act-row">
+      <div class="act-icon">&#9656;</div>
+      <div class="act-text"><code>index.html</code> 静态原型 / Storybook 组件 / Remotion 动画 / 数据分析 App</div>
+    </div>
+  </div>
+  <div class="outcome"><strong>效果：</strong>不用导出、不用切窗口。标注即修改，审查和修正在同一个循环里闭环。</div>
+</div>
+
+{/* Phase 4 */}
+<div class="phase-divider">离线自动 - 你离开座位时</div>
+
+<div class="step-card">
+  <div class="step-head">
+    <div class="step-num">7</div>
+    <div class="step-title">用 Automations 设置定时 / 线程自动任务</div>
+  </div>
+  <div class="step-when">有重复性工作时</div>
+
+  <div class="act">
+    <div class="act-label">Scheduled Automation — 每次全新开始</div>
+    <div class="act-row">
+      <div class="act-icon">[14]</div>
+      <div class="act-text">进入 <strong>Automations</strong> 面板 → 新建 → 选 Schedule → 设时间（如每天 9:00）</div>
+    </div>
+    <div class="prompt-box">每天早上 9 点检查仓库 CI 状态，失败的汇总成报告。</div>
+  </div>
+  <div class="act">
+    <div class="act-label">Thread Automation — 定期唤醒同一线程，延续上下文</div>
+    <div class="act-row">
+      <div class="act-icon">[15]</div>
+      <div class="act-text">在置顶线程里进入 <strong>Automations</strong> → 选 Thread Automation → 设间隔（如每 30 分钟）</div>
+    </div>
+    <div class="prompt-box">每 30 分钟检查 Slack 和 Gmail，筛选需要我回复的消息，调研背景并草拟回复，但不要发送。</div>
+  </div>
+  <div class="act">
+    <div class="act-label">线程自动化还能做的</div>
+    <div class="act-row">
+      <div class="act-icon">&#9656;</div>
+      <div class="act-text">监听 PR 评论 / Google Docs 评论 / Slack 回复 → 自动跟进，如重新渲染动画并 @ 审阅者</div>
+    </div>
+  </div>
+  <div class="outcome"><strong>效果：</strong>你回来时，信息已收集好、回复已草拟好。你只负责审核和发送。</div>
+</div>
+
+<div class="arrow-down">&#x25BE;</div>
+
+<div class="step-card">
+  <div class="step-head">
+    <div class="step-num">8</div>
+    <div class="step-title">用 Goals 设定可验证的完成标准</div>
+  </div>
+  <div class="step-when">复杂任务、需要持续执行时</div>
+
+  <div class="act">
+    <div class="act-label">差的指令（没有终点）</div>
+    <div class="prompt-box">把这个模块用 Rust 重写一下。</div>
+  </div>
+  <div class="act">
+    <div class="act-label">好的指令（Goal + Verifier）</div>
+    <div class="prompt-box">用 Rust 重写 src/auth 模块。完成标准：全部现有单元测试通过。如果测试失败，继续修直到通过为止。</div>
+  </div>
+  <div class="act">
+    <div class="act-label">可用的 Verifier 类型</div>
+    <div class="pills">
+      <span class="pill">测试套件</span>
+      <span class="pill">性能基准</span>
+      <span class="pill">Bug 复现用例</span>
+      <span class="pill">验证矩阵</span>
+      <span class="pill">E2E 流程</span>
+    </div>
+  </div>
+  <div class="outcome"><strong>效果：</strong>Codex 持续推进直到验证器通过。有明确终点，而不是无限改下去。</div>
+</div>
+
+{/* Phase 5 */}
+<div class="phase-divider">移动跟进 - 你在路上时</div>
+
+<div class="step-card">
+  <div class="step-head">
+    <div class="step-num">9</div>
+    <div class="step-title">用 Codex 移动端查看进度、拍板决策</div>
+  </div>
+  <div class="step-when">离开电脑但 Codex 还在跑</div>
+
+  <div class="act">
+    <div class="act-label">你要做</div>
+    <div class="act-row">
+      <div class="act-icon">[16]</div>
+      <div class="act-text">打开 <strong>Codex 移动端 App</strong> → 进入线程 → 查看产出 → 回复 / 批准 / 用语音重新引导</div>
+    </div>
+  </div>
+  <div class="act">
+    <div class="act-label">示例（手机上直接输入）</div>
+    <div class="prompt-box">方案 A 就行，继续往下走。等等，先看一下方案 B 的测试结果再决定。</div>
+  </div>
+  <div class="act">
+    <div class="act-label">关键点</div>
+    <div class="act-row">
+      <div class="act-icon">[17]</div>
+      <div class="act-text">Mac 上的文件、权限、本地环境全部保留不动 — 手机只是远程遥控器</div>
+    </div>
+  </div>
+  <div class="outcome"><strong>效果：</strong>你的决定即时生效。回到电脑前时，进度已经推进了。</div>
+</div>
+
+<div class="post-footer">
+  基于 <a href="https://x.com/jxnlco/status/2057153744630890620">@jxnlco</a> 的 Codex 指南整理 · 2026-05-21
+</div>
