@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MM Token Loan — 从签约到行权的完整体验</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Serif+SC:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #fafaf9;
+    --fg: #1c1917;
+    --muted: #78716c;
+    --border: #e7e5e4;
+    --accent: #b45309;
+    --accent-light: #fef3c7;
+    --green: #15803d;
+    --green-bg: #f0fdf4;
+    --red: #b91c1c;
+    --red-bg: #fef2f2;
+    --blue: #1d4ed8;
+    --blue-bg: #eff6ff;
+    --radius: 6px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', 'Noto Serif SC', sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.7;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Layout ── */
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+  }
+
+  /* ── Progress Bar ── */
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--border);
+    z-index: 100;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  /* ── Chapter Nav ── */
+  .chapter-nav {
+    position: fixed;
+    top: 50%;
+    right: 1.5rem;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 90;
+  }
+  .chapter-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+  }
+  .chapter-dot.active { background: var(--accent); transform: scale(1.3); }
+  .chapter-dot:hover::after {
+    content: attr(data-label);
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    white-space: nowrap;
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--bg);
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  /* ── Typography ── */
+  h1 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 1.8rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .chapter-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 3rem 0 0.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .chapter-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
+
+  p { margin: 0.8rem 0; }
+
+  .highlight {
+    background: var(--accent-light);
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+  }
+
+  /* ── Cards ── */
+  .card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem 1.5rem;
+    margin: 1.2rem 0;
+    background: #fff;
+  }
+
+  .card-header {
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  /* ── Term Sheet ── */
+  .term-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .term-row:last-child { border-bottom: none; }
+  .term-label { color: var(--muted); font-size: 0.85rem; }
+  .term-value { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 0.9rem; }
+  .term-value.editable {
+    cursor: pointer;
+    border-bottom: 1px dashed var(--accent);
+    transition: color 0.2s;
+  }
+  .term-value.editable:hover { color: var(--accent); }
+
+  /* ── Choices ── */
+  .choices {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin: 1.2rem 0;
+  }
+  .choice-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.9rem 1.2rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: all 0.2s;
+    line-height: 1.5;
+  }
+  .choice-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .choice-btn.selected {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .choice-btn .choice-tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--muted);
+    margin-right: 0.4rem;
+  }
+
+  /* ── Consequence Box ── */
+  .consequence {
+    border-left: 2px solid var(--accent);
+    padding: 0.8rem 1rem;
+    margin: 1rem 0;
+    background: #fffdf7;
+    font-size: 0.9rem;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.4s ease;
+  }
+  .consequence.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .consequence.loss { border-left-color: var(--red); background: var(--red-bg); }
+  .consequence.gain { border-left-color: var(--green); background: var(--green-bg); }
+  .consequence.info { border-left-color: var(--blue); background: var(--blue-bg); }
+
+  /* ── Chart ── */
+  .chart-container {
+    position: relative;
+    margin: 1.5rem 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: #fff;
+    padding: 1rem;
+    overflow: hidden;
+  }
+  .chart-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 0.5rem;
+  }
+  canvas { display: block; width: 100%; }
+
+  /* ── Wallet Panel ── */
+  .wallet-panel {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.2rem;
+    margin: 1rem 0;
+    background: #fff;
+  }
+  .wallet-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.3rem 0;
+  }
+  .wallet-label { color: var(--muted); }
+  .wallet-val { font-weight: 500; }
+  .wallet-val.positive { color: var(--green); }
+  .wallet-val.negative { color: var(--red); }
+
+  /* ── Timeline ── */
+  .timeline {
+    position: relative;
+    margin: 1.5rem 0;
+    padding-left: 1.5rem;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 0; bottom: 0;
+    width: 1px;
+    background: var(--border);
+  }
+  .timeline-item {
+    position: relative;
+    padding: 0.5rem 0 1rem;
+    font-size: 0.9rem;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -1.5rem;
+    top: 0.7rem;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--border);
+    border: 2px solid var(--bg);
+  }
+  .timeline-item.active::before { background: var(--accent); }
+
+  /* ── Slider ── */
+  .slider-group { margin: 1.2rem 0; }
+  .slider-group label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+
+  /* ── Final Summary ── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  .summary-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    text-align: center;
+  }
+  .summary-card .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.8rem;
+    font-weight: 600;
+  }
+  .summary-card .label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.2rem;
+  }
+
+  /* ── Sections ── */
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.5s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  .fade-in { opacity: 0; transform: translateY(10px); transition: all 0.5s ease; }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── Next Button ── */
+  .next-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.7rem 1.5rem;
+    border: 1px solid var(--fg);
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--fg);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 1.5rem;
+  }
+  .next-btn:hover { background: var(--fg); color: #fff; }
+  .next-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .next-btn:disabled:hover { background: transparent; color: var(--fg); }
+
+  /* ── Notification Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--fg);
+    color: #fff;
+    padding: 0.6rem 1.2rem;
+    border-radius: var(--radius);
+    font-size: 0.8rem;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 200;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .container { padding: 2rem 1rem 5rem; }
+    .chapter-nav { display: none; }
+    h1 { font-size: 1.4rem; }
+    .summary-grid { grid-template-columns: 1fr; }
+  }
+
+  .small { font-size: 0.8rem; color: var(--muted); }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  strong { font-weight: 600; }
+  em { font-style: italic; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="chapter-nav" id="chapterNav"></div>
+<div class="toast" id="toast"></div>
+
+<div class="container">
+
+  <!-- ═══════ PROLOGUE ═══════ -->
+  <div class="section active" id="s-prologue" data-chapter="序章">
+    <h1>你是一个做市商</h1>
+    <p class="subtitle">一份 token loan 协议刚刚发到你的 Signal 群里。<br>接下来的每一步选择,都将决定一个 altcoin 的命运。</p>
+
+    <p>2025 年春,一个叫 <strong>Project Aurora</strong> 的 L2 即将 TGE。项目方找到你,希望你做他们的做市商。</p>
+    <p>他们的 tokenomics 写着:<em>"5% 做市商分配,用于提供流动性。"</em></p>
+    <p>但你知道这 5% 背后真正的东西——一份 <span class="highlight">Loan + Call Option</span> 的合约。项目方把 token 借给你,你拿到一个以约定价格买入的选择权。价格涨了你行权赚钱,价格跌了你还回去就行。</p>
+    <p>零成本、零下行、全部上行。<br>这门生意,过去几年是加密最赚钱的赛道之一。</p>
+
+    <div class="choices">
+      <button class="choice-btn" onclick="nextSection('s-sign')">
+        <span class="choice-tag">→</span> 打开这份协议,看看条款
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════ STEP 1: SIGNING ═══════ -->
+  <div class="section" id="s-sign" data-chapter="签约">
+    <div class="chapter-title"><span class="chapter-num">01</span> 签约 — 你拿到的条款</div>
+    <p>Project Aurora 的 BD 把 term sheet 发了过来。你要逐条审阅。</p>
+
+    <div class="card">
+      <div class="card-header">&#x1F4C4; Term Sheet — MM Loan Agreement</div>
+      <div class="term-row">
+        <span class="term-label">借出数量</span>
+        <span class="term-value" id="t-amount">50,000,000 AUR</span>
+      </div>
+      <div class="term-row">
+        <span class="term-label">占流通供应</span>
+        <span class="term-value">5%</span>
+      </div>
+      <div class="term-row">
+        <span class="term-label">合同期限</span>
+        <span class="term-value editable" id="t-duration" onclick="toggleDuration()">12 个月</span>
+      </div>
+      <div class="term-row">
+        <span class="term-label">TGE 价格</span>
+        <span class="term-value">$2.00</span>
+      </div>
+      <div class="term-row">
+        <span class="term-label">Strike Price (行权价)</span>
+        <span class="term-value editable" id="t-strike" onclick="toggleStrike()">$3.00 <span class="small">(+50% premium)</span></span>
+      </div>
+      <div class="term-row">
+        <span class="term-label">利润分成</span>
+        <span class="term-value">MM 70% / 项目方 30%</span>
+      </div>
+      <div class="term-row">
+        <span class="term-label">做市义务</span>
+        <span class="term-value">双边报价,spread &lt; 2%</span>
+      </div>
+      <div class="term-row">
+        <span class="term-label">保底条款</span>
+        <span class="term-value" id="t-floor">价格跌破 $0.50 则合同提前终止</span>
+      </div>
+    </div>
+
+    <p class="small">* 点击 <span class="mono" style="border-bottom:1px dashed var(--accent)">可编辑字段</span> 可以切换不同条款,观察激励结构的变化。</p>
+
+    <div class="card" id="incentive-box">
+      <div class="card-header">&#x1F4A1; 你的激励结构</div>
+      <p style="font-size:0.9rem" id="incentive-text">
+        你拿到 <strong>5000 万枚 AUR</strong>,零成本。如果价格涨过 <strong>$3.00</strong>,你行权后立刻获利 <strong>$50,000,000</strong>。如果价格跌破 TGE 价,你还回去就行——<strong>零损失</strong>。
+      </p>
+      <p class="small" style="margin-top:0.5rem;">这是一个<strong>不对称头寸</strong>:全部上行,几乎零下行。项目方承担机会成本,你拿到免费的 call option。</p>
+    </div>
+
+    <div class="choices" id="sign-choices">
+      <button class="choice-btn" onclick="signContract('standard', this)">
+        <span class="choice-tag">A</span> 签下标准条款 — 12 个月,strike $3.00
+      </button>
+      <button class="choice-btn" onclick="signContract('aggressive', this)">
+        <span class="choice-tag">B</span> 争取更激进的条款 — 等看完条款再说
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════ STEP 2: TGE DAY ═══════ -->
+  <div class="section" id="s-tge" data-chapter="TGE">
+    <div class="chapter-title"><span class="chapter-num">02</span> TGE Day — Token 到账</div>
+    <p>合同签好了。TGE 当天,<strong>5000 万枚 AUR</strong>从项目方的 multisig 转入你的钱包。</p>
+
+    <div class="wallet-panel">
+      <div class="wallet-row"><span class="wallet-label">AUR Balance</span><span class="wallet-val" id="w-aur">50,000,000</span></div>
+      <div class="wallet-row"><span class="wallet-label">USDT Balance</span><span class="wallet-val">0</span></div>
+      <div class="wallet-row"><span class="wallet-label">当前价格</span><span class="wallet-val" id="w-price">$2.00</span></div>
+      <div class="wallet-row"><span class="wallet-label">持仓市值</span><span class="wallet-val" id="w-mcap">$100,000,000</span></div>
+      <div class="wallet-row"><span class="wallet-label">行权价</span><span class="wallet-val" id="w-strike">$3.00</span></div>
+      <div class="wallet-row"><span class="wallet-label">浮动 P&L</span><span class="wallet-val" id="w-pnl">$0</span></div>
+    </div>
+
+    <p>注意:在 tokenomics 文档里,这 5000 万枚被标记为<em>"做市商分配 — 流动性储备"</em>。Retail 看到的是"5% 用于做市",他们不知道这是<strong>借出</strong>而非<strong>分配</strong>,也不知道你有一个 strike $3.00 的 call option。</p>
+
+    <p>这就是信息不对称的起点。</p>
+
+    <div class="consequence info visible">
+      <strong>链上视角 (如果已披露):</strong> 任何分析师都可以在注册表里查到:MM 钱包 <span class="mono">0x7a3b...c9f1</span> 收到 50M AUR,合同 12 个月,strike $3.00。但在今天——这些信息只有你和项目方知道。
+    </div>
+
+    <div class="choices">
+      <button class="choice-btn" onclick="nextSection('s-timeline')">
+        <span class="choice-tag">→</span> 进入做市周期
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════ STEP 3: MARKET TIMELINE ═══════ -->
+  <div class="section" id="s-timeline" data-chapter="做市">
+    <div class="chapter-title"><span class="chapter-num">03</span> 做市周期 — 12 个月的价格博弈</div>
+    <p>合同生效后的 12 个月,你要在做市义务和利润最大化之间做一系列决策。</p>
+    <p>拖动下方时间轴,观察价格变化和你在每个节点的理性选择。</p>
+
+    <div class="chart-container">
+      <div class="chart-label">AUR / USDT — 12 个月价格走势</div>
+      <canvas id="priceChart" height="200"></canvas>
+    </div>
+
+    <div class="slider-group">
+      <label>
+        <span>月份</span>
+        <span id="monthLabel" class="mono">Month 0</span>
+      </label>
+      <input type="range" id="monthSlider" min="0" max="12" value="0" oninput="updateMonth(this.value)">
+      <p class="small" style="margin-top:0.4rem;text-align:center;">← 拖动滑块浏览 12 个月的价格变化 →</p>
+    </div>
+
+    <div class="wallet-panel" id="walletLive">
+      <div class="wallet-row"><span class="wallet-label">AUR 价格</span><span class="wallet-val" id="live-price">$2.00</span></div>
+      <div class="wallet-row"><span class="wallet-label">Strike</span><span class="wallet-val" id="live-strike">$3.00</span></div>
+      <div class="wallet-row"><span class="wallet-label">你的 AUR 余额</span><span class="wallet-val" id="live-balance">50,000,000</span></div>
+      <div class="wallet-row"><span class="wallet-label">累计卖出</span><span class="wallet-val" id="live-sold">0</span></div>
+      <div class="wallet-row"><span class="wallet-label">累计回购</span><span class="wallet-val" id="live-buyback">0</span></div>
+      <div class="wallet-row"><span class="wallet-label">做市利润</span><span class="wallet-val" id="live-profit">$0</span></div>
+    </div>
+
+    <div id="monthNarrative" class="card" style="font-size:0.9rem;">
+      <p>TGE 当天。AUR 以 $2.00 开盘。你开始双边报价,维持 spread &lt; 2%。</p>
+    </div>
+
+    <div id="monthChoice" class="choices" style="display:none;"></div>
+
+    <button class="next-btn" id="toExpiryBtn" style="display:none;" onclick="nextSection('s-expiry')">
+      <span>→</span> 合同到期
+    </button>
+  </div>
+
+  <!-- ═══════ STEP 4: EXPIRY ═══════ -->
+  <div class="section" id="s-expiry" data-chapter="到期">
+    <div class="chapter-title"><span class="chapter-num">04</span> 合同到期 — 行权 or 归还</div>
+    <p>12 个月过去了。到了你做最终决定的时刻。</p>
+
+    <div class="wallet-panel" id="expiryWallet">
+      <div class="wallet-row"><span class="wallet-label">AUR 当前价格</span><span class="wallet-val" id="exp-price">$2.00</span></div>
+      <div class="wallet-row"><span class="wallet-label">Strike Price</span><span class="wallet-val" id="exp-strike">$3.00</span></div>
+      <div class="wallet-row"><span class="wallet-label">你剩余 AUR</span><span class="wallet-val" id="exp-balance">50,000,000</span></div>
+      <div class="wallet-row"><span class="wallet-label">行权成本</span><span class="wallet-val" id="exp-cost">$150,000,000</span></div>
+      <div class="wallet-row"><span class="wallet-label">行权后市值</span><span class="wallet-val" id="exp-mcap">$100,000,000</span></div>
+    </div>
+
+    <div id="expiryNarrative" class="card" style="font-size:0.9rem;"></div>
+
+    <div class="choices" id="expiryChoices"></div>
+  </div>
+
+  <!-- ═══════ STEP 5: REVELATION ═══════ -->
+  <div class="section" id="s-reveal" data-chapter="披露">
+    <div class="chapter-title"><span class="chapter-num">05</span> 如果一切都被披露</div>
+    <p>你刚经历的,是 altcoin 市场每天都在发生的事。但 retail 从来不知道。</p>
+    <p>现在,让我们重新播放这 12 个月——假设所有 MM loan 的关键参数<strong>在 TGE 当天就写在链上</strong>。</p>
+
+    <div class="chart-container">
+      <div class="chart-label">AUR / USDT — 透明市场 vs 黑箱市场</div>
+      <canvas id="compareChart" height="200"></canvas>
+    </div>
+
+    <div class="card">
+      <div class="card-header">&#x1F50D; 链上注册表 (如果已披露)</div>
+      <div class="term-row">
+        <span class="term-label">MM 钱包</span>
+        <span class="term-value mono" style="font-size:0.75rem;">0x7a3b...c9f1</span>
+      </div>
+      <div class="term-row">
+        <span class="term-label">借出量</span>
+        <span class="term-value">50,000,000 AUR</span>
+      </div>
+      <div class="term-row">
+        <span class="term-label">合同到期</span>
+        <span class="term-value">2026-05-19</span>
+      </div>
+      <div class="term-row">
+        <span class="term-label">Strike</span>
+        <span class="term-value" id="reveal-strike">$3.00</span>
+      </div>
+      <div class="term-row">
+        <span class="term-label">利润分成</span>
+        <span class="term-value">70 / 30</span>
+      </div>
+      <div class="term-row">
+        <span class="term-label">归还曲线</span>
+        <span class="term-value">线性 12 个月</span>
+      </div>
+    </div>
+
+    <div class="consequence info visible" style="margin:1rem 0;" id="reveal-insights">
+      <strong>零售投资者视角的变化:</strong><br>
+      &#x2714; "流通量 1 亿" 但实际可抛压 = 1 亿 + 5000 万 MM 借出 = <strong>1.5 亿</strong><br>
+      &#x2714; Strike <span class="strike-display">$3.00</span> 成为新的<strong>关键技术位</strong>——接近时 MM 会 hedge,形成隐形供给墙<br>
+      &#x2714; 每一笔从 MM 钱包流出的 token 都可以<strong>归因</strong>到具体合同<br>
+      &#x2714; 没有披露的项目会被假设为<strong>最坏情况</strong>,估值被压低
+    </div>
+
+    <div class="choices">
+      <button class="choice-btn" onclick="nextSection('s-ending')">
+        <span class="choice-tag">→</span> 看完整图景
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════ STEP 6: ENDING ═══════ -->
+  <div class="section" id="s-ending" data-chapter="终章">
+    <div class="chapter-title"><span class="chapter-num">06</span> 终章 — 三重民主化</div>
+    <p>你刚才经历的,是 altcoin 信息不对称的核心。但信息只是最后一层。</p>
+    <p>过去十年,加密市场逐步打破了<strong>三重不对称</strong>:</p>
+
+    <div class="card">
+      <div class="timeline">
+        <div class="timeline-item active">
+          <strong>杠杆民主化</strong> — 永续合约 (2016–)<br>
+          <span class="small">BitMEX 让任何人能用 100 倍杠杆。Retail 第一次能在杠杆维度上与 institution 对等下注。</span>
+        </div>
+        <div class="timeline-item active">
+          <strong>方向民主化</strong> — 链上做空协议 (2023–)<br>
+          <span class="small">Shortit 等协议让任何 token 在任何时点都能被做空。altcoin 从单向市场变成双向市场。</span>
+        </div>
+        <div class="timeline-item active">
+          <strong>信息民主化</strong> — MM loan 上链 (进行中)<br>
+          <span class="small">把做市协议的关键参数写上链。Retail 第一次能推导出 MM 在不同价位的理性反应。</span>
+        </div>
+      </div>
+    </div>
+
+    <p>三者合流之后,altcoin 的价格发现从<strong>"叙事 + 流动性"</strong>转向<strong>"信息 + 预期"</strong>。叙事仍然存在,但叙事不再能孤立地驱动价格。</p>
+
+    <div id="endingSummary"></div>
+
+    <div class="consequence info visible" style="margin-top:2rem;">
+      <strong>合谋不会消失,但合谋的边际成本会被显著抬高。</strong><br>
+      今天,一份对 retail 不利的合同,边际成本几乎为零——因为没人看到。披露之后,任何过度激进的条款都会被市场识别并定价。合同设计本身,就是一场公开博弈。
+    </div>
+
+    <div class="choices" style="margin-top:2rem;">
+      <button class="choice-btn" onclick="location.reload()">
+        <span class="choice-tag">↺</span> 重新体验 — 试试不同的选择
+      </button>
+    </div>
+
+    <p style="margin-top:2rem; font-size:0.85rem; color:var(--muted); text-align:center;">
+      — 基于 <a href="https://x.com/agintender/status/2055917832890696069" style="color:var(--accent);">@agintender</a> 的研究,以做市商视角重构 —
+    </p>
+  </div>
+
+</div>
+
+<script>
+// ── State ──
+const state = {
+  strike: 3.0,
+  duration: 12,
+  amount: 50000000,
+  tgePrice: 2.0,
+  currentBalance: 50000000,
+  totalSold: 0,
+  totalBuyback: 0,
+  tradingProfit: 0,
+  month: 0,
+  priceHistory: [2.0, 1.6, 1.2, 0.8, 0.6, 0.9, 1.1, 1.4, 1.8, 2.2, 2.6, 2.9, 2.5],
+  decisions: {},
+  aggressiveMultiplier: false,
+};
+
+// ── Navigation ──
+function nextSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById(id);
+  target.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  updateProgress();
+  updateChapterNav();
+
+  if (id === 's-timeline') {
+    document.getElementById('monthSlider').value = 0;
+    setTimeout(() => updateMonth(0), 100);
+  }
+  if (id === 's-expiry') { setupExpiry(); }
+  if (id === 's-reveal') {
+    document.getElementById('reveal-strike').textContent = '$' + state.strike.toFixed(2);
+    document.querySelectorAll('.strike-display').forEach(el => el.textContent = '$' + state.strike.toFixed(2));
+    setTimeout(() => drawCompareChart(), 100);
+  }
+  if (id === 's-ending') { setupEnding(); }
+}
+
+function updateProgress() {
+  const sections = document.querySelectorAll('.section');
+  let idx = 0;
+  sections.forEach((s, i) => { if (s.classList.contains('active')) idx = i; });
+  const pct = ((idx + 1) / sections.length) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function buildChapterNav() {
+  const nav = document.getElementById('chapterNav');
+  nav.innerHTML = '';
+  document.querySelectorAll('.section').forEach((s, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'chapter-dot' + (s.classList.contains('active') ? ' active' : '');
+    dot.dataset.label = s.dataset.chapter;
+    dot.onclick = () => nextSection(s.id);
+    nav.appendChild(dot);
+  });
+}
+function updateChapterNav() {
+  const dots = document.querySelectorAll('.chapter-dot');
+  const sections = document.querySelectorAll('.section');
+  sections.forEach((s, i) => {
+    if (dots[i]) dots[i].classList.toggle('active', s.classList.contains('active'));
+  });
+}
+
+// ── Toast ──
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── Term Sheet Interactions ──
+let strikeIdx = 0;
+const strikes = [
+  { val: 3.0, premium: '+50%' },
+  { val: 2.5, premium: '+25%' },
+  { val: 4.0, premium: '+100%' },
+];
+function toggleStrike() {
+  strikeIdx = (strikeIdx + 1) % strikes.length;
+  const s = strikes[strikeIdx];
+  state.strike = s.val;
+  document.getElementById('t-strike').innerHTML = `$${s.val.toFixed(2)} <span class="small">(${s.premium} premium)</span>`;
+  document.getElementById('t-strike').classList.add('editable');
+  updateIncentiveBox();
+  toast(`Strike 切换为 $${s.val.toFixed(2)}`);
+}
+
+let durIdx = 0;
+const durations = [12, 18, 24];
+function toggleDuration() {
+  durIdx = (durIdx + 1) % durations.length;
+  state.duration = durations[durIdx];
+  document.getElementById('t-duration').textContent = durations[durIdx] + ' 个月';
+  toast(`合同期限切换为 ${durations[durIdx]} 个月`);
+}
+
+function updateIncentiveBox() {
+  const upside = state.amount * (state.strike - state.tgePrice);
+  document.getElementById('incentive-text').innerHTML =
+    `你拿到 <strong>${(state.amount/1e6).toFixed(0)}M 枚 AUR</strong>,零成本。如果价格涨过 <strong>$${state.strike.toFixed(2)}</strong>,你行权后立刻获利 <strong>$${(upside/1e6).toFixed(0)},000,000</strong>。如果价格跌破 TGE 价,你还回去就行——<strong>零损失</strong>。`;
+}
+
+// ── Sign Contract ──
+function signContract(type, btn) {
+  document.querySelectorAll('#sign-choices .choice-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.decisions.sign = type;
+  toast('合同已签署');
+  setTimeout(() => nextSection('s-tge'), 600);
+}
+
+// ── Price Chart ──
+function drawPriceChart() {
+  const canvas = document.getElementById('priceChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = (rect.width - 32) * dpr;
+  canvas.height = 200 * dpr;
+  canvas.style.width = (rect.width - 32) + 'px';
+  canvas.style.height = '200px';
+  ctx.scale(dpr, dpr);
+  const W = rect.width - 32, H = 200;
+  const pad = { t: 10, r: 10, b: 25, l: 40 };
+  const gW = W - pad.l - pad.r, gH = H - pad.t - pad.b;
+
+  const prices = state.priceHistory;
+  const minP = 0, maxP = 5;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = '#e7e5e4';
+  ctx.lineWidth = 0.5;
+  [0, 1, 2, 3, 4, 5].forEach(v => {
+    const y = pad.t + gH - (v / maxP) * gH;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + gW, y); ctx.stroke();
+    ctx.fillStyle = '#a8a29e'; ctx.font = '10px JetBrains Mono';
+    ctx.fillText('$' + v, 2, y + 4);
+  });
+
+  // Strike line
+  const strikeY = pad.t + gH - (state.strike / maxP) * gH;
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = '#b45309';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.l, strikeY); ctx.lineTo(pad.l + gW, strikeY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#b45309'; ctx.font = '10px JetBrains Mono';
+  ctx.fillText(`Strike $${state.strike.toFixed(2)}`, pad.l + gW - 70, strikeY - 5);
+
+  // TGE line
+  const tgeY = pad.t + gH - (state.tgePrice / maxP) * gH;
+  ctx.setLineDash([2, 3]);
+  ctx.strokeStyle = '#a8a29e';
+  ctx.beginPath(); ctx.moveTo(pad.l, tgeY); ctx.lineTo(pad.l + gW, tgeY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#a8a29e';
+  ctx.fillText('TGE $2.00', pad.l + 5, tgeY - 5);
+
+  // Price line
+  const monthIdx = state.month;
+  ctx.strokeStyle = '#1c1917';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (let i = 0; i <= monthIdx; i++) {
+    const x = pad.l + (i / 12) * gW;
+    const y = pad.t + gH - (prices[i] / maxP) * gH;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Dot
+  if (monthIdx > 0) {
+    const dx = pad.l + (monthIdx / 12) * gW;
+    const dy = pad.t + gH - (prices[monthIdx] / maxP) * gH;
+    ctx.beginPath();
+    ctx.arc(dx, dy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = prices[monthIdx] >= state.strike ? '#15803d' : '#1c1917';
+    ctx.fill();
+  }
+
+  // X labels
+  ctx.fillStyle = '#a8a29e'; ctx.font = '10px JetBrains Mono';
+  for (let i = 0; i <= 12; i += 3) {
+    ctx.fillText('M' + i, pad.l + (i / 12) * gW - 8, H - 5);
+  }
+}
+
+// ── Month Updates ──
+const narratives = [
+  'TGE 当天。AUR 以 $2.00 开盘,你开始双边报价。做市义务要求你维持 spread < 2%。一切正常。',
+  '第一个月。价格开始下滑,$1.60。项目方说"市场调整"。你的 strike $3.00 看起来很远。但你手里的 5000 万枚没有减值风险——跌了还回去就行。',
+  '两个月。$1.20。项目方社群开始焦虑。你的做市义务让你必须继续报价,但你手里的大量 inventory 现在只有一个用途:卖出,再低价买回,锁定利差。',
+  '三个月。$0.80。项目方召开 AMA 说"团队没有抛压"。你注意到他们没有提到你——做市商分配的 5% 被归类为"流动性储备",不在"团队抛压"的定义里。你继续卖出-回购循环。',
+  '四个月。跌到 $0.60——保底条款附近。如果跌破 $0.50,合同提前终止。你放慢了卖出节奏,开始在 $0.60 附近回购,为可能的反弹布局。',
+  '五个月。有新叙事出现,AUR 开始反弹到 $0.90。你的回购仓位开始盈利。同时你继续做市,spread 稳定在 1.5%。',
+  '六个月。$1.10。项目方宣布新合作伙伴。成交量上升,做市收入增加。你累计的 trading profit 已经很可观。',
+  '七个月。$1.40。势头不错,但距离 strike $3.00 还很远。你的理性判断是:行权概率仍然不高,继续 trading 赚钱。',
+  '八个月。$1.80。社群开始喊"$3 incoming!"。你知道如果冲过 strike,你需要在到期时用 $3.00 买入——开始部分对冲。',
+  '九个月。$2.20。市场情绪高涨。接近 TGE 价的 110%。散户涌入,但他们不知道 strike $3.00 附近有一道隐形的供给墙——你在提前卖出对冲。',
+  '十个月。$2.60。距离 strike 越来越近。你的对冲仓位已经相当大。如果冲过 $3.00,你的行权利润会被部分对冲抵消,但你已经在 trading 中赚了很多。',
+  '十一个月。$2.90。非常接近 strike。你的理性选择:卖出更多,形成供给墙。市场上看到的效果是——每次接近 $3.00 就被打回来。',
+  '到期月。$2.50。最终价格没有突破 strike。你做出了你的最终选择。',
+];
+
+const monthChoices = {
+  3: {
+    text: '价格 $0.80。你的选择:',
+    options: [
+      { label: 'A', text: '加速卖出-回购循环,最大化 trading profit', key: 'aggressive' },
+      { label: 'B', text: '维持正常做市,不额外卖出', key: 'passive' },
+    ]
+  },
+  8: {
+    text: '价格 $1.80,社群情绪高涨。你的选择:',
+    options: [
+      { label: 'A', text: '开始提前卖出对冲,降低 strike 附近的行权风险', key: 'hedge' },
+      { label: 'B', text: '持有不动,等待更高价格', key: 'hold' },
+    ]
+  },
+  11: {
+    text: '价格 $2.90,非常接近 strike。你的选择:',
+    options: [
+      { label: 'A', text: '大量卖出,形成供给墙,把价格压回 strike 以下', key: 'dump' },
+      { label: 'B', text: '克制卖出,希望价格突破 strike 以便行权', key: 'restrain' },
+    ]
+  }
+};
+
+function updateMonth(m) {
+  state.month = parseInt(m);
+  document.getElementById('monthLabel').textContent = 'Month ' + m;
+  const p = state.priceHistory[state.month];
+  document.getElementById('live-price').textContent = '$' + p.toFixed(2);
+  document.getElementById('live-strike').textContent = '$' + state.strike.toFixed(2);
+
+  // Simulate MM behavior based on month
+  let sold = 0, buyback = 0, profit = 0;
+  if (state.month >= 2 && state.month <= 6) {
+    sold = Math.floor(state.amount * 0.04 * state.month);
+    buyback = Math.floor(sold * 0.7);
+    profit = (sold - buyback) * (2.0 - p) * 0.3;
+  } else if (state.month > 6) {
+    sold = Math.floor(state.amount * 0.04 * 6 + state.amount * 0.02 * (state.month - 6));
+    buyback = Math.floor(sold * 0.65);
+    profit = (sold - buyback) * (2.0 - 1.0) * 0.5 + sold * 0.1;
+  }
+
+  if (state.aggressiveMultiplier) profit *= 1.5;
+
+  state.totalSold = sold;
+  state.totalBuyback = buyback;
+  state.tradingProfit = Math.max(0, profit);
+  state.currentBalance = state.amount - sold + buyback;
+
+  document.getElementById('live-balance').textContent = state.currentBalance.toLocaleString();
+  document.getElementById('live-sold').textContent = sold.toLocaleString();
+  document.getElementById('live-buyback').textContent = buyback.toLocaleString();
+  document.getElementById('live-profit').textContent = '$' + Math.floor(state.tradingProfit).toLocaleString();
+
+  // Narrative
+  const narr = document.getElementById('monthNarrative');
+  narr.innerHTML = '<p>' + narratives[state.month] + '</p>';
+
+  // Choices
+  const choiceDiv = document.getElementById('monthChoice');
+  if (monthChoices[state.month] && !state.decisions['m' + state.month]) {
+    const mc = monthChoices[state.month];
+    choiceDiv.style.display = 'flex';
+    choiceDiv.innerHTML = '<p style="font-size:0.85rem;color:var(--muted);margin-bottom:0.5rem;">' + mc.text + '</p>' +
+      mc.options.map(o => `<button class="choice-btn" onclick="makeMonthChoice(${state.month},'${o.key}', this)"><span class="choice-tag">${o.label}</span> ${o.text}</button>`).join('');
+  } else {
+    choiceDiv.style.display = 'none';
+  }
+
+  drawPriceChart();
+
+  // Show expiry button at month 12
+  document.getElementById('toExpiryBtn').style.display = state.month === 12 ? 'inline-flex' : 'none';
+}
+
+function makeMonthChoice(month, key, btn) {
+  state.decisions['m' + month] = key;
+  document.querySelectorAll('#monthChoice .choice-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+
+  if (key === 'aggressive') {
+    state.aggressiveMultiplier = true;
+    state.tradingProfit *= 1.5;
+    document.getElementById('live-profit').textContent = '$' + Math.floor(state.tradingProfit).toLocaleString();
+    toast('你加速了卖出-回购循环');
+  }
+  if (key === 'dump') {
+    state.priceHistory[12] = 2.2;
+    toast('你的大量卖出压低了最终价格');
+  }
+  if (key === 'restrain') {
+    state.priceHistory[12] = 2.8;
+    toast('你选择克制卖出');
+  }
+  if (key === 'passive' || key === 'hold') {
+    toast('决策已记录');
+  }
+
+  document.getElementById('monthChoice').style.display = 'none';
+}
+
+// ── Expiry ──
+function setupExpiry() {
+  const finalPrice = state.priceHistory[12];
+  document.getElementById('exp-price').textContent = '$' + finalPrice.toFixed(2);
+  document.getElementById('exp-strike').textContent = '$' + state.strike.toFixed(2);
+  document.getElementById('exp-balance').textContent = state.currentBalance.toLocaleString();
+  document.getElementById('exp-cost').textContent = '$' + (state.currentBalance * state.strike).toLocaleString();
+  document.getElementById('exp-mcap').textContent = '$' + (state.currentBalance * finalPrice).toLocaleString();
+
+  const narr = document.getElementById('expiryNarrative');
+  const choices = document.getElementById('expiryChoices');
+
+  if (finalPrice < state.strike) {
+    narr.innerHTML = `<p>AUR 当前价格 <strong>$${finalPrice.toFixed(2)}</strong>,低于 strike <strong>$${state.strike.toFixed(2)}</strong>。</p>
+      <p>行权意味着用 $${state.strike.toFixed(2)}/枚 买入现价 $${finalPrice.toFixed(2)} 的 token——立刻亏损 <span class="mono" style="color:var(--red)">$${((state.strike - finalPrice) * state.currentBalance / 1e6).toFixed(1)}M</span>。</p>
+      <p>理性选择很清楚:不行权,把 token 还回去。你在 12 个月的做市中已经通过卖出-回购循环赚了 <strong>$${Math.floor(state.tradingProfit).toLocaleString()}</strong> 的 trading profit。归还 token,合同终止。</p>`;
+
+    choices.innerHTML = `
+      <button class="choice-btn" onclick="chooseExpiry('return', this)"><span class="choice-tag">A</span> 归还 token,不行权 — 锁定做市利润</button>
+      <button class="choice-btn" onclick="chooseExpiry('exercise_loss', this)"><span class="choice-tag">B</span> 强行行权 (亏损) — 看看会怎样</button>`;
+  } else {
+    narr.innerHTML = `<p>AUR 当前价格 <strong>$${finalPrice.toFixed(2)}</strong>,高于 strike <strong>$${state.strike.toFixed(2)}</strong>。</p>
+      <p>行权意味着用 $${state.strike.toFixed(2)}/枚 买入——立刻获利 <span class="mono" style="color:var(--green)">$${((finalPrice - state.strike) * state.currentBalance / 1e6).toFixed(1)}M</span>。</p>`;
+
+    choices.innerHTML = `
+      <button class="choice-btn" onclick="chooseExpiry('exercise', this)"><span class="choice-tag">A</span> 行权买入 — 锁定利润</button>
+      <button class="choice-btn" onclick="chooseExpiry('return', this)"><span class="choice-tag">B</span> 归还 token (放弃利润) — 看看会怎样</button>`;
+  }
+}
+
+function chooseExpiry(action, btn) {
+  document.querySelectorAll('#expiryChoices .choice-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+
+  state.decisions.expiry = action;
+  const finalPrice = state.priceHistory[12];
+
+  let msg = '';
+  if (action === 'return') {
+    msg = `你把 ${(state.currentBalance/1e6).toFixed(0)}M 枚 AUR 归还给项目方。合同终止。你在 12 个月中通过做市和 trading 累计获利 $${Math.floor(state.tradingProfit).toLocaleString()}。零下行风险,全部利润到手。这就是 MM loan 的本质。`;
+  } else if (action === 'exercise') {
+    const pnl = (finalPrice - state.strike) * state.currentBalance;
+    msg = `你以 $${state.strike.toFixed(2)} 行权 ${(state.currentBalance/1e6).toFixed(0)}M 枚 AUR。按当前价格 $${finalPrice.toFixed(2)},行权利润 $${(pnl/1e6).toFixed(1)}M。加上做市利润,总收入非常可观。项目方则失去了本可以在更高价格卖出的 token。`;
+  } else {
+    msg = `你强行以 $${state.strike.toFixed(2)} 行权,但 AUR 只值 $${finalPrice.toFixed(2)}。立刻亏损。这在现实中不会发生——MM 是理性的,不会在价外行权。但这个场景说明了为什么 MM 会在 strike 附近大量卖出:避免被迫行权亏损的尾部风险。`;
+  }
+
+  const narr = document.getElementById('expiryNarrative');
+  narr.innerHTML += `<div class="consequence ${action === 'return' ? 'gain' : action === 'exercise' ? 'gain' : 'loss'} visible" style="margin-top:1rem;">${msg}</div>`;
+
+  document.getElementById('expiryChoices').style.display = 'none';
+
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'next-btn';
+  nextBtn.innerHTML = '<span>→</span> 如果这一切都被披露...';
+  nextBtn.onclick = () => nextSection('s-reveal');
+  document.getElementById('s-expiry').appendChild(nextBtn);
+}
+
+// ── Compare Chart ──
+function drawCompareChart() {
+  const canvas = document.getElementById('compareChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = (rect.width - 32) * dpr;
+  canvas.height = 200 * dpr;
+  canvas.style.width = (rect.width - 32) + 'px';
+  canvas.style.height = '200px';
+  ctx.scale(dpr, dpr);
+  const W = rect.width - 32, H = 200;
+  const pad = { t: 10, r: 10, b: 25, l: 40 };
+  const gW = W - pad.l - pad.r, gH = H - pad.t - pad.b;
+
+  const opac = state.priceHistory;
+  // Transparent market: less dumping because MM behavior is visible, price reaches closer to fair value
+  const strikeRatio = state.strike / 3.0; // normalize to default strike
+  const transparent = [2.0, 1.85, 1.75, 1.6, 1.5, 1.6, 1.75, 1.95, 2.25, 2.55, 2.85, state.strike * 0.97, state.strike * 0.95].map(v => v * (0.85 + strikeRatio * 0.15));
+  const maxP = 5;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = '#e7e5e4'; ctx.lineWidth = 0.5;
+  [0, 1, 2, 3, 4, 5].forEach(v => {
+    const y = pad.t + gH - (v / maxP) * gH;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + gW, y); ctx.stroke();
+    ctx.fillStyle = '#a8a29e'; ctx.font = '10px JetBrains Mono';
+    ctx.fillText('$' + v, 2, y + 4);
+  });
+
+  // Strike
+  const strikeY = pad.t + gH - (state.strike / maxP) * gH;
+  ctx.setLineDash([4, 4]); ctx.strokeStyle = '#b45309'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.l, strikeY); ctx.lineTo(pad.l + gW, strikeY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#b45309'; ctx.font = '10px JetBrains Mono';
+  ctx.fillText(`Strike $${state.strike.toFixed(2)}`, pad.l + gW - 70, strikeY - 5);
+
+  // Opaque line (actual)
+  ctx.strokeStyle = '#d6d3d1'; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (let i = 0; i <= 12; i++) {
+    const x = pad.l + (i / 12) * gW;
+    const y = pad.t + gH - (opac[i] / maxP) * gH;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Transparent line
+  ctx.strokeStyle = '#1d4ed8'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let i = 0; i <= 12; i++) {
+    const x = pad.l + (i / 12) * gW;
+    const y = pad.t + gH - (transparent[i] / maxP) * gH;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Labels
+  ctx.fillStyle = '#a8a29e'; ctx.font = '10px JetBrains Mono';
+  for (let i = 0; i <= 12; i += 3) {
+    ctx.fillText('M' + i, pad.l + (i / 12) * gW - 8, H - 5);
+  }
+
+  // Legend
+  ctx.fillStyle = '#d6d3d1'; ctx.fillRect(pad.l + 10, pad.t + 5, 12, 2);
+  ctx.fillStyle = '#a8a29e'; ctx.font = '10px Inter';
+  ctx.fillText('黑箱市场', pad.l + 28, pad.t + 9);
+
+  ctx.fillStyle = '#1d4ed8'; ctx.fillRect(pad.l + 100, pad.t + 5, 12, 2);
+  ctx.fillStyle = '#a8a29e';
+  ctx.fillText('透明市场 (MM loan 已披露)', pad.l + 118, pad.t + 9);
+}
+
+// ── Ending ──
+function setupEnding() {
+  const totalProfit = Math.floor(state.tradingProfit);
+  const finalPrice = state.priceHistory[12];
+  const exerciseResult = finalPrice >= state.strike ? '行权' : '归还';
+  const signDecision = state.decisions.sign === 'aggressive' ? '激进条款' : '标准条款';
+
+  document.getElementById('endingSummary').innerHTML = `
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="num" style="color:var(--green);">$${(totalProfit/1e6).toFixed(1)}M</div>
+        <div class="label">你的做市利润</div>
+      </div>
+      <div class="summary-card">
+        <div class="num">${exerciseResult === '行权' ? '&#x2705;' : '&#x21A9;'}</div>
+        <div class="label">到期决策: ${exerciseResult}</div>
+      </div>
+      <div class="summary-card">
+        <div class="num">${(state.totalSold/1e6).toFixed(0)}M</div>
+        <div class="label">累计卖出 AUR</div>
+      </div>
+      <div class="summary-card">
+        <div class="num" style="color:var(--red);">$${finalPrice.toFixed(2)}</div>
+        <div class="label">最终价格</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1.5rem;">
+      <div class="card-header">&#x1F441; 你 vs Retail — 同一枚 token,两种现实</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; font-size:0.85rem;">
+        <div>
+          <p style="font-weight:600; margin-bottom:0.5rem;">你知道的</p>
+          <p>&#x2714; 借出 ${(state.amount/1e6).toFixed(0)}M AUR,零成本</p>
+          <p>&#x2714; Strike $${state.strike.toFixed(2)} 的 call option</p>
+          <p>&#x2714; 跌了还回去,不承担减值</p>
+          <p>&#x2714; 每次卖出-回购都是纯利</p>
+        </div>
+        <div>
+          <p style="font-weight:600; margin-bottom:0.5rem;">Retail 看到的</p>
+          <p>&#x2718; tokenomics 写"5% 做市商分配"</p>
+          <p>&#x2718; 不知道是借出还是分配</p>
+          <p>&#x2718; 不知道 strike 在哪</p>
+          <p>&#x2718; 只看到价格持续下跌,找不到原因</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="small" style="text-align:center;margin-top:1rem;">
+      你选择了<strong>${signDecision}</strong>,在 12 个月内通过卖出-回购循环获利 $${(totalProfit/1e6).toFixed(1)}M,<br>
+      到期时${exerciseResult === '行权' ? '以 strike 买入获利' : '归还 token,零下行损失'}。<br>
+      而 retail 只看到价格从 $2.00 跌到 $${finalPrice.toFixed(2)},不知道为什么。
+    </p>`;
+}
+
+// ── Init ──
+buildChapterNav();
+updateProgress();
+
+// ── Keyboard Navigation ──
+const sectionOrder = ['s-prologue', 's-sign', 's-tge', 's-timeline', 's-expiry', 's-reveal', 's-ending'];
+document.addEventListener('keydown', (e) => {
+  const current = document.querySelector('.section.active');
+  if (!current) return;
+  const idx = sectionOrder.indexOf(current.id);
+
+  // Right arrow or Space: go forward (only if current section has no pending choices)
+  if (e.key === 'ArrowRight' || (e.key === ' ' && e.target.tagName !== 'INPUT')) {
+    e.preventDefault();
+    const nextBtn = current.querySelector('.next-btn:not([style*="display: none"]):not(:disabled), .choice-btn');
+    if (nextBtn && !nextBtn.style.display?.includes('none')) {
+      // Don't auto-click choice buttons, only next buttons
+    }
+  }
+
+  // Left arrow: go back
+  if (e.key === 'ArrowLeft' && idx > 0) {
+    e.preventDefault();
+    nextSection(sectionOrder[idx - 1]);
+  }
+});
+
+// ── Canvas Resize Handler ──
+window.addEventListener('resize', () => {
+  const active = document.querySelector('.section.active');
+  if (!active) return;
+  if (active.id === 's-timeline') drawPriceChart();
+  if (active.id === 's-reveal') drawCompareChart();
+});
+</script>
+</body>
+</html>
