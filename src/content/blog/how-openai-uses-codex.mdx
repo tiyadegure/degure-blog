@@ -6,246 +6,218 @@ tags: ['codex', 'openai', 'guide']
 layout: '../../layouts/OpenAICodexGuide.astro'
 ---
 
-<h1 class="post-title">OpenAI 如何使用 Codex</h1>
-<p class="post-sub">从 OpenAI 内部实践整理，面向个人用户</p>
+<div class="post-hero">
+  <h1>OpenAI 如何使用 Codex</h1>
+  <p class="lead">从 OpenAI 内部工程师的访谈和使用数据中提炼，面向个人用户整理。覆盖 7 个核心场景 + 6 条最佳实践。</p>
+</div>
 
-<div class="overview-bar">
-  <div class="ov-item"><span class="ov-l">理解代码</span></div>
-  <div class="ov-item"><span class="ov-l">重构迁移</span></div>
-  <div class="ov-item"><span class="ov-l">性能优化</span></div>
-  <div class="ov-item"><span class="ov-l">补充测试</span></div>
-  <div class="ov-item"><span class="ov-l">加速开发</span></div>
-  <div class="ov-item"><span class="ov-l">保持心流</span></div>
-  <div class="ov-item"><span class="ov-l">探索验证</span></div>
+<div class="toc">
+  <div class="toc-title">目录</div>
+  <div class="toc-grid">
+    <a class="toc-item" href="#understand"><span class="toc-num">01</span> 理解代码</a>
+    <a class="toc-item" href="#explore"><span class="toc-num">02</span> 探索验证</a>
+    <a class="toc-item" href="#refactor"><span class="toc-num">03</span> 重构迁移</a>
+    <a class="toc-item" href="#perf"><span class="toc-num">04</span> 性能优化</a>
+    <a class="toc-item" href="#test"><span class="toc-num">05</span> 补充测试</a>
+    <a class="toc-item" href="#velocity"><span class="toc-num">06</span> 加速开发</a>
+    <a class="toc-item" href="#flow"><span class="toc-num">07</span> 保持心流</a>
+    <a class="toc-item" href="#best"><span class="toc-num">08</span> 最佳实践</a>
+  </div>
 </div>
 
 Codex 在 OpenAI 内部被安全、产品工程、前端、API、基础设施、性能工程等团队日常使用，覆盖从理解复杂系统、重构大型代码库、发布新功能到紧急排查等多种工程任务。
 
-以下从 OpenAI 工程师的访谈和内部使用数据中提炼，整理为个人用户可直接复用的场景。
+以下内容来自 OpenAI 工程师的访谈和内部使用数据，整理为个人用户可直接复用的场景。
 
-{/* ======== Part 1: 写代码之前 ======== */}
+<div class="section-tag" id="understand">写代码之前 — 理解与探索</div>
 
-<div class="phase-divider">写代码之前 — 理解与探索</div>
-
-<div class="step-card">
-  <div class="step-head">
-    <div class="step-num">1</div>
-    <div class="step-title">理解代码</div>
+<div class="case">
+  <div class="case-head">
+    <span class="case-id">01</span>
+    <span class="case-title">理解代码</span>
   </div>
-  <div class="step-desc">
-    接手新项目、调试或排查线上问题时，用 Codex 快速上手陌生代码库。定位核心逻辑、梳理模块关系、追踪数据流、发现缺失的文档。
+  <div class="case-body">
+    接手新项目、调试或排查线上问题时，用 Codex 快速上手陌生代码库。定位核心逻辑、梳理模块关系、追踪数据流、发现缺失的文档。在排查故障时，Codex 帮助工程师快速进入新领域，揭示组件间的交互，或追踪故障状态如何在系统间传播。
   </div>
 
-  <div class="act">
-    <div class="act-label">示例 prompt</div>
-    <div class="prompt-box">这个仓库的认证逻辑在哪里实现的？</div>
-    <div class="prompt-box">总结一下请求在这个服务里从入口到响应的完整流程。</div>
-    <div class="prompt-box">哪些模块依赖 [模块名]？失败是怎么处理的？</div>
+  <div class="prompt-group">
+    <div class="prompt-label">示例 prompt</div>
+    <div class="prompt-item">这个仓库的认证逻辑在哪里实现的？</div>
+    <div class="prompt-item">总结一下请求在这个服务里从入口到响应的完整流程。</div>
+    <div class="prompt-item">哪些模块依赖 [模块名]？失败是怎么处理的？</div>
   </div>
 
-  <div class="quote-box">
-    "修 bug 的时候，我会用 Ask 模式看看代码库里其他地方有没有同样的问题。"
-    <div class="quote-author">— 性能工程师，检索系统团队</div>
+  <div class="insight">
+    <div class="insight-quote">"修 bug 的时候，我会用 Ask 模式看看代码库里其他地方有没有同样的问题。"</div>
+    <div class="insight-author">— 性能工程师，检索系统团队</div>
   </div>
 </div>
 
-<div class="arrow-down">&#x25BE;</div>
-
-<div class="step-card">
-  <div class="step-head">
-    <div class="step-num">2</div>
-    <div class="step-title">探索与验证</div>
+<div class="case" id="explore">
+  <div class="case-head">
+    <span class="case-id">02</span>
+    <span class="case-title">探索与验证</span>
   </div>
-  <div class="step-desc">
+  <div class="case-body">
     开放性问题用 Codex 探索多种解法、验证设计决策、压力测试假设。给定一个已知问题或弃用方法，让它扫描代码库中类似的模式，方便一次性清理。
   </div>
 
-  <div class="act">
-    <div class="act-label">示例 prompt</div>
-    <div class="prompt-box">如果这个系统用事件驱动而不是请求/响应，会怎么设计？</div>
-    <div class="prompt-box">找出所有手动拼 SQL 而不是用查询构造器的模块。</div>
-    <div class="prompt-box">用更函数式的风格重写，避免副作用和可变状态。</div>
+  <div class="prompt-group">
+    <div class="prompt-label">示例 prompt</div>
+    <div class="prompt-item">如果这个系统用事件驱动而不是请求/响应，会怎么设计？</div>
+    <div class="prompt-item">找出所有手动拼 SQL 而不是用查询构造器的模块。</div>
+    <div class="prompt-item">用更函数式的风格重写，避免副作用和可变状态。</div>
   </div>
 
-  <div class="quote-box">
-    "Codex 帮我解决冷启动问题 —— 我粘贴需求规格和文档，它就帮我搭好框架，或者告诉我漏了什么。"
-    <div class="quote-author">— OpenAI 工程师</div>
-  </div>
-</div>
-
-{/* ======== Part 2: 写代码时 ======== */}
-
-<div class="phase-divider">写代码时 — 修改与优化</div>
-
-<div class="step-card">
-  <div class="step-head">
-    <div class="step-num">3</div>
-    <div class="step-title">重构与迁移</div>
-  </div>
-  <div class="step-desc">
-    跨文件修改时用 Codex 保持一致性。更新 API、切换依赖、统一模式 —— 尤其是同样的修改要做几十处，或者正则替换抓不到结构和依赖关系的时候。
-  </div>
-
-  <div class="act">
-    <div class="act-label">示例 prompt</div>
-    <div class="prompt-box">把这个文件按职责拆成独立模块，并为每个模块生成测试。</div>
-    <div class="prompt-box">把所有回调风格的数据库访问改成 async/await。</div>
-  </div>
-
-  <div class="quote-box">
-    "Codex 把所有旧的 getUserById() 都换成了新服务模式，还自动开了 PR。几分钟搞定的事，手动要几小时。"
-    <div class="quote-author">— 后端工程师，ChatGPT Web</div>
+  <div class="insight">
+    <div class="insight-quote">"Codex 帮我解决冷启动问题 —— 我粘贴需求规格和文档，它就帮我搭好框架，或者告诉我漏了什么。"</div>
+    <div class="insight-author">— OpenAI 工程师</div>
   </div>
 </div>
 
-<div class="arrow-down">&#x25BE;</div>
+<div class="section-tag" id="refactor">写代码时 — 修改与优化</div>
 
-<div class="step-card">
-  <div class="step-head">
-    <div class="step-num">4</div>
-    <div class="step-title">性能优化</div>
+<div class="case">
+  <div class="case-head">
+    <span class="case-id">03</span>
+    <span class="case-title">重构与迁移</span>
   </div>
-  <div class="step-desc">
-    让 Codex 分析低效循环、冗余操作、昂贵查询，提出优化建议。也用来识别仍在使用的已弃用模式，减少长期技术债。
-  </div>
-
-  <div class="act">
-    <div class="act-label">示例 prompt</div>
-    <div class="prompt-box">优化这个循环的内存效率，解释为什么你的版本更快。</div>
-    <div class="prompt-box">找出这个请求处理器里的重复昂贵操作，建议缓存方案。</div>
-    <div class="prompt-box">建议一种更快的方式来批量处理这个函数里的数据库查询。</div>
+  <div class="case-body">
+    跨文件修改时用 Codex 保持一致性。更新 API、切换依赖、统一模式 —— 尤其是同样的修改要做几十处，或者正则替换抓不到结构和依赖关系的时候。也用来拆分过大的模块、用现代模式替换旧写法、为测试做准备。
   </div>
 
-  <div class="quote-box">
-    "我用 Codex 扫描重复的昂贵数据库调用。它很擅长标记热点路径，草拟批量查询方案。"
-    <div class="quote-author">— 基础设施工程师，API 可靠性团队</div>
-  </div>
-</div>
-
-<div class="arrow-down">&#x25BE;</div>
-
-<div class="step-card">
-  <div class="step-head">
-    <div class="step-num">5</div>
-    <div class="step-title">补充测试</div>
-  </div>
-  <div class="step-desc">
-    测试覆盖率低的地方，让 Codex 生成单元测试。它擅长发现空输入、最大长度、异常状态等容易遗漏的边界条件。
+  <div class="prompt-group">
+    <div class="prompt-label">示例 prompt</div>
+    <div class="prompt-item">把这个文件按职责拆成独立模块，并为每个模块生成测试。</div>
+    <div class="prompt-item">把所有回调风格的数据库访问改成 async/await。</div>
   </div>
 
-  <div class="act">
-    <div class="act-label">示例 prompt</div>
-    <div class="prompt-box">为这个函数写单元测试，包括边界情况和失败路径。</div>
-    <div class="prompt-box">为这个排序工具生成基于属性的测试（property-based test）。</div>
-    <div class="prompt-box">扩展这个测试文件，补上 null 输入和非法状态的场景。</div>
-  </div>
-
-  <div class="quote-box">
-    "我让 Codex 处理低覆盖率的模块，睡一觉起来就有可运行的单元测试 PR 了。"
-    <div class="quote-author">— 前端工程师，ChatGPT Desktop</div>
+  <div class="insight">
+    <div class="insight-quote">"Codex 把所有旧的 getUserById() 都换成了新服务模式，还自动开了 PR。几分钟搞定的事，手动要几小时。"</div>
+    <div class="insight-author">— 后端工程师，ChatGPT Web</div>
   </div>
 </div>
 
-{/* ======== Part 3: 工作方式 ======== */}
-
-<div class="phase-divider">工作方式 — 提速与保持节奏</div>
-
-<div class="step-card">
-  <div class="step-head">
-    <div class="step-num">6</div>
-    <div class="step-title">加速开发</div>
+<div class="case" id="perf">
+  <div class="case-head">
+    <span class="case-id">04</span>
+    <span class="case-title">性能优化</span>
   </div>
-  <div class="step-desc">
+  <div class="case-body">
+    让 Codex 分析低效循环、冗余操作、昂贵查询，提出优化建议。也用来识别仍在使用的已弃用模式，减少长期技术债，主动防止回归。
+  </div>
+
+  <div class="prompt-group">
+    <div class="prompt-label">示例 prompt</div>
+    <div class="prompt-item">优化这个循环的内存效率，解释为什么你的版本更快。</div>
+    <div class="prompt-item">找出这个请求处理器里的重复昂贵操作，建议缓存方案。</div>
+    <div class="prompt-item">建议一种更快的方式来批量处理这个函数里的数据库查询。</div>
+  </div>
+
+  <div class="insight">
+    <div class="insight-quote">"我用 Codex 扫描重复的昂贵数据库调用。它很擅长标记热点路径，草拟批量查询方案。"</div>
+    <div class="insight-author">— 基础设施工程师，API 可靠性团队</div>
+  </div>
+</div>
+
+<div class="case" id="test">
+  <div class="case-head">
+    <span class="case-id">05</span>
+    <span class="case-title">补充测试</span>
+  </div>
+  <div class="case-body">
+    测试覆盖率低的地方，让 Codex 生成单元测试。它擅长发现空输入、最大长度、异常状态等容易遗漏的边界条件。修 bug 或重构时，也可以让它建议覆盖边界情况和失败路径的测试。
+  </div>
+
+  <div class="prompt-group">
+    <div class="prompt-label">示例 prompt</div>
+    <div class="prompt-item">为这个函数写单元测试，包括边界情况和失败路径。</div>
+    <div class="prompt-item">为这个排序工具生成基于属性的测试（property-based test）。</div>
+    <div class="prompt-item">扩展这个测试文件，补上 null 输入和非法状态的场景。</div>
+  </div>
+
+  <div class="insight">
+    <div class="insight-quote">"我让 Codex 处理低覆盖率的模块，睡一觉起来就有可运行的单元测试 PR 了。"</div>
+    <div class="insight-author">— 前端工程师，ChatGPT Desktop</div>
+  </div>
+</div>
+
+<div class="section-tag" id="velocity">工作方式 — 提速与保持节奏</div>
+
+<div class="case">
+  <div class="case-head">
+    <span class="case-id">06</span>
+    <span class="case-title">加速开发</span>
+  </div>
+  <div class="case-body">
     开始时用 Codex 生成脚手架 —— 目录、模块、API 桩。收尾时让它处理 bug 分类、配置文件、上线脚本等琐碎但必要的任务。也可以把用户反馈或需求规格粘贴进去，让它生成初版代码。
   </div>
 
-  <div class="act">
-    <div class="act-label">示例 prompt</div>
-    <div class="prompt-box">搭建一个 POST /events 的 API 路由，带基本校验和日志。</div>
-    <div class="prompt-box">根据这个模板生成新功能的埋点代码：[插入你的埋点示例]</div>
-    <div class="prompt-box">根据这个需求规格生成一个初版实现：[插入需求描述]</div>
+  <div class="prompt-group">
+    <div class="prompt-label">示例 prompt</div>
+    <div class="prompt-item">搭建一个 POST /events 的 API 路由，带基本校验和日志。</div>
+    <div class="prompt-item">根据这个模板生成新功能的埋点代码：[插入你的埋点示例]</div>
+    <div class="prompt-item">根据这个需求规格生成一个初版实现：[插入需求描述]</div>
   </div>
 
-  <div class="quote-box">
-    "我一整天都在开会，但还是合并了 4 个 PR，因为 Codex 在后台干活。"
-    <div class="quote-author">— OpenAI 工程师</div>
-  </div>
-</div>
-
-<div class="arrow-down">&#x25BE;</div>
-
-<div class="step-card">
-  <div class="step-head">
-    <div class="step-num">7</div>
-    <div class="step-title">保持心流</div>
-  </div>
-  <div class="step-desc">
-    日程碎片化时，用 Codex 捕获未完成的工作、把笔记变成原型、分出可稍后处理的探索性任务。被打断时不用切分支，发给 Codex 就行。
-  </div>
-
-  <div class="act">
-    <div class="act-label">用法</div>
-    <div class="act-row">
-      <div class="act-icon">&#9656;</div>
-      <div class="act-text">顺手能修的 bug，直接发给 Codex 开 PR，有空了再 review</div>
-    </div>
-    <div class="act-row">
-      <div class="act-icon">&#9656;</div>
-      <div class="act-text">开会时记下的想法，粘贴给 Codex 让它生成原型代码</div>
-    </div>
-    <div class="act-row">
-      <div class="act-icon">&#9656;</div>
-      <div class="act-text">被打断时，把当前进度发给 Codex，让它继续推进</div>
-    </div>
-  </div>
-
-  <div class="quote-box">
-    "如果我发现一个顺手能修的问题，我会发给 Codex 而不是切分支。等有空了再 review 它的 PR。"
-    <div class="quote-author">— OpenAI 工程师</div>
+  <div class="insight">
+    <div class="insight-quote">"我一整天都在开会，但还是合并了 4 个 PR，因为 Codex 在后台干活。"</div>
+    <div class="insight-author">— OpenAI 工程师</div>
   </div>
 </div>
 
-{/* ======== Best practices ======== */}
-
-<div class="phase-divider">最佳实践</div>
-
-<div class="step-card">
-  <div class="step-head">
-    <div class="step-num">&#10003;</div>
-    <div class="step-title">让 Codex 发挥最大价值</div>
+<div class="case" id="flow">
+  <div class="case-head">
+    <span class="case-id">07</span>
+    <span class="case-title">保持心流</span>
+  </div>
+  <div class="case-body">
+    日程碎片化时，用 Codex 捕获未完成的工作、把笔记变成原型、分出可稍后处理的探索性任务。被打断时不用切分支，发给 Codex 就行。值班或会议多的时候特别有用。
   </div>
 
-  <div class="act">
-    <div class="act-label">先规划再执行</div>
-    <div class="act-text">大改动先用 Ask 模式让 Codex 出实现方案，再切 Code 模式执行。Codex 最适合处理「一个工程师一小时能做完」或「几百行代码」的任务。</div>
+  <div class="prompt-group">
+    <div class="prompt-label">用法</div>
+    <div class="prompt-item">顺手能修的 bug，直接发给 Codex 开 PR，有空了再 review</div>
+    <div class="prompt-item">开会时记下的想法，粘贴给 Codex 让它生成原型代码</div>
+    <div class="prompt-item">被打断时，把当前进度发给 Codex，让它继续推进</div>
   </div>
 
-  <div class="act">
-    <div class="act-label">配好环境</div>
-    <div class="act-text">设置启动脚本、环境变量、网络访问，能大幅减少错误率。遇到构建错误就调整环境配置，几轮迭代后效率会显著提升。</div>
-  </div>
-
-  <div class="act">
-    <div class="act-label">像写 PR 一样写提示</div>
-    <div class="act-text">包含文件路径、组件名、diff、文档片段。用「参照 [模块 X] 的方式实现」这样的句式效果更好。</div>
-  </div>
-
-  <div class="act">
-    <div class="act-label">随手发任务</div>
-    <div class="act-text">零碎想法、顺手修复、半成品 —— 都可以丢给 Codex。不一定要一次生成完整 PR，把它当暂存区，有空了再回来处理。</div>
-  </div>
-
-  <div class="act">
-    <div class="act-label">维护 AGENTS.md</div>
-    <div class="act-text">在仓库根目录放一个 AGENTS.md，写上命名规范、业务逻辑、已知坑、特殊依赖。Codex 跨 prompt 执行任务时会参考它。</div>
-  </div>
-
-  <div class="act">
-    <div class="act-label">用 Best-of-N 探索多方案</div>
-    <div class="act-text">Best-of-N 功能可以同时生成多个响应，快速比较不同解法。复杂任务可以组合不同响应的优点。</div>
+  <div class="insight">
+    <div class="insight-quote">"如果我发现一个顺手能修的问题，我会发给 Codex 而不是切分支。等有空了再 review 它的 PR。"</div>
+    <div class="insight-author">— OpenAI 工程师</div>
   </div>
 </div>
 
-<div class="post-footer">
-  基于 <a href="https://openai.com/business/guides-and-resources/how-openai-uses-codex/">OpenAI 官方指南</a> 整理，面向个人用户改写 · 2026-05-21
+<div class="section-tag" id="best">最佳实践</div>
+
+<div class="tip-list">
+  <div class="tip-item">
+    <div class="tip-key">先规划再执行</div>
+    <div class="tip-val">大改动先用 Ask 模式让 Codex 出实现方案，再切 Code 模式执行。Codex 最适合处理「一个工程师一小时能做完」或「几百行代码」的任务。</div>
+  </div>
+  <div class="tip-item">
+    <div class="tip-key">配好环境</div>
+    <div class="tip-val">设置启动脚本、环境变量、网络访问，能大幅减少错误率。遇到构建错误就调整环境配置，几轮迭代后效率会显著提升。</div>
+  </div>
+  <div class="tip-item">
+    <div class="tip-key">像写 PR 一样写提示</div>
+    <div class="tip-val">包含文件路径、组件名、diff、文档片段。用「参照 [模块 X] 的方式实现」这样的句式效果更好。</div>
+  </div>
+  <div class="tip-item">
+    <div class="tip-key">随手发任务</div>
+    <div class="tip-val">零碎想法、顺手修复、半成品 —— 都可以丢给 Codex。不一定要一次生成完整 PR，把它当暂存区，有空了再回来处理。</div>
+  </div>
+  <div class="tip-item">
+    <div class="tip-key">维护 AGENTS.md</div>
+    <div class="tip-val">在仓库根目录放一个 AGENTS.md，写上命名规范、业务逻辑、已知坑、特殊依赖。Codex 跨 prompt 执行任务时会参考它。</div>
+  </div>
+  <div class="tip-item">
+    <div class="tip-key">Best-of-N</div>
+    <div class="tip-val">Best-of-N 功能可以同时生成多个响应，快速比较不同解法。复杂任务可以组合不同响应的优点。</div>
+  </div>
+</div>
+
+<div class="post-meta-footer">
+  <span>2026-05-21</span>
+  <a href="https://openai.com/business/guides-and-resources/how-openai-uses-codex/">原文来源</a>
 </div>
