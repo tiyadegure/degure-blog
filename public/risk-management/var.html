@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VaR 的计算：根据 PDF 课件重制</title>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #667085;
+      --line: #d8e0ed;
+      --blue: #1f5fbf;
+      --bg: #eef3f9;
+      --soft: #f7faff;
+      --case: #fff8e8;
+      --ok: #ecfdf3;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      line-height: 1.65;
+    }
+    .page { max-width: 1060px; margin: 0 auto; padding: 28px 18px 58px; }
+    header {
+      padding: 30px;
+      color: #fff;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #123b75, #1f6ed4);
+    }
+    h1 { margin: 0 0 8px; font-size: clamp(28px, 5vw, 42px); line-height: 1.18; }
+    header p { margin: 6px 0 0; color: #eaf2ff; }
+    nav {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+      gap: 10px;
+      margin: 16px 0;
+    }
+    nav a {
+      display: block;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--blue);
+      font-weight: 700;
+      text-decoration: none;
+    }
+    section {
+      margin-top: 16px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+    }
+    h2 { margin: 0 0 12px; font-size: 25px; line-height: 1.3; }
+    h3 { margin: 18px 0 8px; font-size: 19px; color: #123b75; }
+    p, ul, ol { margin-top: 8px; margin-bottom: 8px; }
+    li { margin: 4px 0; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 15px; }
+    th, td { border: 1px solid var(--line); padding: 9px 10px; vertical-align: top; }
+    th { background: #edf4ff; color: #123b75; text-align: left; }
+    .formula {
+      margin: 10px 0;
+      padding: 12px 14px;
+      border-left: 4px solid var(--blue);
+      border-radius: 7px;
+      background: var(--soft);
+      overflow-x: auto;
+    }
+    .case {
+      margin: 10px 0;
+      padding: 12px 14px;
+      border: 1px solid #ffd88a;
+      border-radius: 8px;
+      background: var(--case);
+    }
+    .check {
+      margin: 10px 0;
+      padding: 12px 14px;
+      border: 1px solid #a9e7c4;
+      border-radius: 8px;
+      background: var(--ok);
+    }
+    .muted { color: var(--muted); }
+    @media print {
+      body { background: #fff; }
+      .page { max-width: none; padding: 0; }
+      nav { display: none; }
+      section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <h1>VaR 的计算：PDF 课件公式版</h1>
+      <p>根据《金融风险管理3--市场风险的度量.pdf》第 63-95 页重制。公式按 PDF 原始符号转写为 LaTeX，不解 PDF 作业题。</p>
+      <p class="muted" style="color:#dce9ff">核心：相对 VaR / 绝对 VaR、正态参数法、时间一致性、组合 VaR、成分 VaR。</p>
+    </header>
+
+    <nav>
+      <a href="#symbols">符号</a>
+      <a href="#definition">基本公式</a>
+      <a href="#normal">正态分布</a>
+      <a href="#time">持有期换算</a>
+      <a href="#portfolio">组合 VaR</a>
+      <a href="#component">VaR 分解</a>
+      <a href="#homework">作业模板</a>
+    </nav>
+
+    <section id="symbols">
+      <h2>1. 先统一课件符号</h2>
+      <table>
+        <thead>
+          <tr><th>符号</th><th>含义</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>\(W_0\)</td><td>资产组合初始投资额。</td></tr>
+          <tr><td>\(R\)</td><td>目标投资期收益率。</td></tr>
+          <tr><td>\(\mu=E(R)\)</td><td>收益率均值。</td></tr>
+          <tr><td>\(\sigma^2=\operatorname{var}(R)\)</td><td>收益率方差，\(\sigma\) 为标准差。</td></tr>
+          <tr><td>\(R^*\)</td><td>给定置信度下资产组合的最低收益率。</td></tr>
+          <tr><td>\(R^{*'}\)</td><td>\(R^*\) 标准化后在标准正态分布中的值，是负数。</td></tr>
+          <tr><td>\(\Delta t\)</td><td>目标投资期，以年为单位。</td></tr>
+        </tbody>
+      </table>
+      <div class="check">课件采用负分位数写法：\(R^{*'}=-1.65\) 对应 95%，\(R^{*'}=-2.33\) 对应 99%。所以公式里经常出现 \(-R^{*'}\)。</div>
+    </section>
+
+    <section id="definition">
+      <h2>2. VaR 基本计算公式</h2>
+      <p>VaR 是在目标投资期内、给定置信度下的预期最大损失。计算关键是找出 \(W^*\) 或 \(R^*\)。</p>
+
+      <div class="formula">
+        \[
+        E(W)=W_0(1+\mu)
+        \]
+      </div>
+      <div class="formula">
+        \[
+        W^*=W_0(1+R^*)
+        \]
+      </div>
+
+      <h3>相对 VaR</h3>
+      <div class="formula">
+        \[
+        \begin{aligned}
+        \text{相对VaR}
+        &=E(W)-W^*\\
+        &=W_0(1+\mu)-W_0(1+R^*)\\
+        &=W_0(\mu-R^*)\\
+        &=W_0\bigl[\mu-(\mu+\sigma R^{*'})\bigr]\\
+        &=-W_0\sigma R^{*'}
+        \end{aligned}
+        \]
+      </div>
+
+      <h3>绝对 VaR</h3>
+      <div class="formula">
+        \[
+        \begin{aligned}
+        \text{绝对VaR}
+        &=W_0-W^*\\
+        &=W_0-W_0(1+R^*)\\
+        &=-W_0R^*
+        \end{aligned}
+        \]
+      </div>
+
+      <div class="case">
+        <strong>小案例：</strong>若目标期 \(\sigma=2\%\)，95% 置信度下 \(R^{*'}=-1.65\)，相对 VaR 只需写成
+        \[
+        -W_0\times 2\%\times(-1.65)
+        \]
+        注意这里的负号来自课件的 \(R^{*'}<0\)。
+      </div>
+    </section>
+
+    <section id="normal">
+      <h2>3. 正态分布中确定 \(R^*\)</h2>
+      <p>课件假设金融资产收益率 \(R\) 服从正态分布，并将其标准化。</p>
+      <div class="formula">
+        \[
+        R\sim N(\mu,\sigma^2),\qquad
+        R^{*'}=\frac{R^*-\mu}{\sigma}
+        \]
+      </div>
+      <div class="formula">
+        \[
+        R^*=\mu+\sigma R^{*'}
+        \]
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>左尾概率</th><th>置信度</th><th>课件分位数</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>5%</td><td>95%</td><td>\(R^{*'}=-1.65\)</td></tr>
+          <tr><td>3%</td><td>97.5% 附近课件写法</td><td>\(R^{*'}=-1.96\)</td></tr>
+          <tr><td>1%</td><td>99%</td><td>\(R^{*'}=-2.33\)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="case">
+        <strong>小案例：</strong>若 \(\mu=0.5\%\)、\(\sigma=3\%\)、99% 置信度，则最低收益率的代入式为
+        \[
+        R^*=0.5\%+3\%\times(-2.33)
+        \]
+        得到 \(R^*\) 后再放进相对或绝对 VaR 公式。
+      </div>
+    </section>
+
+    <section id="time">
+      <h2>4. 时间一致性：年参数换持有期参数</h2>
+      <p>课件强调：代入 VaR 前，均值、标准差必须与 VaR 的持有期一致。若年均值、年标准差已知，且收益率独立同分布：</p>
+      <div class="formula">
+        \[
+        \mu_{\Delta t}=\mu\,\Delta t,\qquad
+        \sigma_{\Delta t}=\sigma\sqrt{\Delta t}
+        \]
+      </div>
+
+      <h3>课件第 80-81 页公式</h3>
+      <div class="formula">
+        \[
+        \text{相对VaR}_{\Delta t}
+        =-W_0R^{*'}\sigma\sqrt{\Delta t}
+        \]
+      </div>
+      <div class="formula">
+        \[
+        \text{绝对VaR}_{\Delta t}
+        =-W_0\left(R^{*'}\sigma\sqrt{\Delta t}+\mu\Delta t\right)
+        =W_0\left(-R^{*'}\sigma\sqrt{\Delta t}-\mu\Delta t\right)
+        \]
+      </div>
+      <div class="formula">
+        \[
+        99\%\text{相对VaR}
+        =2.33\,W_0\sigma\sqrt{\Delta t}
+        \]
+      </div>
+
+      <h3>同一资产 VaR 换算</h3>
+      <div class="formula">
+        \[
+        VaR(c_2,T_2)=VaR(c_1,T_1)
+        \frac{-R^{*'}_{c_2}}{-R^{*'}_{c_1}}
+        \sqrt{\frac{T_2}{T_1}}
+        \]
+      </div>
+
+      <div class="case">
+        <strong>小案例：</strong>已知 95% 日相对 VaR，换成 99% 的 5 日相对 VaR：
+        \[
+        VaR_{99\%,5日}=VaR_{95\%,1日}\times\frac{2.33}{1.65}\times\sqrt{5}
+        \]
+      </div>
+    </section>
+
+    <section id="portfolio">
+      <h2>5. 组合 VaR</h2>
+      <p>课件第 83-85 页：通常情况下，组合 VaR 不等于各资产 VaR 之和。只有完全正相关时才相等。</p>
+
+      <div class="formula">
+        \[
+        VaR_p=-W_0R^{*'}\sigma_p
+        \]
+      </div>
+      <div class="formula">
+        \[
+        \sigma_p=\sqrt{\omega^\prime\Sigma\omega}
+        \]
+      </div>
+      <p>两资产时：</p>
+      <div class="formula">
+        \[
+        \sigma_p=
+        \sqrt{\omega_1^2\sigma_1^2+\omega_2^2\sigma_2^2
+        +2\omega_1\omega_2\sigma_{12}}
+        \]
+      </div>
+      <div class="formula">
+        \[
+        \sigma_{12}=\rho_{12}\sigma_1\sigma_2
+        \]
+      </div>
+
+      <h3>课件中的矩阵表达</h3>
+      <div class="formula">
+        \[
+        VaR_p=-W_0R^{*'}\sqrt{\omega^\prime\Sigma\omega}
+        \]
+      </div>
+      <div class="formula">
+        \[
+        VaR_p=
+        \bigl(VaR_1,\ldots,VaR_n\bigr)\,
+        \Gamma\,
+        \bigl(VaR_1,\ldots,VaR_n\bigr)^\prime
+        \quad\text{的平方根形式}
+        \]
+      </div>
+
+      <div class="case">
+        <strong>小案例：</strong>股票和债券组合，先用权重、标准差、相关系数求 \(\sigma_p\)，再代入
+        \[
+        VaR_p=-W_0R^{*'}\sigma_p
+        \]
+        95% 用 \(R^{*'}=-1.65\)，99% 用 \(R^{*'}=-2.33\)。
+      </div>
+      <div class="check">检查点：若 \(\rho_{12}<1\)，直接相加单项 VaR 会高估组合 VaR。</div>
+    </section>
+
+    <section id="component">
+      <h2>6. VaR 分解：成分、边际、增量</h2>
+      <h3>成分 VaR</h3>
+      <p>成分 VaR 表示资产 \(i\) 对组合 VaR 的贡献额。</p>
+      <div class="formula">
+        \[
+        VaR_p=\sum_{i=1}^n C\text{-}VaR_i
+        \]
+      </div>
+
+      <h3>边际 VaR</h3>
+      <div class="formula">
+        \[
+        M\text{-}VaR_i=\frac{\partial VaR(w)}{\partial w_i}
+        \]
+      </div>
+      <div class="formula">
+        \[
+        C\text{-}VaR_i=w_i\cdot M\text{-}VaR_i
+        \]
+      </div>
+
+      <h3>增量 VaR</h3>
+      <div class="formula">
+        \[
+        I\text{-}VaR(dw)=VaR(w+dw)-VaR(w)
+        \]
+      </div>
+
+      <h3>正态假设下的边际 VaR 与 \(\beta_i\)</h3>
+      <div class="formula">
+        \[
+        \beta_i=\frac{\operatorname{Cov}(r_i,r_p)}{\sigma_p^2}
+        \]
+      </div>
+      <div class="formula">
+        \[
+        M\text{-}VaR_i=\beta_i VaR_p
+        \]
+      </div>
+      <div class="formula">
+        \[
+        C\text{-}VaR_i=w_i\beta_iVaR_p
+        \]
+      </div>
+      <div class="formula">
+        \[
+        \sum_{i=1}^n w_i\beta_i=1,\qquad
+        \sum_{i=1}^n C\text{-}VaR_i=VaR_p
+        \]
+      </div>
+
+      <div class="case">
+        <strong>小案例：</strong>若某资产 \(w_i=0.3,\ \beta_i=1.2\)，组合 VaR 为 \(VaR_p\)，则
+        \[
+        C\text{-}VaR_i=0.3\times1.2\times VaR_p
+        \]
+        若 \(\beta_i<0\)，该资产的成分 VaR 可能为负，表示对冲风险。
+      </div>
+    </section>
+
+    <section id="homework">
+      <h2>7. PDF 作业套用模板</h2>
+      <table>
+        <thead>
+          <tr><th>题目</th><th>套用方法</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>题 1</td>
+            <td>用 \(\Delta t=3/12\)、\(R^{*'}=-2.33\)。相对 VaR 用 \(-W_0R^{*'}\sigma\sqrt{\Delta t}\)；若按绝对 VaR，用 \(W_0(-R^{*'}\sigma\sqrt{\Delta t}-\mu\Delta t)\)。</td>
+          </tr>
+          <tr>
+            <td>题 2</td>
+            <td>先 \(95\%\to99\%\)：乘 \(2.33/1.65\)；再日到周：乘 \(\sqrt{5}\)。</td>
+          </tr>
+          <tr>
+            <td>题 3</td>
+            <td>先用 \(\sigma_p=\sqrt{\omega_1^2\sigma_1^2+\omega_2^2\sigma_2^2+2\omega_1\omega_2\rho_{12}\sigma_1\sigma_2}\)，再分别代入 95%、99% 的 \(R^{*'}\)。</td>
+          </tr>
+          <tr>
+            <td>题 4</td>
+            <td>把所有组合统一到同一持有期、同一置信度：\(VaR(c_2,T_2)=VaR(c_1,T_1)\frac{-R^{*'}_{c_2}}{-R^{*'}_{c_1}}\sqrt{T_2/T_1}\)，再排序。</td>
+          </tr>
+          <tr>
+            <td>题 5</td>
+            <td>先算组合 \(VaR_p\)，再用 \(C\text{-}VaR_A=w_A\beta_AVaR_p\)、\(C\text{-}VaR_B=w_B\beta_BVaR_p\)、\(C\text{-}VaR_C=w_C\beta_CVaR_p\)。最后检查三者和是否等于 \(VaR_p\)。</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>
