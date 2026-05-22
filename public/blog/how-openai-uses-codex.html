@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenAI 如何使用 Codex — 个人用户版</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    color: #1a1a1a; background: #fff;
+    line-height: 1.7; padding: 2rem 1.2rem 3rem;
+    max-width: 680px; margin: 0 auto;
+  }
+  h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; }
+  .sub { color: #6b7280; font-size: .85rem; margin: .2rem 0 2rem; }
+
+  .overview {
+    display: flex; gap: 0; margin-bottom: 2.5rem;
+    border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden;
+    font-size: .72rem; text-align: center;
+  }
+  .ov-item { flex: 1; padding: .55rem .3rem; border-right: 1px solid #e5e7eb; }
+  .ov-item:last-child { border-right: none; }
+  .ov-item:hover { background: #f9fafb; }
+  .ov-item .ov-n { display: block; font-weight: 700; font-size: .95rem; margin-bottom: .1rem; }
+  .ov-item .ov-l { color: #6b7280; }
+
+  .divider {
+    display: flex; align-items: center; gap: .6rem;
+    margin: 2.4rem 0 1.8rem; font-size: .68rem;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: #9ca3af; font-weight: 600;
+  }
+  .divider::after { content: ''; flex: 1; height: 1px; background: #e5e7eb; }
+
+  .step {
+    border: 1px solid #e5e7eb; border-radius: 8px;
+    padding: 1.1rem 1.2rem; margin-bottom: 1rem;
+  }
+  .step-head {
+    display: flex; align-items: baseline; gap: .6rem;
+    margin-bottom: .5rem;
+  }
+  .step-num {
+    flex-shrink: 0; width: 1.6rem; height: 1.6rem;
+    border: 1.5px solid #111; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .78rem; font-weight: 700;
+  }
+  .step-title { font-size: .95rem; font-weight: 600; }
+  .step-desc { font-size: .83rem; color: #374151; margin-bottom: .6rem; line-height: 1.6; }
+
+  .act { margin-bottom: .5rem; }
+  .act-label {
+    font-size: .65rem; text-transform: uppercase; letter-spacing: .06em;
+    color: #9ca3af; margin-bottom: .2rem; font-weight: 600;
+  }
+  .act-row {
+    display: flex; align-items: flex-start; gap: .5rem; font-size: .83rem;
+  }
+  .act-icon {
+    flex-shrink: 0; width: 1.6rem; text-align: center;
+    font-size: .9rem; padding-top: .1rem; color: #6b7280;
+  }
+  .act-text { flex: 1; }
+
+  .prompt {
+    display: block;
+    background: #f9fafb; border: 1px solid #e5e7eb;
+    border-radius: 6px; padding: .35rem .6rem;
+    font-size: .8rem; color: #374151;
+    margin-top: .25rem; line-height: 1.55;
+  }
+
+  .quote {
+    border-left: 2px solid #d1d5db;
+    padding: .4rem .8rem;
+    margin: .4rem 0;
+    font-size: .82rem;
+    color: #4b5563;
+    font-style: italic;
+  }
+  .quote-author {
+    font-size: .72rem;
+    color: #9ca3af;
+    font-style: normal;
+    margin-top: .2rem;
+  }
+
+  .outcome {
+    font-size: .8rem; color: #6b7280;
+    border-top: 1px solid #f3f4f6;
+    padding-top: .5rem; margin-top: .5rem;
+  }
+  .outcome strong { color: #374151; font-weight: 600; }
+
+  .arrow {
+    text-align: center; color: #d1d5db;
+    font-size: 1.1rem; margin: -.3rem 0; user-select: none;
+  }
+
+  .pills { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .3rem; }
+  .pill {
+    font-size: .7rem; border: 1px solid #d1d5db; border-radius: 3px;
+    padding: .05em .45em; color: #374151;
+  }
+  .kbd {
+    display: inline-block; font-size: .72rem;
+    border: 1px solid #d1d5db; border-radius: 3px;
+    padding: 0 .3em; background: #f9fafb;
+  }
+
+  .footer {
+    margin-top: 2.5rem; padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+    font-size: .75rem; color: #9ca3af;
+  }
+  .footer a { color: #2563eb; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<h1>OpenAI 如何使用 Codex</h1>
+<p class="sub">个人用户指南 — 从 OpenAI 内部实践提炼的 7 种用法 + 最佳实践</p>
+
+<div class="overview">
+  <div class="ov-item"><span class="ov-n">1</span><span class="ov-l">理解代码</span></div>
+  <div class="ov-item"><span class="ov-n">2</span><span class="ov-l">重构迁移</span></div>
+  <div class="ov-item"><span class="ov-n">3</span><span class="ov-l">性能优化</span></div>
+  <div class="ov-item"><span class="ov-n">4</span><span class="ov-l">补充测试</span></div>
+  <div class="ov-item"><span class="ov-n">5</span><span class="ov-l">加速开发</span></div>
+  <div class="ov-item"><span class="ov-n">6</span><span class="ov-l">保持心流</span></div>
+  <div class="ov-item"><span class="ov-n">7</span><span class="ov-l">探索验证</span></div>
+</div>
+
+<!-- Use case 1 -->
+<div class="divider">场景 1 — 理解代码</div>
+
+<div class="step">
+  <div class="step-head">
+    <div class="step-num">1</div>
+    <div class="step-title">快速上手陌生代码库</div>
+  </div>
+  <div class="step-desc">
+    接手新项目、调试 bug 或排查线上问题时，用 Codex 快速定位核心逻辑、理清模块关系、追踪数据流。
+  </div>
+
+  <div class="act">
+    <div class="act-label">你可以问</div>
+    <div class="prompt">这个仓库的认证逻辑在哪里实现的？</div>
+    <div class="prompt">总结一下请求在这个服务里从入口到响应的完整流程。</div>
+    <div class="prompt">哪些模块依赖 [模块名]？失败是怎么处理的？</div>
+  </div>
+
+  <div class="quote">
+    "修 bug 的时候，我会用 Ask 模式看看代码库里其他地方有没有同样的问题。"
+    <div class="quote-author">— OpenAI 性能工程师</div>
+  </div>
+
+  <div class="outcome"><strong>效果：</strong>几分钟内掌握一个你从没见过的代码库，不用花几小时读文档。</div>
+</div>
+
+<div class="arrow">&#x25BE;</div>
+
+<!-- Use case 2 -->
+<div class="divider">场景 2 — 重构与迁移</div>
+
+<div class="step">
+  <div class="step-head">
+    <div class="step-num">2</div>
+    <div class="step-title">批量修改，保持一致</div>
+  </div>
+  <div class="step-desc">
+    更新 API、切换依赖、统一代码风格 —— 需要跨文件修改时，Codex 比正则替换更安全，因为它理解代码结构。
+  </div>
+
+  <div class="act">
+    <div class="act-label">你可以让 Codex 做</div>
+    <div class="prompt">把这个文件按职责拆成独立模块，并为每个模块生成测试。</div>
+    <div class="prompt">把所有回调风格的数据库访问改成 async/await。</div>
+  </div>
+
+  <div class="quote">
+    "Codex 把所有旧的 getUserById() 都换成了新服务模式，还自动开了 PR。几分钟搞定的事，手动要几小时。"
+    <div class="quote-author">— OpenAI 后端工程师</div>
+  </div>
+
+  <div class="outcome"><strong>效果：</strong>大规模代码修改不再靠手动搜索替换，减少遗漏和不一致。</div>
+</div>
+
+<div class="arrow">&#x25BE;</div>
+
+<!-- Use case 3 -->
+<div class="divider">场景 3 — 性能优化</div>
+
+<div class="step">
+  <div class="step-head">
+    <div class="step-num">3</div>
+    <div class="step-title">找出瓶颈，给出方案</div>
+  </div>
+  <div class="step-desc">
+    让 Codex 分析低效循环、冗余操作、昂贵查询，提出优化建议。也可以用来识别技术债和已弃用的模式。
+  </div>
+
+  <div class="act">
+    <div class="act-label">你可以问</div>
+    <div class="prompt">优化这个循环的内存效率，解释为什么你的版本更快。</div>
+    <div class="prompt">找出这个请求处理器里的重复昂贵操作，建议缓存方案。</div>
+    <div class="prompt">建议一种更快的方式来批量处理这个函数里的数据库查询。</div>
+  </div>
+
+  <div class="quote">
+    "我用 Codex 扫描重复的昂贵数据库调用。它很擅长标记热点路径，草拟批量查询方案。"
+    <div class="quote-author">— OpenAI 基础设施工程师</div>
+  </div>
+
+  <div class="outcome"><strong>效果：</strong>不用 Profiler 也能发现性能问题，优化方案有代码有解释。</div>
+</div>
+
+<div class="arrow">&#x25BE;</div>
+
+<!-- Use case 4 -->
+<div class="divider">场景 4 — 补充测试</div>
+
+<div class="step">
+  <div class="step-head">
+    <div class="step-num">4</div>
+    <div class="step-title">覆盖边界，堵住漏洞</div>
+  </div>
+  <div class="step-desc">
+    测试覆盖率低的地方，让 Codex 生成单元测试。它擅长发现空输入、最大长度、异常状态等容易遗漏的边界条件。
+  </div>
+
+  <div class="act">
+    <div class="act-label">你可以让 Codex 做</div>
+    <div class="prompt">为这个函数写单元测试，包括边界情况和失败路径。</div>
+    <div class="prompt">为这个排序工具生成基于属性的测试（property-based test）。</div>
+    <div class="prompt">扩展这个测试文件，补上 null 输入和非法状态的场景。</div>
+  </div>
+
+  <div class="quote">
+    "我让 Codex 处理低覆盖率的模块，睡一觉起来就有可运行的单元测试 PR 了。"
+    <div class="quote-author">— OpenAI 前端工程师</div>
+  </div>
+
+  <div class="outcome"><strong>效果：</strong>测试覆盖不再是苦差事，Codex 帮你想到你没想到的 case。</div>
+</div>
+
+<div class="arrow">&#x25BE;</div>
+
+<!-- Use case 5 -->
+<div class="divider">场景 5 — 加速开发</div>
+
+<div class="step">
+  <div class="step-head">
+    <div class="step-num">5</div>
+    <div class="step-title">脚手架 + 收尾，两头提速</div>
+  </div>
+  <div class="step-desc">
+    开始时用 Codex 生成脚手架代码（目录、模块、API 桩），收尾时让它处理 bug 分类、配置文件、上线脚本等琐碎但必要的任务。
+  </div>
+
+  <div class="act">
+    <div class="act-label">你可以让 Codex 做</div>
+    <div class="prompt">搭建一个 POST /events 的 API 路由，带基本校验和日志。</div>
+    <div class="prompt">根据这个模板生成新功能的埋点代码：[插入你的埋点示例]</div>
+    <div class="prompt">根据这个需求规格生成一个初版实现：[插入需求描述]</div>
+  </div>
+
+  <div class="quote">
+    "我一整天都在开会，但还是合并了 4 个 PR，因为 Codex 在后台干活。"
+    <div class="quote-author">— OpenAI 工程师</div>
+  </div>
+
+  <div class="outcome"><strong>效果：</strong>开发速度不再被琐事拖慢，你可以专注于核心逻辑。</div>
+</div>
+
+<div class="arrow">&#x25BE;</div>
+
+<!-- Use case 6 -->
+<div class="divider">场景 6 — 保持心流</div>
+
+<div class="step">
+  <div class="step-head">
+    <div class="step-num">6</div>
+    <div class="step-title">碎片时间也能推进工作</div>
+  </div>
+  <div class="step-desc">
+    会议间隙、等人时、通勤路上 —— 把零散想法丢给 Codex，让它帮你记录、整理、生成初版。你回来时直接 review。
+  </div>
+
+  <div class="act">
+    <div class="act-label">用法</div>
+    <div class="act-row">
+      <div class="act-icon">&#9656;</div>
+      <div class="act-text">看到顺手能修的 bug，直接发给 Codex 开 PR，等有空了再 review</div>
+    </div>
+    <div class="act-row">
+      <div class="act-icon">&#9656;</div>
+      <div class="act-text">开会时记下的想法，粘贴给 Codex 让它生成原型代码</div>
+    </div>
+    <div class="act-row">
+      <div class="act-icon">&#9656;</div>
+      <div class="act-text">被打断时，把当前进度发给 Codex，让它继续推进</div>
+    </div>
+  </div>
+
+  <div class="quote">
+    "如果我发现一个顺手能修的问题，我会发给 Codex 而不是切分支。等有空了再 review 它的 PR。"
+    <div class="quote-author">— OpenAI 工程师</div>
+  </div>
+
+  <div class="outcome"><strong>效果：</strong>上下文切换的成本降到最低，碎片时间也能产出。</div>
+</div>
+
+<div class="arrow">&#x25BE;</div>
+
+<!-- Use case 7 -->
+<div class="divider">场景 7 — 探索与验证</div>
+
+<div class="step">
+  <div class="step-head">
+    <div class="step-num">7</div>
+    <div class="step-title">比较方案，验证假设</div>
+  </div>
+  <div class="step-desc">
+    开放性问题用 Codex 探索多种解法，验证设计决策。也可以用它查找相关 bug —— 给定一个已知问题，让它扫描代码库里类似的模式。
+  </div>
+
+  <div class="act">
+    <div class="act-label">你可以问</div>
+    <div class="prompt">如果这个系统用事件驱动而不是请求/响应，会怎么设计？</div>
+    <div class="prompt">找出所有手动拼 SQL 的模块，而不是用查询构造器的地方。</div>
+    <div class="prompt">用更函数式的风格重写，避免副作用和可变状态。</div>
+  </div>
+
+  <div class="quote">
+    "Codex 帮我解决冷启动问题 —— 我粘贴需求规格和文档，它就帮我搭好框架，或者告诉我漏了什么。"
+    <div class="quote-author">— OpenAI 工程师</div>
+  </div>
+
+  <div class="outcome"><strong>效果：</strong>不再只有一种解法，Codex 帮你看到更多可能性。</div>
+</div>
+
+<!-- Best practices -->
+<div class="divider">最佳实践</div>
+
+<div class="step">
+  <div class="step-head">
+    <div class="step-num">&#10003;</div>
+    <div class="step-title">让 Codex 发挥最大价值的 6 个习惯</div>
+  </div>
+
+  <div class="act">
+    <div class="act-label">1. 先规划再执行</div>
+    <div class="act-text">大改动先用 Ask 模式让 Codex 出实现方案，再切 Code 模式执行。Codex 最适合处理「一个工程师一小时能做完」或「几百行代码」的任务。</div>
+  </div>
+
+  <div class="act">
+    <div class="act-label">2. 配好环境</div>
+    <div class="act-text">设置启动脚本、环境变量、网络访问，能大幅减少 Codex 的错误率。遇到构建错误就调整环境配置，几轮迭代后效率会显著提升。</div>
+  </div>
+
+  <div class="act">
+    <div class="act-label">3. 像写 PR 一样写提示</div>
+    <div class="act-text">包含文件路径、组件名、diff、文档片段。用「参照 [模块 X] 的方式实现」这样的句式效果更好。</div>
+  </div>
+
+  <div class="act">
+    <div class="act-label">4. 随手发任务</div>
+    <div class="act-text">零碎想法、顺手修复、半成品 —— 都可以丢给 Codex。不一定要一次生成完整 PR，把它当暂存区，有空了再回来处理。</div>
+  </div>
+
+  <div class="act">
+    <div class="act-label">5. 维护 AGENTS.md</div>
+    <div class="act-text">在仓库根目录放一个 AGENTS.md，写上命名规范、业务逻辑、已知坑、特殊依赖。Codex 跨 prompt 执行任务时会参考它。</div>
+  </div>
+
+  <div class="act">
+    <div class="act-label">6. 用 Best-of-N 探索多方案</div>
+    <div class="act-text">Best-of-N 功能可以同时生成多个响应，快速比较不同解法。复杂任务可以组合不同响应的优点。</div>
+  </div>
+</div>
+
+<div class="footer">
+  基于 <a href="https://openai.com/business/guides-and-resources/how-openai-uses-codex/">OpenAI 官方指南</a> 整理，面向个人用户改写 · 2026-05-21
+</div>
+
+</body>
+</html>
