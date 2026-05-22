@@ -1,0 +1,128 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const { frontmatter } = Astro.props;
+---
+
+<html lang="zh-CN">
+  <head>
+    <BaseHead title={frontmatter.title} description={frontmatter.description} />
+    <style is:global>
+      .post-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; }
+      .post-sub { color: #6b7280; font-size: .85rem; margin: .2rem 0 2rem; }
+      
+      .overview-bar {
+        display: flex; gap: 0; margin-bottom: 2.5rem;
+        border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden;
+        font-size: .72rem; text-align: center;
+      }
+      .ov-item { flex: 1; padding: .55rem .3rem; border-right: 1px solid #e5e7eb; transition: background .15s; }
+      .ov-item:last-child { border-right: none; }
+      .ov-item:hover { background: #f9fafb; }
+      .ov-item .ov-n { display: block; font-weight: 700; font-size: .95rem; margin-bottom: .1rem; }
+      .ov-item .ov-l { color: #6b7280; }
+      
+      .phase-divider {
+        display: flex; align-items: center; gap: .6rem;
+        margin: 2.4rem 0 1.8rem; font-size: .68rem;
+        text-transform: uppercase; letter-spacing: .08em;
+        color: #9ca3af; font-weight: 600;
+      }
+      .phase-divider::after { content: ''; flex: 1; height: 1px; background: #e5e7eb; }
+      
+      .step-card {
+        border: 1px solid #e5e7eb; border-radius: 8px;
+        padding: 1.1rem 1.2rem; margin-bottom: 1rem;
+        transition: box-shadow .2s;
+      }
+      .step-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+      
+      .step-head {
+        display: flex; align-items: center; gap: .6rem;
+        margin-bottom: .5rem;
+      }
+      .step-num {
+        flex-shrink: 0; width: 1.6rem; height: 1.6rem;
+        border: 1.5px solid #111; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .78rem; font-weight: 700;
+      }
+      .step-title { font-size: .95rem; font-weight: 600; }
+      .step-desc { font-size: .83rem; color: #374151; margin-bottom: .6rem; line-height: 1.6; }
+      
+      .act { margin-bottom: .5rem; }
+      .act-label {
+        font-size: .65rem; text-transform: uppercase; letter-spacing: .06em;
+        color: #9ca3af; margin-bottom: .2rem; font-weight: 600;
+      }
+      .act-row {
+        display: flex; align-items: flex-start; gap: .5rem; font-size: .83rem;
+      }
+      .act-icon {
+        flex-shrink: 0; width: 1.6rem; text-align: center;
+        font-size: .9rem; padding-top: .1rem; color: #6b7280;
+      }
+      .act-text { flex: 1; line-height: 1.6; }
+      
+      .prompt-box {
+        display: block;
+        background: #f9fafb; border: 1px solid #e5e7eb;
+        border-radius: 6px; padding: .35rem .6rem;
+        font-size: .8rem; color: #374151;
+        margin-top: .25rem; line-height: 1.55;
+      }
+      
+      .quote-box {
+        border-left: 2px solid #d1d5db;
+        padding: .4rem .8rem;
+        margin: .4rem 0;
+        font-size: .82rem;
+        color: #4b5563;
+        font-style: italic;
+      }
+      .quote-author {
+        font-size: .72rem;
+        color: #9ca3af;
+        font-style: normal;
+        margin-top: .2rem;
+      }
+      
+      .outcome {
+        font-size: .8rem; color: #6b7280;
+        border-top: 1px solid #f3f4f6;
+        padding-top: .5rem; margin-top: .5rem;
+      }
+      .outcome strong { color: #374151; font-weight: 600; }
+      
+      .arrow-down {
+        text-align: center; color: #d1d5db;
+        font-size: 1.1rem; margin: -.3rem 0; user-select: none;
+      }
+      
+      .pills { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .3rem; }
+      .pill {
+        font-size: .7rem; border: 1px solid #d1d5db; border-radius: 3px;
+        padding: .05em .45em; color: #374151;
+      }
+      
+      .post-footer {
+        margin-top: 2.5rem; padding-top: 1rem;
+        border-top: 1px solid #e5e7eb;
+        font-size: .75rem; color: #9ca3af;
+      }
+      .post-footer a { color: #2563eb; text-decoration: none; }
+      .post-footer a:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <Header />
+    <main>
+      <article>
+        <slot />
+      </article>
+    </main>
+    <Footer />
+  </body>
+</html>
