@@ -1,0 +1,104 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const { frontmatter } = Astro.props;
+---
+
+<html lang="zh-CN">
+  <head>
+    <BaseHead title={frontmatter.title} description={frontmatter.description} />
+    <style is:global>
+      .risk-hero {
+        margin-bottom: 3rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      .risk-hero h1 {
+        font-size: 1.8rem;
+        font-weight: 800;
+        letter-spacing: -.03em;
+        line-height: 1.2;
+        margin-bottom: .4rem;
+      }
+      .risk-hero .lead {
+        font-size: 1rem;
+        color: #6b7280;
+        line-height: 1.6;
+      }
+
+      .risk-section {
+        margin: 2rem 0;
+        padding: 1.5rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: #fff;
+      }
+      .risk-section h2 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: #111;
+      }
+      .risk-section p {
+        font-size: .9rem;
+        line-height: 1.8;
+        color: #374151;
+        margin-bottom: .8rem;
+      }
+      .risk-section ul {
+        margin: .5rem 0;
+        padding-left: 1.5rem;
+      }
+      .risk-section li {
+        font-size: .9rem;
+        line-height: 1.8;
+        color: #374151;
+        margin-bottom: .3rem;
+      }
+
+      .risk-nav {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: .5rem;
+        margin: 1rem 0;
+      }
+      .risk-nav a {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .5rem .7rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        font-size: .82rem;
+        color: #374151;
+        text-decoration: none;
+        transition: border-color .15s, background .15s;
+      }
+      .risk-nav a:hover {
+        border-color: #d1d5db;
+        background: #fafafa;
+      }
+
+      .post-meta-footer {
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e5e7eb;
+        font-size: .75rem;
+        color: #9ca3af;
+      }
+      .post-meta-footer a { color: #2563eb; text-decoration: none; }
+      .post-meta-footer a:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <Header />
+    <main>
+      <article>
+        <slot />
+      </article>
+    </main>
+    <Footer />
+  </body>
+</html>
