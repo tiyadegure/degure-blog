@@ -14,8 +14,15 @@ type Props = Awaited<ReturnType<typeof getCollection<'blog'>>>[number];
 
 const post = Astro.props;
 const { Content } = await render(post);
+
+// Check if the post has a custom layout
+const hasCustomLayout = post.data.layout && post.data.layout !== '';
 ---
 
-<BlogPost {...post.data}>
+{hasCustomLayout ? (
   <Content />
-</BlogPost>
+) : (
+  <BlogPost {...post.data}>
+    <Content />
+  </BlogPost>
+)}
