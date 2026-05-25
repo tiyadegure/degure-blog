@@ -1,6 +1,9 @@
 ---
 import { getCollection, render } from 'astro:content';
 import BlogPost from '../../layouts/BlogPost.astro';
+import CodexWorkflow from '../../layouts/CodexWorkflow.astro';
+import OpenAICodexGuide from '../../layouts/OpenAICodexGuide.astro';
+import RiskIndex from '../../layouts/RiskIndex.astro';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
@@ -15,12 +18,21 @@ type Props = Awaited<ReturnType<typeof getCollection<'blog'>>>[number];
 const post = Astro.props;
 const { Content } = await render(post);
 
-// Check if the post has a custom layout
-const hasCustomLayout = post.data.layout && post.data.layout !== '';
+// Map layout names to components
+const layoutMap: Record<string, any> = {
+  '../../layouts/CodexWorkflow.astro': CodexWorkflow,
+  '../../layouts/OpenAICodexGuide.astro': OpenAICodexGuide,
+  '../../../layouts/RiskIndex.astro': RiskIndex,
+};
+
+const layoutName = post.data.layout;
+const CustomLayout = layoutName ? layoutMap[layoutName as string] : null;
 ---
 
-{hasCustomLayout ? (
-  <Content />
+{CustomLayout ? (
+  <CustomLayout frontmatter={post.data}>
+    <Content />
+  </CustomLayout>
 ) : (
   <BlogPost {...post.data}>
     <Content />
