@@ -1,0 +1,84 @@
+---
+title: 'AI × Web3 School Week 1：从"Agent 能做什么"到"Agent 应该被允许做什么"'
+description: 'Week 1 学习总结 — Agent Workflow、Agent Wallet、Human-in-the-loop，以及一个核心认知转变。'
+pubDate: 2026-05-25
+tags: ['ai', 'web3', 'agent', 'learning', 'ai-web3-school']
+---
+
+AI × Web3 School 的第一周结束了。这篇文章是我对这一周学习的整理，不是知识点罗列，而是我真正理解了什么、做了什么、以及还有什么没想清楚。
+
+---
+
+## 一个重新理解的 AI 概念：Agent 不是更聪明的 ChatBot
+
+之前我对 AI Agent 的理解是"能调用工具的 LLM"。这周读了 Handbook 的 Agent Workflow 章节后，认知被刷新了。
+
+Agent 的核心不是"推理能力更强"，而是**需要一套确定性流程来约束概率模型**。Handbook 里有一句话特别准确：
+
+> Agent Workflow 的核心，是把概率模型放进确定性流程里。
+
+具体来说，一个真正可用的链上 Agent 需要：
+- **Task Graph** — 把目标拆成节点和依赖，而不是让模型一口气自由执行
+- **State Machine** — 显式状态追踪，系统不会忘记自己在哪
+- **Trace** — 每一步输入/输出/判断的记录，出问题才能复盘
+- **Regression Set** — 固定测试用例，防止模型更新后安全退化
+
+这和"让 ChatGPT 帮你写代码"是完全不同的工程思维。
+
+---
+
+## 一个重新理解的 Web3 概念：钱包不只是"存钱的地方"
+
+作为 Web3 新手，我之前以为钱包就是一个"加密版支付宝"。这周学了 Agent Wallet 章节后，才理解钱包本质上是一个**权限系统**。
+
+三种账户方案在 Agent 场景下的差异很大：
+
+- **EOA（普通钱包）** — 一把私钥控制全部权限。给 Agent 私钥 = 给全部资产，太危险。
+- **Smart Account（智能账户）** — 合约规则控制。可以给 Agent 一个 Session Key（临时受限钥匙），限制时间、金额、目标合约、调用方法。
+- **多签（Safe）** — 多人签名。Agent 生成交易草稿，人来批准。
+
+一句话总结：EOA 是钥匙，智能账户是门禁卡，多签是金库。对 Agent 来说，智能账户 + Session Key 是最合适的方案。
+
+---
+
+## 一个 AI × Web3 交叉问题：Human-in-the-loop 到底该放在哪？
+
+这是这周我思考最多的问题。
+
+Agent 可以自动完成很多事：解析意图、加载上下文、查询价格、模拟交易、生成摘要。但到了签名那一步，必须是人来确认。
+
+问题不是"要不要有人工确认"，而是**人确认时能否看懂自己在批准什么**。
+
+我画了一张 Agent 辅助 swap 的 8 步流程图，标出了 5 个 AI 自动步骤、1 个人工确认步骤、1 个钱包签名步骤、1 个链上确认步骤。发现好的 Human-in-the-loop 应该让用户看到：
+- 资产变化（你会失去什么、得到什么）
+- 权限变化（你在授权什么）
+- 失败风险（最坏情况是什么）
+
+如果用户只看到一串哈希和"Confirm"按钮，那这个确认就没有意义。
+
+---
+
+## 本周 Proof-of-Work
+
+1. **学习仓库** — [ai-web3-school-cohort-0](https://github.com/tiyadegure/ai-web3-school-cohort-0)，包含每日笔记、任务产出、Handbook 反馈
+2. **AI × Web3 最小交叉流程图** — Agent 辅助 swap 的 8 步流程，标出 AI/人工/链上的边界
+3. **受限 Web3 助手设计（DeFi Swap Guardian）** — 10 个状态的状态机 + 5 个人工确认点 + Policy 规则
+4. **EOA vs 智能账户 vs 多签对比** — 从安全性、灵活性、成本三个维度分析
+5. **Sepolia 测试网合约部署** — SimpleCounter 合约，验证了部署→读取→写入全流程
+6. **活动参与** — Open Agentic Economy（ERC-8004 Agent Identity）、Co-learning（Railgun 隐私协议）、Long-term Memory for AI Agents
+
+---
+
+## 还没解决的问题
+
+**Agent 的记忆应该存在哪？**
+
+这周学了 Agent Workflow 和 Agent Wallet，但 Agent 的"记忆"问题还没想清楚。参加了 EverMind-AI 的分享，他们把 Memory Engineering 分成四个领域：Database Engineering、Agent Engineering、ML Engineering、Information Retrieval。
+
+但链上 Agent 的记忆有什么不同？ERC-8004 的 Reputation Registry 算不算一种"链上记忆"？Agent 的执行 Trace 应该存在链上还是链下？
+
+这是我下一周想继续探索的方向。
+
+---
+
+*AI × Web3 School 是 LXDAO + ETHPanda 的开源学习计划。* [Handbook](https://aiweb3.school/zh/handbook/) | [GitHub](https://github.com/lxdao-official/aiweb3school)
