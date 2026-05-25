@@ -25,7 +25,8 @@ const layoutMap: Record<string, any> = {
   '../../../layouts/RiskIndex.astro': RiskIndex,
 };
 
-const layoutName = post.data.layout;
+// Get layout from frontmatter
+const layoutName = (post as any).data?.layout || (post as any).frontmatter?.layout;
 const CustomLayout = layoutName ? layoutMap[layoutName as string] : null;
 ---
 
