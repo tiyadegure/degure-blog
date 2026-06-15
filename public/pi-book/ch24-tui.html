@@ -1,0 +1,420 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>pi-tui — 在终端里做应用 - pi 的设计艺术：构建生产级 Coding Agent 的架构决策</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/custom.css">
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "ayu" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">pi 的设计艺术：构建生产级 Coding Agent 的架构决策</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/ZhangHanDong/pi-book" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="第-24-章pi-tui--在终端里做应用"><a class="header" href="#第-24-章pi-tui--在终端里做应用">第 24 章：<code>pi-tui</code> — 在终端里做应用</a></h1>
+<blockquote>
+<p><strong>定位</strong>：本章解析 pi 为什么自建 TUI 框架，以及极简 Component 接口如何撑起复杂交互。
+前置依赖：第 10 章（Agent 事件订阅）。
+适用场景：当你想理解终端 UI 的渲染模型，或者想为 pi 的 TUI 添加组件。</p>
+</blockquote>
+<h2 id="为什么不用-inkjs"><a class="header" href="#为什么不用-inkjs">为什么不用 Ink.js？</a></h2>
+<p>Node.js 生态有成熟的终端 UI 框架（Ink.js 基于 React 的声明式模型）。pi 选择自建，原因是 <strong>差分渲染的完全控制权</strong>。</p>
+<p>Ink.js 使用 React 的 reconciliation 算法来管理组件树，然后把组件树渲染成终端输出。问题在于：终端不是浏览器 DOM — 你不能"修改一个元素"，你只能覆盖某一行的内容。Ink.js 的抽象层让你无法精确控制"哪些行需要重绘"，导致不必要的全屏刷新。</p>
+<p>pi-tui 选择了一个更底层的模型：组件返回字符串数组，TUI 逐行比较新旧输出，只重绘变化的行。</p>
+<h2 id="component-接口一个方法定义一切"><a class="header" href="#component-接口一个方法定义一切">Component 接口：一个方法定义一切</a></h2>
+<pre><code class="language-typescript">// packages/tui/src/tui.ts:17-41
+export interface Component {
+  render(width: number): string[];
+  handleInput?(data: string): void;
+  wantsKeyRelease?: boolean;
+  invalidate(): void;
+}
+</code></pre>
+<p><code>render</code> 返回字符串数组（每个元素是一行）。就是这么简单 — 没有 virtual DOM，没有 JSX，没有 state management。一个组件的全部职责就是：给你一个宽度，你告诉我你要显示什么。</p>
+<p><code>handleInput</code> 是可选的 — 只有能接收键盘输入的组件（比如 Editor、SelectList）才需要实现它。参数 <code>data</code> 是原始的终端输入序列（可能是单个字符如 <code>"a"</code>，也可能是转义序列如 <code>"\x1b[A"</code> 表示方向上键）。</p>
+<p><code>wantsKeyRelease</code> 控制组件是否接收按键释放事件。这需要 Kitty keyboard protocol 支持（普通终端不区分 keydown 和 keyup）。默认 <code>false</code> — 释放事件被 TUI 过滤掉，减少组件需要处理的事件量。</p>
+<p><code>invalidate()</code> 通知 TUI 组件需要重绘。调用后 TUI 会在下一个 render cycle 重新调用 <code>render()</code>。组件的缓存状态（如果有的话）也应该在 <code>invalidate()</code> 中清除。</p>
+<h2 id="focusable-接口与硬件光标"><a class="header" href="#focusable-接口与硬件光标">Focusable 接口与硬件光标</a></h2>
+<pre><code class="language-typescript">// packages/tui/src/tui.ts:52-68
+export interface Focusable {
+  focused: boolean;
+}
+
+export const CURSOR_MARKER = "\x1b_pi:c\x07";
+</code></pre>
+<p><code>Focusable</code> 是 <code>Component</code> 的增强接口。当一个组件获得焦点时，TUI 设置它的 <code>focused</code> 属性为 <code>true</code>。组件在 <code>render()</code> 中如果需要显示光标（比如编辑器的文本光标），就在光标位置输出 <code>CURSOR_MARKER</code>。</p>
+<p><code>CURSOR_MARKER</code> 是一个 APC（Application Program Command）转义序列 — 终端会忽略它，但 TUI 可以在渲染后找到它的位置，然后把硬件光标移到那里。</p>
+<p>为什么需要硬件光标？因为 <strong>IME 输入法</strong>。中文、日文、韩文的输入法需要知道光标位置来显示候选窗口。如果没有正确定位的硬件光标，候选窗口会出现在错误的位置。这个看似小众的需求，决定了 pi-tui 必须实现光标追踪。</p>
+<h2 id="tui-类渲染引擎"><a class="header" href="#tui-类渲染引擎">TUI 类：渲染引擎</a></h2>
+<pre><code class="language-typescript">// packages/tui/src/tui.ts:214-245
+export class TUI extends Container {
+  public terminal: Terminal;
+  private previousLines: string[] = [];
+  private previousWidth = 0;
+  private previousHeight = 0;
+  private focusedComponent: Component | null = null;
+  private renderRequested = false;
+  private renderTimer: NodeJS.Timeout | undefined;
+  private lastRenderAt = 0;
+  private static readonly MIN_RENDER_INTERVAL_MS = 16;
+  private cursorRow = 0;
+  private hardwareCursorRow = 0;
+  private maxLinesRendered = 0;
+  // Overlay stack for modal components
+  private overlayStack: {
+    component: Component;
+    options?: OverlayOptions;
+    preFocus: Component | null;
+    hidden: boolean;
+    focusOrder: number;
+  }[] = [];
+}
+</code></pre>
+<p>TUI 自身继承了 <code>Container</code>（组件树的容器），同时管理渲染状态。几个关键的状态字段：</p>
+<ul>
+<li><code>previousLines</code>：上一次渲染的输出，用于差分比较</li>
+<li><code>MIN_RENDER_INTERVAL_MS = 16</code>：渲染节流，约 60fps 上限，防止高频 invalidate 导致 CPU 空转</li>
+<li><code>maxLinesRendered</code>：终端工作区域的最大高度，用于检测内容收缩时是否需要清理空行</li>
+</ul>
+<h2 id="渲染调度requestrender"><a class="header" href="#渲染调度requestrender">渲染调度：requestRender</a></h2>
+<pre><code class="language-typescript">// packages/tui/src/tui.ts:469-516
+requestRender(force = false): void {
+  if (force) {
+    this.previousLines = [];
+    this.previousWidth = -1;
+    this.previousHeight = -1;
+    // ...重置所有状态...
+    process.nextTick(() =&gt; {
+      this.doRender();
+    });
+    return;
+  }
+  if (this.renderRequested) return;
+  this.renderRequested = true;
+  process.nextTick(() =&gt; this.scheduleRender());
+}
+
+private scheduleRender(): void {
+  const elapsed = performance.now() - this.lastRenderAt;
+  const delay = Math.max(0, MIN_RENDER_INTERVAL_MS - elapsed);
+  this.renderTimer = setTimeout(() =&gt; {
+    this.doRender();
+  }, delay);
+}
+</code></pre>
+<p><code>requestRender</code> 有两种模式：</p>
+<ul>
+<li><strong><code>force = true</code></strong>：清空所有缓存，下一个 tick 立即全量渲染。用于主题切换、终端 reset 等场景。</li>
+<li><strong><code>force = false</code></strong>（默认）：标记"需要渲染"，通过 <code>scheduleRender</code> 节流到至少 16ms 间隔。多次快速的 <code>requestRender</code> 调用只会触发一次实际渲染。</li>
+</ul>
+<p><code>process.nextTick</code> 确保渲染在当前事件循环结束后执行 — 这让同一个 tick 中的多个状态变更可以合并为一次渲染。</p>
+<h2 id="差分渲染算法"><a class="header" href="#差分渲染算法">差分渲染算法</a></h2>
+<p><code>doRender()</code> 是 TUI 的核心。它的逻辑可以分为四个阶段：</p>
+<pre><code class="language-mermaid">flowchart TD
+    Render["1. component.render(width)"] --&gt; Composite["2. compositeOverlays()"]
+    Composite --&gt; Compare{"3. 和 previousLines\n逐行比较"}
+    Compare --&gt;|"首次渲染"| Full["输出全部行"]
+    Compare --&gt;|"宽度变化"| Clear["清屏 + 全部重绘"]
+    Compare --&gt;|"内容变化"| Diff["跳到 firstChanged\n输出到 lastChanged"]
+    Compare --&gt;|"无变化"| Skip["跳过渲染\n只更新光标"]
+    
+    Full --&gt; Sync["synchronized output\nCSI ?2026h ... ?2026l"]
+    Clear --&gt; Sync
+    Diff --&gt; Sync
+    
+    style Diff fill:#c8e6c9
+</code></pre>
+<p>差分阶段的核心代码：</p>
+<pre><code class="language-typescript">// packages/tui/src/tui.ts:981-1011
+// Find first and last changed lines
+let firstChanged = -1;
+let lastChanged = -1;
+const maxLines = Math.max(
+  newLines.length, this.previousLines.length
+);
+for (let i = 0; i &lt; maxLines; i++) {
+  const oldLine = this.previousLines[i] ?? "";
+  const newLine = newLines[i] ?? "";
+  if (oldLine !== newLine) {
+    if (firstChanged === -1) firstChanged = i;
+    lastChanged = i;
+  }
+}
+</code></pre>
+<p>算法的关键洞察：只需要找到<strong>第一个</strong>和<strong>最后一个</strong>变化行。然后把光标移到第一个变化行，从那里开始输出到最后一个变化行。不需要逐行比较和逐行更新 — 因为终端的 cursor movement 本身也有开销，连续输出比跳跃输出更快。</p>
+<p>特殊情况处理：</p>
+<ul>
+<li><strong>宽度变化</strong>：必须全量重绘，因为换行位置全部改变</li>
+<li><strong>高度变化</strong>：全量重绘（Termux 例外 — 软键盘弹出会频繁改变高度）</li>
+<li><strong>内容收缩</strong>：可选地清理空行（<code>clearOnShrink</code>），避免在长输出消失后留下视觉残留</li>
+</ul>
+<h2 id="synchronized-output"><a class="header" href="#synchronized-output">Synchronized Output</a></h2>
+<p>每次渲染都包裹在 synchronized output 序列中：</p>
+<pre><code class="language-typescript">// packages/tui/src/tui.ts:917-923
+let buffer = "\x1b[?2026h"; // Begin synchronized output
+// ...写入所有行...
+buffer += "\x1b[?2026l"; // End synchronized output
+this.terminal.write(buffer);
+</code></pre>
+<p>CSI <code>?2026h</code> 告诉终端"开始缓冲"，<code>?2026l</code> 告诉终端"一次性显示"。没有这个序列，逐行输出会导致可见的闪烁 — 用户能看到旧内容被逐行替换为新内容的过程。synchronized output 让更新在视觉上是原子的。</p>
+<p>注意：不是所有终端都支持 CSI 2026。不支持的终端会忽略这些序列，退化为逐行更新。这种优雅降级是 pi-tui 的设计哲学之一 — 利用先进终端的能力，但不依赖它们。</p>
+<h2 id="overlay-系统"><a class="header" href="#overlay-系统">Overlay 系统</a></h2>
+<pre><code class="language-typescript">// packages/tui/src/tui.ts:119-155
+export interface OverlayOptions {
+  width?: SizeValue;
+  minWidth?: number;
+  maxHeight?: SizeValue;
+  anchor?: OverlayAnchor;
+  offsetX?: number;
+  offsetY?: number;
+  row?: SizeValue;
+  col?: SizeValue;
+  margin?: OverlayMargin | number;
+  visible?: (termWidth: number, termHeight: number) =&gt; boolean;
+  nonCapturing?: boolean;
+}
+</code></pre>
+<p>Overlay 是渲染在主内容之上的浮动组件。典型用途：自动补全菜单、模型选择器、键绑定帮助。</p>
+<p>Overlay 的定位支持三种模式：</p>
+<ol>
+<li><strong>锚点模式</strong>（<code>anchor</code>）：9 个预定义位置（center、top-left、bottom-right 等）</li>
+<li><strong>百分比模式</strong>（<code>row: "25%"</code>）：相对终端大小定位</li>
+<li><strong>绝对模式</strong>（<code>row: 5, col: 10</code>）：固定位置</li>
+</ol>
+<p><code>visible</code> 回调让 overlay 可以根据终端尺寸动态显示/隐藏 — 比如在终端宽度小于 60 列时隐藏侧边栏 overlay。</p>
+<p>Overlay 有独立的焦点管理。<code>showOverlay</code> 返回一个 <code>OverlayHandle</code>，可以控制显示/隐藏、焦点获取/释放。焦点释放时自动恢复到之前的焦点组件（<code>preFocus</code>）。</p>
+<p>Overlay 的渲染发生在 <code>compositeOverlays</code> 阶段 — 先渲染主内容，再把 overlay 的输出合成到对应位置。差分比较在合成之后进行，所以 overlay 的变化也受益于差分渲染。</p>
+<h2 id="container组件树的基础"><a class="header" href="#container组件树的基础">Container：组件树的基础</a></h2>
+<pre><code class="language-typescript">// packages/tui/src/tui.ts:178-209
+export class Container implements Component {
+  children: Component[] = [];
+
+  addChild(component: Component): void {
+    this.children.push(component);
+  }
+
+  render(width: number): string[] {
+    const lines: string[] = [];
+    for (const child of this.children) {
+      lines.push(...child.render(width));
+    }
+    return lines;
+  }
+}
+</code></pre>
+<p>Container 是组件树的容器节点。它的 <code>render</code> 简单地拼接所有子组件的输出。TUI 自身继承 Container — 整个 UI 就是一棵组件树，TUI 是根节点。</p>
+<p>这个设计的简洁性值得注意：没有 layout engine，没有 flex/grid，没有 padding/margin。所有布局都由组件自己在 <code>render()</code> 中通过字符串拼接实现。这看起来原始，但对终端 UI 来说足够了 — 终端的布局模型本质上就是"一行一行堆叠"。</p>
+<h2 id="取舍分析"><a class="header" href="#取舍分析">取舍分析</a></h2>
+<h3 id="得到了什么"><a class="header" href="#得到了什么">得到了什么</a></h3>
+<p><strong>完全的控制力</strong>。差分渲染的粒度、IME 支持（通过 CURSOR_MARKER 定位硬件光标）、Kitty keyboard protocol 支持 — 这些都需要直接操作终端转义序列，框架反而会碍事。</p>
+<p><strong>极低的渲染开销</strong>。字符串比较 + 只重绘变化行的策略，让 TUI 在高频更新场景（比如 bash 命令的流式输出）下保持流畅。</p>
+<p><strong>渲染节流防抖</strong>。16ms 的最小渲染间隔和 <code>requestRender</code> 的去重机制，确保即使组件频繁触发 invalidate，CPU 消耗也是可控的。</p>
+<h3 id="放弃了什么"><a class="header" href="#放弃了什么">放弃了什么</a></h3>
+<p><strong>更多的维护成本</strong>。从字符宽度计算到 ANSI 转义序列解析，都要自己实现。<code>visibleWidth()</code>、<code>truncateToWidth()</code>、<code>wrapTextWithAnsi()</code> 这些工具函数证明了"终端里的文本处理"远比想象复杂。</p>
+<p><strong>没有声明式 API</strong>。相比 React/Ink.js 的声明式模型，命令式的 <code>render()</code> 方法需要组件自己管理所有状态和渲染逻辑。但 Component 接口的简洁性在某种程度上弥补了这一点 — 实现一个新组件只需要一个 <code>render(width): string[]</code> 方法。</p>
+<hr />
+<h3 id="版本演化说明"><a class="header" href="#版本演化说明">版本演化说明</a></h3>
+<blockquote>
+<p>本章核心分析基于 pi-mono v0.66.0。pi-tui 是 pi-mono 中最稳定的包之一。
+Component 接口自创建以来没有改变，新功能通过添加新组件实现。
+Overlay 系统是后来添加的 — 早期版本的模态交互（如模型选择）直接替换主内容。</p>
+</blockquote>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch23-search-tools.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="ch25-editor.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch23-search-tools.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="ch25-editor.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="mermaid.min.js"></script>
+        <script src="mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

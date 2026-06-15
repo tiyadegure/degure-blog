@@ -1,0 +1,357 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>find 和 grep — 结构化搜索替代万能 bash - pi 的设计艺术：构建生产级 Coding Agent 的架构决策</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/custom.css">
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "ayu" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">pi 的设计艺术：构建生产级 Coding Agent 的架构决策</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/ZhangHanDong/pi-book" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="第-23-章find-和-grep--结构化搜索替代万能-bash"><a class="header" href="#第-23-章find-和-grep--结构化搜索替代万能-bash">第 23 章：<code>find</code> 和 <code>grep</code> — 结构化搜索替代万能 bash</a></h1>
+<blockquote>
+<p><strong>定位</strong>：本章解析 find 和 grep 从 bash 中独立出来的设计理由。
+前置依赖：第 19 章（工具设计原则）、第 22 章（bash 的定位）。
+适用场景：当你想理解为什么"多一个工具"有时比"少一个工具"更好。</p>
+</blockquote>
+<h2 id="为什么要把搜索从-bash-中拆出来"><a class="header" href="#为什么要把搜索从-bash-中拆出来">为什么要把搜索从 bash 中拆出来？</a></h2>
+<p>LLM 用 bash 搜索时的典型模式：</p>
+<pre><code class="language-bash"># LLM 可能会生成
+find . -name "*.ts" -not -path "node_modules/*" | head -100
+grep -rn "registerProvider" --include="*.ts" src/
+</code></pre>
+<p>这些命令有几个问题：</p>
+<ol>
+<li><strong>平台不一致</strong>。macOS 的 <code>find</code> 和 Linux 的 <code>find</code> 参数不完全相同</li>
+<li><strong>node_modules 陷阱</strong>。LLM 经常忘记排除 <code>node_modules</code>，导致返回几万个结果</li>
+<li><strong>结果截断不可控</strong>。<code>head -100</code> 是 LLM 的猜测，不是系统的保护</li>
+</ol>
+<p>pi 把搜索拆成两个结构化工具 — find（按文件名搜索）和 grep（按内容搜索） — 每个都有明确的参数定义、自动保护和跨平台一致性。</p>
+<h2 id="两个-schema-对比"><a class="header" href="#两个-schema-对比">两个 Schema 对比</a></h2>
+<p>把 find 和 grep 的 schema 放在一起看，可以清楚地看到它们各自的职责边界：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/tools/find.ts:20-26
+const findSchema = Type.Object({
+  pattern: Type.String({
+    description: "Glob pattern to match files, " +
+      "e.g. '*.ts', '**/*.json', or 'src/**/*.spec.ts'"
+  }),
+  path: Type.Optional(Type.String({
+    description: "Directory to search in (default: cwd)"
+  })),
+  limit: Type.Optional(Type.Number({
+    description: "Maximum number of results (default: 1000)"
+  })),
+});
+</code></pre>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/tools/grep.ts:23-35
+const grepSchema = Type.Object({
+  pattern: Type.String({
+    description: "Search pattern (regex or literal string)"
+  }),
+  path: Type.Optional(Type.String({
+    description: "Directory or file to search (default: cwd)"
+  })),
+  glob: Type.Optional(Type.String({
+    description: "Filter files by glob pattern, e.g. '*.ts'"
+  })),
+  ignoreCase: Type.Optional(Type.Boolean({
+    description: "Case-insensitive search (default: false)"
+  })),
+  literal: Type.Optional(Type.Boolean({
+    description: "Treat pattern as literal string (default: false)"
+  })),
+  context: Type.Optional(Type.Number({
+    description: "Lines before and after each match (default: 0)"
+  })),
+  limit: Type.Optional(Type.Number({
+    description: "Maximum number of matches (default: 100)"
+  })),
+});
+</code></pre>
+<p>find 有 3 个参数，grep 有 7 个 — 这个差异反映了内容搜索比文件名搜索本质上更复杂。grep 需要控制正则/字面量模式、大小写敏感、上下文行数、文件类型过滤，这些在 bash <code>grep</code> 命令中是通过 <code>-i</code>、<code>-F</code>、<code>-C</code>、<code>--include</code> 等 flags 实现的。结构化 schema 把这些 flags 转化为有描述的命名参数，让 LLM 不需要记忆 flag 字母。</p>
+<h2 id="默认限制的设计"><a class="header" href="#默认限制的设计">默认限制的设计</a></h2>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/tools/find.ts:30
+const DEFAULT_LIMIT = 1000;
+
+// packages/coding-agent/src/core/tools/grep.ts:38
+const DEFAULT_LIMIT = 100;
+</code></pre>
+<p>find 默认 1000 条，grep 默认 100 条。这个 10 倍的差异有意为之：</p>
+<ul>
+<li><strong>文件名列表的信息密度低</strong>。每条结果就是一个路径，一千条路径在 LLM context 中占用不大。LLM 经常需要浏览大量文件来理解项目结构。</li>
+<li><strong>内容搜索的信息密度高</strong>。每条 grep 结果包含文件路径、行号、匹配行内容、可能还有上下文行。100 条 grep 结果已经提供了足够的信息，更多只会浪费 context。</li>
+</ul>
+<p>LLM 可以通过 <code>limit</code> 参数覆盖默认值，但大多数情况下默认值足够好。这种"合理的默认值"减少了 LLM 需要做的决策数量。</p>
+<h2 id="gitignore-集成"><a class="header" href="#gitignore-集成"><code>.gitignore</code> 集成</a></h2>
+<p>两个搜索工具都自动尊重 <code>.gitignore</code> 规则。这不是一个 flag — 它是默认行为，不能关闭。</p>
+<p>为什么强制启用？因为 LLM 搜索 <code>node_modules</code>、<code>dist</code>、<code>.git</code> 这些目录的结果几乎从来都不是有用的。一个典型的 Node.js 项目，<code>node_modules</code> 中的文件数量可能是源码的 100 倍。不排除这些目录，搜索结果会被噪声淹没。</p>
+<p>find 工具的实现优先使用 <code>fd</code>（如果系统安装了的话），否则回退到 Node.js 的 <code>globSync</code>：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/tools/find.ts:41-46
+export interface FindOperations {
+  exists: (absolutePath: string) =&gt;
+    Promise&lt;boolean&gt; | boolean;
+  glob: (
+    pattern: string,
+    cwd: string,
+    options: { ignore: string[]; limit: number }
+  ) =&gt; Promise&lt;string[]&gt; | string[];
+}
+</code></pre>
+<p><code>fd</code> 是一个 Rust 写的 <code>find</code> 替代品，默认尊重 <code>.gitignore</code>、速度极快。当 <code>fd</code> 可用时，find 工具通过 <code>ensureTool</code> 确保它已安装，然后使用 <code>spawnSync</code> 调用。这是一个"能力增强"的设计 — 核心功能不依赖外部工具，但安装了外部工具后性能更好。</p>
+<h2 id="ripgrep-后端"><a class="header" href="#ripgrep-后端">ripgrep 后端</a></h2>
+<p>grep 工具的后端是 ripgrep（<code>rg</code>）。选择 ripgrep 而非系统 <code>grep</code> 的原因：</p>
+<ol>
+<li><strong>默认尊重 <code>.gitignore</code></strong>。和 <code>fd</code> 一样，不需要额外配置</li>
+<li><strong>速度</strong>。ripgrep 使用 Rust 的 regex crate，在大代码库上比 GNU grep 快数倍</li>
+<li><strong>Unicode 安全</strong>。正确处理 UTF-8 文件，不会因为二进制文件内容导致乱码输出</li>
+<li><strong>单行截断</strong>。ripgrep 可以限制匹配行的最大长度，避免一行 minified JS 消耗大量 context</li>
+</ol>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/tools/truncate.ts:13
+export const GREP_MAX_LINE_LENGTH = 500; // Max chars per grep match line
+</code></pre>
+<p>每条 grep 匹配行被截断到 500 字符。这个限制处理了一个常见的噪声源 — minified 文件中的匹配。一行 50KB 的 minified JavaScript 如果包含搜索词，不加截断就会消耗大量 context 而不提供有用信息。</p>
+<h2 id="结果截断的层次"><a class="header" href="#结果截断的层次">结果截断的层次</a></h2>
+<p>grep 的截断有三个层次，形成递进的保护：</p>
+<p><strong>1. 单行截断</strong>（500 字符）— 防止单个匹配行过长
+<strong>2. 匹配数限制</strong>（默认 100 条）— 防止匹配结果过多
+<strong>3. 总输出截断</strong>（50KB）— 最终的安全网</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/tools/grep.ts:40-44
+export interface GrepToolDetails {
+  truncation?: TruncationResult;
+  matchLimitReached?: number;
+  linesTruncated?: boolean;
+}
+</code></pre>
+<p><code>matchLimitReached</code> 记录了是否因为 limit 而停止搜索。当这个字段有值时，返回给 LLM 的结果会附带提示："搜索在第 N 条结果后停止，可能还有更多匹配。如果需要更多，请增加 limit 参数或缩小搜索范围。"</p>
+<p><code>linesTruncated</code> 标记是否有匹配行被截断。这让 LLM 知道某些匹配行的内容不完整，如果需要完整行可以用 read 工具去读对应文件。</p>
+<h2 id="grepoperations-的可插拔设计"><a class="header" href="#grepoperations-的可插拔设计"><code>GrepOperations</code> 的可插拔设计</a></h2>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/tools/grep.ts:50-55
+export interface GrepOperations {
+  isDirectory: (absolutePath: string) =&gt;
+    Promise&lt;boolean&gt; | boolean;
+  readFile: (absolutePath: string) =&gt;
+    Promise&lt;string&gt; | string;
+}
+</code></pre>
+<p>grep 的 operations 接口比 find 的更简单 — 只需要判断路径类型和读取文件。这是因为 grep 的核心搜索逻辑（ripgrep 调用）在默认实现中处理，远程场景下可能需要完全不同的搜索策略（比如全文搜索引擎而非逐文件 grep）。</p>
+<p>find 和 grep 的 operations 接口都支持同步和异步返回值（<code>Promise&lt;T&gt; | T</code>）。这种灵活性让本地实现可以用同步文件系统调用（更快，无 event loop 开销），远程实现可以用异步调用。</p>
+<h2 id="tui-中的搜索结果展示"><a class="header" href="#tui-中的搜索结果展示">TUI 中的搜索结果展示</a></h2>
+<p>find 结果在 TUI 中按文件路径显示，每条结果一行，超过 10 条后折叠。grep 结果的展示更复杂 — 包含文件路径（作为分组标题）、行号（高亮显示）、匹配行内容（搜索词高亮）。</p>
+<p>两个工具的 TUI 展示都使用了和 read 相同的"默认折叠 + 手动展开"模式。LLM 看到的是完整的截断后结果，用户在 TUI 中看到的是精简预览。</p>
+<h2 id="取舍分析"><a class="header" href="#取舍分析">取舍分析</a></h2>
+<h3 id="得到了什么"><a class="header" href="#得到了什么">得到了什么</a></h3>
+<p><strong>大幅降低搜索出错率</strong>。LLM 不需要拼 shell 命令、不需要记住平台差异、不需要手动排除 node_modules。</p>
+<p><strong>分层截断保护</strong>。从单行截断到匹配数限制到总输出截断，三层保护确保搜索结果永远不会消耗失控的 context。</p>
+<p><strong>性能提升</strong>。ripgrep 和 fd 在大代码库上比系统工具快数倍，这直接转化为 agent 的响应速度提升。</p>
+<h3 id="放弃了什么"><a class="header" href="#放弃了什么">放弃了什么</a></h3>
+<p><strong>多了两个工具增加选择负担</strong>。LLM 需要知道"搜文件名用 find、搜内容用 grep、其他用 bash"。system prompt 中的工具使用指引帮助 LLM 做选择，但对于不熟悉 pi 工具集的 LLM（比如较弱的模型），额外的工具可能导致混淆。</p>
+<p><strong>强制 .gitignore 过滤可能遗漏需要的文件</strong>。如果 LLM 需要搜索 <code>dist/</code> 目录中的构建产物，find 和 grep 都会跳过它。这时 LLM 必须回退到 bash 工具。</p>
+<hr />
+<h3 id="版本演化说明"><a class="header" href="#版本演化说明">版本演化说明</a></h3>
+<blockquote>
+<p>本章核心分析基于 pi-mono v0.66.0。find 和 grep 是较晚从 bash 中分离出来的工具。
+它们的 <code>Operations</code> 接口（和 edit、bash 一样的 pluggable 设计）允许远程执行。
+<code>GREP_MAX_LINE_LENGTH</code> 的 500 字符限制是在实际使用中根据 minified 文件的噪声问题调整的。</p>
+</blockquote>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch22-bash-tool.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="ch24-tui.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch22-bash-tool.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="ch24-tui.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="mermaid.min.js"></script>
+        <script src="mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

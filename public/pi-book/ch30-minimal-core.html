@@ -1,0 +1,429 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>极简核心，能力外置 - pi 的设计艺术：构建生产级 Coding Agent 的架构决策</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/custom.css">
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "ayu" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">pi 的设计艺术：构建生产级 Coding Agent 的架构决策</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/ZhangHanDong/pi-book" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="第-30-章极简核心能力外置"><a class="header" href="#第-30-章极简核心能力外置">第 30 章：极简核心，能力外置</a></h1>
+<blockquote>
+<p><strong>定位</strong>：本章提炼 pi 的核心设计方法论。
+前置依赖：全书前 29 章。
+适用场景：当你想把 pi 的设计经验应用到自己的系统中。</p>
+</blockquote>
+<h2 id="内核只做三件事"><a class="header" href="#内核只做三件事">内核只做三件事</a></h2>
+<p>回顾前面的章节，pi 的内核（pi-ai + pi-agent-core）只做三件事：</p>
+<ol>
+<li><strong>调模型</strong>（第 4-7 章）：统一 20+ 家厂商，流式事件，跨模型消息变换</li>
+<li><strong>跑循环</strong>（第 8-9 章）：无状态的双层循环，三阶段工具执行管道</li>
+<li><strong>管状态</strong>（第 10 章）：有状态的 Agent 壳，事件订阅，消息队列</li>
+</ol>
+<p>其余所有功能 — 会话持久化、上下文压缩、system prompt 装配、工具实现、UI 渲染、配置管理 — 都在内核之外。</p>
+<h3 id="用行数说话"><a class="header" href="#用行数说话">用行数说话</a></h3>
+<p>pi-mono 共约 120,000 行 TypeScript（不含测试和生成代码）。内核的占比很小：</p>
+<div class="table-wrapper"><table><thead><tr><th>包</th><th>行数</th><th>职责</th><th>层级</th></tr></thead><tbody>
+<tr><td>pi-ai</td><td>~26,875</td><td>模型调用、provider 注册、消息变换</td><td>内核</td></tr>
+<tr><td>pi-agent-core</td><td>~1,859</td><td>agent 循环、事件系统、状态管理</td><td>内核</td></tr>
+<tr><td><strong>内核合计</strong></td><td><strong>~28,734</strong></td><td></td><td><strong>24%</strong></td></tr>
+<tr><td>pi-coding-agent</td><td>~42,058</td><td>会话管理、prompt 装配、工具实现、配置</td><td>产品层</td></tr>
+<tr><td>pi-tui</td><td>~10,764</td><td>终端 UI 渲染</td><td>UI 层</td></tr>
+<tr><td>mom</td><td>~4,046</td><td>Slack bot 适配</td><td>产品壳</td></tr>
+<tr><td>pods</td><td>~1,773</td><td>GPU 部署工具</td><td>工具</td></tr>
+<tr><td>web-ui</td><td>~14,623</td><td>Web UI</td><td>UI 层</td></tr>
+</tbody></table>
+</div>
+<p>注意 pi-ai 的行数较多，是因为它包含了 20+ 家 provider 的适配代码（每个 provider 约 200-500 行的流式转换逻辑）。<strong>真正的核心抽象</strong>（<code>StreamFunction</code>、<code>Context</code>、<code>Model</code> 类型、<code>agentLoop</code>、<code>Agent</code> 类）加起来不到 3000 行。</p>
+<p>pi-agent-core 只有 ~1,859 行，是整个 monorepo 中最小的包。但它定义了最关键的协议：agent 循环、事件类型、工具接口、回调钩子。</p>
+<pre><code class="language-mermaid">graph TB
+    subgraph Core["内核 ~3000 行核心抽象"]
+        AI["pi-ai&lt;br/&gt;调模型"]
+        Loop["agent-core&lt;br/&gt;跑循环"]
+        Agent["Agent&lt;br/&gt;管状态"]
+        AI --&gt; Loop --&gt; Agent
+    end
+    
+    subgraph External["外置能力 ~90000 行"]
+        Session["会话树"]
+        Compact["Compaction"]
+        Prompt["Prompt 装配"]
+        Tools["7 个工具"]
+        TUI["终端 UI"]
+        Config["配置系统"]
+        Ext["Extension"]
+        Skill["Skill"]
+    end
+    
+    Agent --&gt;|事件流| Session
+    Agent --&gt;|事件流| TUI
+    Loop --&gt;|回调| Compact
+    Loop --&gt;|回调| Prompt
+    Loop --&gt;|回调| Tools
+    Agent --&gt;|注册| Ext
+    Agent --&gt;|注册| Skill
+    Agent --&gt;|回调| Config
+    
+    style Core fill:#e3f2fd
+    style External fill:#e8f5e9
+</code></pre>
+<p>这种比例（核心 24%，外围 76%）不是偶然的。它反映了一个判断：<strong>agent 系统的核心应该是一个协议（事件流 + 回调），而不是一个框架（内建的功能集合）。</strong></p>
+<h2 id="协议-vs-框架用例子说清楚"><a class="header" href="#协议-vs-框架用例子说清楚">协议 vs 框架：用例子说清楚</a></h2>
+<p>"协议式设计"和"框架式设计"是两种根本不同的架构策略。用具体例子对比：</p>
+<h3 id="例子-1添加一个新工具"><a class="header" href="#例子-1添加一个新工具">例子 1：添加一个新工具</a></h3>
+<p><strong>框架式</strong>（假设的 AgentFramework）：</p>
+<pre><code class="language-typescript">// 框架内建了工具注册系统，你在框架的约束内添加
+class MyAgent extends AgentFramework {
+  @Tool({ name: "search", schema: searchSchema })
+  async search(query: string) {
+    return await doSearch(query);
+  }
+}
+</code></pre>
+<p><strong>协议式</strong>（pi）：</p>
+<pre><code class="language-typescript">// 工具只是一个满足 AgentTool 接口的对象
+const searchTool: AgentTool&lt;typeof searchSchema&gt; = {
+  name: "search",
+  label: "search",
+  description: "Search for matching content",
+  parameters: searchSchema,
+  async execute(_toolCallId, { query }) {
+    return await doSearch(query);
+  },
+};
+// 传入 Agent 的 initialState.tools 即可
+</code></pre>
+<p>区别不在语法糖，而在<strong>控制权</strong>。框架式设计中，工具的生命周期由框架管理（注册、发现、权限检查都内建）。协议式设计中，工具只是一个数据结构，产品层可以自由地创建、组合、替换。</p>
+<h3 id="例子-2实现上下文压缩"><a class="header" href="#例子-2实现上下文压缩">例子 2：实现上下文压缩</a></h3>
+<p><strong>框架式</strong>：</p>
+<pre><code class="language-typescript">// 框架内建了 compaction 策略
+agent.setCompactionStrategy("summarize", {
+  threshold: 100000,
+  model: "claude-haiku",
+});
+</code></pre>
+<p><strong>协议式</strong>（pi）：</p>
+<pre><code class="language-typescript">// transformContext 回调可以做任何事
+const config: AgentLoopConfig = {
+  transformContext: (messages) =&gt; {
+    // 你自己决定压缩策略
+    if (estimateTokens(messages) &gt; threshold) {
+      return compactMessages(messages);
+    }
+    return messages;
+  },
+};
+</code></pre>
+<p>框架式更方便（一行配置），协议式更灵活（可以实现框架没预见到的策略）。</p>
+<h3 id="例子-3多产品复用"><a class="header" href="#例子-3多产品复用">例子 3：多产品复用</a></h3>
+<p>这是协议式设计的杀手级优势。pi 的同一个内核被三个完全不同的产品使用：</p>
+<pre><code>pi CLI（终端 coding agent）
+├── 使用：TUI 渲染、本地文件系统工具、自定义权限钩子
+├── 不使用：Slack API、Docker sandbox
+
+mom（Slack bot）
+├── 使用：Docker sandbox、Slack 消息输出、事件调度
+├── 不使用：TUI、同步确认流、本地工具权限
+
+web-ui（浏览器 IDE）
+├── 使用：浏览器内 Agent 视图、proxy-aware streamFn、IndexedDB 存储
+├── 不使用：TUI、Slack API、Docker sandbox
+</code></pre>
+<p>如果内核是框架式的（内建了 TUI、本地文件工具、权限 popup），mom 和 web-ui 要么 fork 框架，要么在框架上面做大量适配。pi 的协议式内核没有这些假设 — 它只定义"模型怎么调"和"循环怎么跑"，产品层自行决定其余一切。</p>
+<h2 id="与竞品的架构对比"><a class="header" href="#与竞品的架构对比">与竞品的架构对比</a></h2>
+<p>以下对比是<strong>结构性的</strong>（架构选择），不是<strong>评价性的</strong>（孰优孰劣）。每种选择都有其适用场景。</p>
+<h3 id="claude-code"><a class="header" href="#claude-code">Claude Code</a></h3>
+<p>Claude Code 是 Anthropic 官方的 CLI agent。架构对比：</p>
+<div class="table-wrapper"><table><thead><tr><th>维度</th><th>pi</th><th>Claude Code</th></tr></thead><tbody>
+<tr><td>模型层</td><td>多 provider 抽象</td><td>单一 Anthropic API</td></tr>
+<tr><td>循环引擎</td><td>可组合纯函数（agentLoop）</td><td>内建循环 + 工具管理</td></tr>
+<tr><td>工具系统</td><td>外置，通过接口注入</td><td>内建标准工具集</td></tr>
+<tr><td>扩展机制</td><td>Extension API + Skill</td><td>Slash command + CLAUDE.md</td></tr>
+<tr><td>会话管理</td><td>外置 SessionManager</td><td>内建会话持久化</td></tr>
+<tr><td>UI 层</td><td>独立的 pi-tui 包</td><td>内建终端 UI</td></tr>
+<tr><td>多产品</td><td>CLI / Slack / Web</td><td>CLI 为主，headless 模式</td></tr>
+</tbody></table>
+</div>
+<p>关键差异：Claude Code 是<strong>单一产品优化</strong>的设计 — 它只需要支持一个 provider（Anthropic）、一个 UI（终端）、一组工具。这让它可以把更多功能内建，降低上手成本。pi 是<strong>多产品基座</strong>的设计 — 它需要支持多个 provider、多个 UI、多个产品形态，所以必须把更多东西外置。</p>
+<h3 id="cursor--windsurfide-agent"><a class="header" href="#cursor--windsurfide-agent">Cursor / Windsurf（IDE Agent）</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>维度</th><th>pi</th><th>IDE Agent（Cursor 类）</th></tr></thead><tbody>
+<tr><td>宿主</td><td>独立进程</td><td>IDE 插件（VS Code extension）</td></tr>
+<tr><td>编辑操作</td><td>工具调用 → Edit/Write</td><td>直接操作 IDE API</td></tr>
+<tr><td>上下文</td><td>手动管理（transformContext）</td><td>IDE 提供语义索引</td></tr>
+<tr><td>文件导航</td><td>Glob/Grep 工具</td><td>LSP + 语义搜索</td></tr>
+<tr><td>多模型</td><td>用户可切换</td><td>内建路由（不同任务用不同模型）</td></tr>
+</tbody></table>
+</div>
+<p>关键差异：IDE agent 有一个巨大优势 — IDE 本身就是上下文源（打开的文件、编辑历史、语言服务器）。pi 作为独立进程，需要通过工具（Glob、Grep、Read）来获取这些信息。但 pi 的独立性也意味着它不受 IDE 限制 — 可以在 Slack、Web、CI/CD 中运行。</p>
+<h3 id="aider"><a class="header" href="#aider">Aider</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>维度</th><th>pi</th><th>Aider</th></tr></thead><tbody>
+<tr><td>语言</td><td>TypeScript</td><td>Python</td></tr>
+<tr><td>编辑策略</td><td>LLM 生成 edit/write 工具调用</td><td>LLM 生成 unified diff</td></tr>
+<tr><td>循环模型</td><td>通用 agent 循环</td><td>专注于 code edit 循环</td></tr>
+<tr><td>Git 集成</td><td>通过 bash 工具</td><td>内建 git 操作</td></tr>
+<tr><td>上下文管理</td><td>手动 + transformContext</td><td>Repo map + 文件标签</td></tr>
+</tbody></table>
+</div>
+<p>关键差异：Aider 是<strong>垂直整合</strong>的 coding assistant — git、diff、编辑、测试一体化。pi 是<strong>水平分层</strong>的 agent 基座 — coding 只是其中一个用例。Aider 在纯代码编辑场景中更高效（diff 策略比 tool call 更节省 tokens），但 pi 的通用循环可以做 Aider 做不到的事（Slack bot、自动化管道等）。</p>
+<h2 id="不内建的判断标准"><a class="header" href="#不内建的判断标准">"不内建"的判断标准</a></h2>
+<p>pi 如何决定一个功能是内建还是外置？有三个判断标准：</p>
+<h3 id="1-这个功能是否产品相关"><a class="header" href="#1-这个功能是否产品相关">1. 这个功能是否产品相关？</a></h3>
+<p>如果功能的实现取决于产品形态，就应该外置。</p>
+<ul>
+<li><strong>权限确认</strong>：CLI 弹终端 popup，Slack 发消息让用户回复，Web 弹 modal → <strong>外置</strong></li>
+<li><strong>工具执行</strong>：CLI 在本地执行，mom 在 Docker 中执行 → <strong>外置</strong></li>
+<li><strong>输出渲染</strong>：CLI 用 TUI，Slack 用 mrkdwn，Web 用 HTML → <strong>外置</strong></li>
+<li><strong>流式事件格式</strong>：所有产品都需要相同的事件流 → <strong>内建</strong></li>
+</ul>
+<h3 id="2-这个功能是否有多种合理实现"><a class="header" href="#2-这个功能是否有多种合理实现">2. 这个功能是否有多种合理实现？</a></h3>
+<p>如果功能有多种同样合理的实现方式，就应该外置为回调或接口。</p>
+<ul>
+<li><strong>compaction 策略</strong>：可以用 LLM 总结、可以按时间截断、可以按 token 预算裁剪 → <strong>外置</strong>为 <code>on("session_before_compact", ...)</code> 钩子</li>
+<li><strong>上下文变换</strong>：可以注入 plan 指令、可以过滤历史、可以动态切换模型 → <strong>外置</strong>为 <code>transformContext</code> 回调</li>
+<li><strong>消息序列化</strong>：每个 LLM 的消息格式不同 → <strong>内建</strong>在 provider 层统一处理</li>
+</ul>
+<h3 id="3-这个功能是否需要系统级别的一致性"><a class="header" href="#3-这个功能是否需要系统级别的一致性">3. 这个功能是否需要系统级别的一致性？</a></h3>
+<p>如果功能的不一致会导致系统行为不可预测，就应该内建。</p>
+<ul>
+<li><strong>事件类型</strong>：所有组件必须用相同的事件定义 → <strong>内建</strong></li>
+<li><strong>工具执行管道</strong>：prepare/execute/finalize 三阶段必须统一 → <strong>内建</strong></li>
+<li><strong>工具的具体 schema</strong>：不同工具有不同参数 → <strong>外置</strong></li>
+</ul>
+<h2 id="与竞品的设计对比决策矩阵"><a class="header" href="#与竞品的设计对比决策矩阵">与竞品的设计对比（决策矩阵）</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>设计维度</th><th>pi</th><th>典型框架式 Agent</th></tr></thead><tbody>
+<tr><td>Sub-agents</td><td>不内建，用 tool call 组合</td><td>内建 multi-agent orchestration</td></tr>
+<tr><td>权限控制</td><td>beforeToolCall 钩子</td><td>内建 permission popup</td></tr>
+<tr><td>Plan mode</td><td>transformContext 组合</td><td>内建 plan/execute 模式</td></tr>
+<tr><td>会话存储</td><td>SessionManager（产品层）</td><td>内建 memory store</td></tr>
+<tr><td>Prompt 管理</td><td>AGENTS.md + skills</td><td>内建 prompt registry</td></tr>
+<tr><td>模型路由</td><td>产品层选择 model</td><td>内建 model router</td></tr>
+<tr><td>错误恢复</td><td>产品层实现 retry</td><td>内建 retry + fallback</td></tr>
+<tr><td>可观测性</td><td>事件流 + 订阅</td><td>内建 tracing/logging</td></tr>
+</tbody></table>
+</div>
+<p>pi 的每个"不内建"都对应一个"用更底层的机制组合出来"。不是没想到，是故意没做。</p>
+<h2 id="极简核心的代价"><a class="header" href="#极简核心的代价">极简核心的代价</a></h2>
+<p>诚实地说，极简核心不是没有代价：</p>
+<p><strong>上手成本高</strong>。新用户面对的是"洋葱架构" — pi-ai、pi-agent-core、pi-coding-agent、pi-tui 四层，每层有自己的类型和回调。理解一个"消息从用户输入到模型回复"的完整路径，需要穿越所有四层。</p>
+<p><strong>重复劳动</strong>。不同的产品壳（CLI、mom、web-ui）各自实现了类似的功能（session 加载、system prompt 构建、工具权限）。虽然它们各有差异，但重复的部分不小。</p>
+<p><strong>文档负担</strong>。内建功能可以在框架文档中一次性说明。外置功能需要每个产品各自文档化其组合方式。</p>
+<p><strong>调试困难</strong>。bug 可能出现在内核、产品层、或两者的交互中。分层越多，追踪问题的路径越长。</p>
+<p>这些代价是 pi 为多产品适应性付出的"税"。对于只需要单一产品的团队，框架式设计可能是更好的选择。</p>
+<h2 id="取舍分析"><a class="header" href="#取舍分析">取舍分析</a></h2>
+<h3 id="得到了什么"><a class="header" href="#得到了什么">得到了什么</a></h3>
+<p><strong>极致的适应性</strong>。同一个内核跑在终端（pi CLI）、Slack（mom）、浏览器（pi-web-ui）、GPU 集群（pods）。每个产品只需要实现自己需要的"壳"。内核的 24% 代码驱动了 100% 的产品形态。</p>
+<p><strong>长期可维护性</strong>。内核的变化不影响产品层（只要协议不变）。产品层的变化不影响内核。这种解耦在 monorepo 中已经得到验证 — mom 和 web-ui 可以独立演进，不需要协调内核修改。</p>
+<h3 id="放弃了什么"><a class="header" href="#放弃了什么">放弃了什么</a></h3>
+<p><strong>上手成本</strong>。用户需要理解"洋葱架构"的每一层才能有效使用 pi。没有"开箱即用"的体验 — 你要么接受默认配置，要么深入理解系统才能定制。</p>
+<p><strong>开发速度</strong>。在框架式系统中，添加一个新功能可能只需要调一个 API。在 pi 中，你可能需要理解三层的交互才能找到正确的注入点。</p>
+<hr />
+<h3 id="版本演化说明"><a class="header" href="#版本演化说明">版本演化说明</a></h3>
+<blockquote>
+<p>本章核心分析基于 pi-mono v0.66.0 的架构快照。
+极简核心的设计哲学从 pi 的第一个版本就确立了，后续版本只是在不扩大内核的前提下
+通过 extension、skill、回调等机制添加新能力。行数统计可能随版本变化，
+但内核与外围的比例预计保持稳定。</p>
+</blockquote>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch29-pods-gpu.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="ch31-contrarian-choices.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch29-pods-gpu.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="ch31-contrarian-choices.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="mermaid.min.js"></script>
+        <script src="mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

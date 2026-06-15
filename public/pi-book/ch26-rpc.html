@@ -1,0 +1,436 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>RPC 模式 — pi 作为后端服务 - pi 的设计艺术：构建生产级 Coding Agent 的架构决策</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/custom.css">
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "ayu" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">pi 的设计艺术：构建生产级 Coding Agent 的架构决策</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/ZhangHanDong/pi-book" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="第-26-章rpc-模式--pi-作为后端服务"><a class="header" href="#第-26-章rpc-模式--pi-作为后端服务">第 26 章：RPC 模式 — pi 作为后端服务</a></h1>
+<blockquote>
+<p><strong>定位</strong>：本章解析 pi 的 RPC 模式 — 让 CLI 工具可以被其他进程驱动。
+前置依赖：第 10 章（Agent 类）。
+适用场景：当你想把 pi 集成到 IDE 插件、Web 前端或自动化管道中。</p>
+</blockquote>
+<h2 id="为什么-cli-工具需要-rpc-模式"><a class="header" href="#为什么-cli-工具需要-rpc-模式">为什么 CLI 工具需要 RPC 模式？</a></h2>
+<p>pi 的主要界面是终端 TUI（第 24 章）。但有些场景不需要终端交互：</p>
+<ul>
+<li><strong>IDE 插件</strong>：VS Code extension 需要通过进程间通信驱动 pi</li>
+<li><strong>Web 前端</strong>：浏览器客户端需要通过 HTTP 或 WebSocket 驱动 pi</li>
+<li><strong>自动化管道</strong>：CI/CD 脚本需要非交互式地使用 pi</li>
+</ul>
+<p>RPC 模式（<code>packages/coding-agent/src/modes/rpc/</code>）提供了一个 JSON-L 协议，让外部进程可以：</p>
+<ol>
+<li>发送 prompt 和 steer/follow-up 请求</li>
+<li>接收流式事件（和 Agent 事件一一对应）</li>
+<li>切换模型、调整 thinking level</li>
+<li>管理会话（创建、切换、fork、导出）</li>
+</ol>
+<pre><code class="language-mermaid">graph LR
+    IDE["IDE 插件\n(进程 A)"] --&gt;|"JSON-L stdin"| RPC["pi --mode rpc\n(进程 B)"]
+    RPC --&gt;|"JSON-L stdout"| IDE
+    RPC --&gt; Agent["Agent"]
+    Agent --&gt; Loop["agentLoop"]
+    
+    style IDE fill:#e3f2fd
+    style RPC fill:#fff3e0
+</code></pre>
+<p>RPC 模式和 interactive 模式共享同一个 Agent 实例（第 10 章）。不同的只是事件的消费方式 — interactive 模式渲染到终端，RPC 模式序列化成 JSON-L 输出到 stdout。</p>
+<h2 id="协议设计json-lines-over-stdio"><a class="header" href="#协议设计json-lines-over-stdio">协议设计：JSON Lines over stdio</a></h2>
+<p>RPC 使用 JSON Lines 协议 — 每条消息是一行 JSON，以换行符分隔。选择 JSON-L over stdio 而非 HTTP/WebSocket 的理由：</p>
+<ol>
+<li><strong>零配置</strong>。不需要端口分配、不需要 TLS、不需要服务发现</li>
+<li><strong>进程生命周期绑定</strong>。父进程退出时子进程的 stdin 关闭，RPC 会话自然终止</li>
+<li><strong>双向通信</strong>。stdin 发命令，stdout 收响应和事件</li>
+<li><strong>调试友好</strong>。JSON Lines 可以用 <code>jq</code> 解析，管道可以用 <code>tee</code> 录制</li>
+</ol>
+<h2 id="rpc-命令类型"><a class="header" href="#rpc-命令类型">RPC 命令类型</a></h2>
+<p>命令通过 stdin 发送，每条命令是一个 JSON 对象，必须包含 <code>type</code> 字段：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/modes/rpc/rpc-types.ts:19-68
+export type RpcCommand =
+  // Prompting
+  | { id?: string; type: "prompt"; message: string;
+      images?: ImageContent[];
+      streamingBehavior?: "steer" | "followUp" }
+  | { id?: string; type: "steer"; message: string;
+      images?: ImageContent[] }
+  | { id?: string; type: "follow_up"; message: string;
+      images?: ImageContent[] }
+  | { id?: string; type: "abort" }
+  | { id?: string; type: "new_session";
+      parentSession?: string }
+
+  // Model
+  | { id?: string; type: "set_model";
+      provider: string; modelId: string }
+  | { id?: string; type: "cycle_model" }
+  | { id?: string; type: "get_available_models" }
+
+  // Thinking
+  | { id?: string; type: "set_thinking_level";
+      level: ThinkingLevel }
+
+  // Session
+  | { id?: string; type: "get_session_stats" }
+  | { id?: string; type: "export_html";
+      outputPath?: string }
+  | { id?: string; type: "fork"; entryId: string }
+  | { id?: string; type: "get_messages" }
+
+  // ... 更多命令类型
+</code></pre>
+<p>几个设计要点：</p>
+<p><strong><code>id</code> 是可选的</strong>。客户端可以为每条命令指定一个 correlation ID，响应会带上同一个 ID，让客户端可以匹配请求和响应。对于不需要匹配的场景（比如 fire-and-forget 的 abort），可以省略 ID。</p>
+<p><strong>prompt 的三种变体</strong>。<code>prompt</code> 是标准请求；<code>steer</code> 在 agent 思考过程中插入修正；<code>follow_up</code> 在 agent 完成后追加问题。这三种操作对应 Agent API 中不同的消息队列，RPC 直接暴露了这个区分。</p>
+<p><strong><code>streamingBehavior</code></strong>。<code>prompt</code> 命令可以指定 <code>streamingBehavior: "steer"</code> 或 <code>"followUp"</code>，让客户端控制当 agent 正在处理时新消息应该进入哪个队列。这和 interactive 模式中的"用户在 agent 思考时输入新消息"是同一个语义。</p>
+<h2 id="rpc-响应类型"><a class="header" href="#rpc-响应类型">RPC 响应类型</a></h2>
+<p>响应通过 stdout 发送，所有响应共享统一的信封格式：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/modes/rpc/rpc-types.ts:110-204
+export type RpcResponse =
+  // 成功响应 (部分)
+  | { id?: string; type: "response"; command: "prompt";
+      success: true }
+  | { id?: string; type: "response"; command: "get_state";
+      success: true; data: RpcSessionState }
+  | { id?: string; type: "response"; command: "set_model";
+      success: true; data: Model&lt;any&gt; }
+  | { id?: string; type: "response"; command: "bash";
+      success: true; data: BashResult }
+  | { id?: string; type: "response"; command: "get_messages";
+      success: true; data: { messages: AgentMessage[] } }
+
+  // 错误响应 (任何命令都可能失败)
+  | { id?: string; type: "response"; command: string;
+      success: false; error: string };
+</code></pre>
+<p>响应的 TypeScript 类型是一个 discriminated union — 每种命令有自己的成功响应类型（带不同的 <code>data</code> 结构），但所有命令共享同一个错误响应类型。这让客户端可以先检查 <code>success</code> 字段，再根据 <code>command</code> 字段解析 <code>data</code>。</p>
+<p><strong>异步命令和同步命令的区别</strong>。<code>prompt</code>、<code>steer</code>、<code>follow_up</code> 的成功响应不包含 data — 因为这些操作是异步的，真正的结果通过后续的事件流（AgentSessionEvent）传递。<code>get_state</code>、<code>get_messages</code> 是同步查询，结果直接在响应的 <code>data</code> 中返回。</p>
+<h2 id="会话状态"><a class="header" href="#会话状态">会话状态</a></h2>
+<pre><code class="language-typescript">// packages/coding-agent/src/modes/rpc/rpc-types.ts:90-103
+export interface RpcSessionState {
+  model?: Model&lt;any&gt;;
+  thinkingLevel: ThinkingLevel;
+  isStreaming: boolean;
+  isCompacting: boolean;
+  steeringMode: "all" | "one-at-a-time";
+  followUpMode: "all" | "one-at-a-time";
+  sessionFile?: string;
+  sessionId: string;
+  sessionName?: string;
+  autoCompactionEnabled: boolean;
+  messageCount: number;
+  pendingMessageCount: number;
+}
+</code></pre>
+<p><code>RpcSessionState</code> 是 RPC 客户端了解 agent 状态的主要手段。通过 <code>get_state</code> 命令获取，包含了 UI 渲染需要的全部信息：当前模型、是否在流式输出、队列中有多少待处理消息。</p>
+<p><code>steeringMode</code> 和 <code>followUpMode</code> 控制消息队列的行为：<code>"all"</code> 表示累积所有消息一起处理，<code>"one-at-a-time"</code> 表示逐条处理。这影响了 IDE 插件的 UX 设计 — 如果用户快速发送多条消息，客户端可以选择是让它们排队还是合并。</p>
+<h2 id="会话管理"><a class="header" href="#会话管理">会话管理</a></h2>
+<p>RPC 提供了完整的会话管理能力：</p>
+<ul>
+<li><strong><code>new_session</code></strong>：创建新会话，可选地从指定父会话继承上下文</li>
+<li><strong><code>switch_session</code></strong>：切换到已有会话</li>
+<li><strong><code>fork</code></strong>：从指定消息处分叉对话（类似 git branch）</li>
+<li><strong><code>get_fork_messages</code></strong>：获取可用于 fork 的消息列表</li>
+<li><strong><code>export_html</code></strong>：导出当前会话为 HTML 文件</li>
+<li><strong><code>set_session_name</code></strong>：给会话命名</li>
+</ul>
+<p><code>fork</code> 操作是一个高级功能 — 用户可以回到对话中的某个节点，从那里开始新的对话分支。这在 interactive 模式中通过 TUI 交互实现，在 RPC 模式中通过 <code>fork</code> 命令 + <code>entryId</code> 参数实现。<code>get_fork_messages</code> 返回可 fork 的消息列表和它们的 ID。</p>
+<h2 id="extension-ui-桥接"><a class="header" href="#extension-ui-桥接">Extension UI 桥接</a></h2>
+<p>RPC 模式需要处理一个特殊问题：extension 的 UI 交互。在 interactive 模式中，extension 通过 UI context 的 <code>select()</code>、<code>confirm()</code>、<code>input()</code>、<code>notify()</code>、<code>setStatus()</code>、<code>editor()</code> 等方法与用户交互。但 RPC 模式没有 TUI — 这些交互需要被序列化为 JSON 请求，发送给 RPC 客户端处理。</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/modes/rpc/rpc-types.ts:211-246
+export type RpcExtensionUIRequest =
+  | { type: "extension_ui_request"; id: string;
+      method: "select"; title: string;
+      options: string[]; timeout?: number }
+  | { type: "extension_ui_request"; id: string;
+      method: "confirm"; title: string;
+      message: string; timeout?: number }
+  | { type: "extension_ui_request"; id: string;
+      method: "input"; title: string;
+      placeholder?: string; timeout?: number }
+  | { type: "extension_ui_request"; id: string;
+      method: "editor"; title: string;
+      prefill?: string }
+  | { type: "extension_ui_request"; id: string;
+      method: "notify"; message: string;
+      notifyType?: "info" | "warning" | "error" }
+  | { type: "extension_ui_request"; id: string;
+      method: "setStatus"; statusKey: string;
+      statusText: string | undefined }
+  | { type: "extension_ui_request"; id: string;
+      method: "setWidget"; widgetKey: string;
+      widgetLines: string[] | undefined }
+  | { type: "extension_ui_request"; id: string;
+      method: "set_editor_text"; text: string }
+</code></pre>
+<p>流程是：extension 发起 UI 请求 → RPC 层序列化为 <code>RpcExtensionUIRequest</code> 输出到 stdout → 客户端展示 UI → 客户端发送 <code>RpcExtensionUIResponse</code> 到 stdin → RPC 层传回 extension。</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/modes/rpc/rpc-types.ts:253-256
+export type RpcExtensionUIResponse =
+  | { type: "extension_ui_response"; id: string;
+      value: string }
+  | { type: "extension_ui_response"; id: string;
+      confirmed: boolean }
+  | { type: "extension_ui_response"; id: string;
+      cancelled: true };
+</code></pre>
+<p>这是一个完整的 UI 代理模式 — extension 不知道也不关心 UI 是在终端还是在浏览器中渲染的。</p>
+<h2 id="rpc-模式的启动"><a class="header" href="#rpc-模式的启动">RPC 模式的启动</a></h2>
+<pre><code class="language-typescript">// packages/coding-agent/src/modes/rpc/rpc-mode.ts:46-53
+export async function runRpcMode(
+  runtimeHost: AgentSessionRuntime
+): Promise&lt;never&gt; {
+  takeOverStdout();
+  let session = runtimeHost.session;
+  let unsubscribe: (() =&gt; void) | undefined;
+
+  const output = (
+    obj: RpcResponse | RpcExtensionUIRequest | object
+  ) =&gt; {
+    writeRawStdout(serializeJsonLine(obj));
+  };
+</code></pre>
+<p><code>takeOverStdout()</code> 劫持了 <code>console.log</code> 和 <code>process.stdout.write</code>，防止其他代码意外向 stdout 写入非 JSON 内容。这是 RPC 模式的核心防御 — stdout 是协议通道，任何非 JSON 输出都会破坏客户端的解析。</p>
+<p><code>writeRawStdout</code> 绕过了劫持层直接写入 stdout。只有 RPC 层自己可以往 stdout 写数据。</p>
+<h2 id="pending-extension-requests"><a class="header" href="#pending-extension-requests">Pending Extension Requests</a></h2>
+<pre><code class="language-typescript">// packages/coding-agent/src/modes/rpc/rpc-mode.ts:71-74
+const pendingExtensionRequests = new Map&lt;
+  string,
+  { resolve: (value: any) =&gt; void;
+    reject: (error: Error) =&gt; void }
+&gt;();
+</code></pre>
+<p>Extension UI 请求是异步的 — RPC 层发送请求后需要等待客户端响应。<code>pendingExtensionRequests</code> Map 以请求 ID 为 key 保存了 Promise 的 resolve/reject 回调。当客户端的 <code>extension_ui_response</code> 到达时，查找对应的 pending request 并 resolve。</p>
+<p>这个 Map 也处理了超时和取消 — 如果 extension 设置了 timeout，超时后 pending request 会被 reject；如果客户端发送 <code>cancelled: true</code>，request 也会被相应处理。</p>
+<h2 id="agent-api-到-rpc-的映射"><a class="header" href="#agent-api-到-rpc-的映射">Agent API 到 RPC 的映射</a></h2>
+<p>RPC 命令和 Agent API 的对应关系：</p>
+<div class="table-wrapper"><table><thead><tr><th>RPC Command</th><th>Agent API</th></tr></thead><tbody>
+<tr><td><code>prompt</code></td><td><code>session.prompt()</code></td></tr>
+<tr><td><code>steer</code></td><td><code>session.steer()</code></td></tr>
+<tr><td><code>follow_up</code></td><td><code>session.followUp()</code></td></tr>
+<tr><td><code>abort</code></td><td><code>session.abort()</code></td></tr>
+<tr><td><code>set_model</code></td><td><code>session.setModel()</code></td></tr>
+<tr><td><code>compact</code></td><td><code>session.compact()</code></td></tr>
+<tr><td><code>get_messages</code></td><td><code>session.getMessages()</code></td></tr>
+<tr><td><code>bash</code></td><td>direct bash execution</td></tr>
+<tr><td><code>fork</code></td><td><code>session.fork()</code></td></tr>
+</tbody></table>
+</div>
+<p>这个映射几乎是一对一的。RPC 层不添加业务逻辑 — 它只做序列化/反序列化和 stdout 保护。这种薄层设计让 RPC 的行为和 interactive 模式完全一致。</p>
+<h2 id="取舍分析"><a class="header" href="#取舍分析">取舍分析</a></h2>
+<h3 id="得到了什么"><a class="header" href="#得到了什么">得到了什么</a></h3>
+<p><strong>pi 可以被任何前端驱动</strong>。同一个 agent 内核，终端用户通过 TUI 交互，IDE 用户通过 RPC 交互。代码复用，行为一致。</p>
+<p><strong>Extension UI 的透明代理</strong>。Extension 不需要为不同的 UI 后端写不同的代码 — RPC 层自动桥接 UI 交互。</p>
+<h3 id="放弃了什么"><a class="header" href="#放弃了什么">放弃了什么</a></h3>
+<p><strong>增加了一个运行模式的维护成本</strong>。RPC 协议需要版本管理、backward compatibility、错误序列化。每次 Agent API 变化，RPC 层都需要同步更新。</p>
+<p><strong>stdout 污染是隐蔽的 bug 源</strong>。任何第三方库的 <code>console.log</code> 都可能破坏 RPC 协议。<code>takeOverStdout</code> 是必要的防御，但它也让调试变得更困难 — 你不能用 <code>console.log</code> 来 debug RPC 模式。</p>
+<hr />
+<h3 id="版本演化说明"><a class="header" href="#版本演化说明">版本演化说明</a></h3>
+<blockquote>
+<p>本章核心分析基于 pi-mono v0.66.0。RPC 模式为 IDE 集成而创建，
+支持的操作类型随 IDE 插件的需求不断扩展。Extension UI 桥接
+是较晚添加的能力，早期版本的 RPC 不支持 extension 的 UI 交互。</p>
+</blockquote>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch25-editor.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="ch27-web-ui.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch25-editor.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="ch27-web-ui.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="mermaid.min.js"></script>
+        <script src="mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

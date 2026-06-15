@@ -1,0 +1,443 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>pods — 为什么这个仓库还要管 GPU - pi 的设计艺术：构建生产级 Coding Agent 的架构决策</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/custom.css">
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "ayu" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">pi 的设计艺术：构建生产级 Coding Agent 的架构决策</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/ZhangHanDong/pi-book" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="第-29-章pods--为什么这个仓库还要管-gpu"><a class="header" href="#第-29-章pods--为什么这个仓库还要管-gpu">第 29 章：<code>pods</code> — 为什么这个仓库还要管 GPU</a></h1>
+<blockquote>
+<p><strong>定位</strong>：本章解释 pi-mono 为什么同时覆盖"模型供给侧"和"代理消费侧"。
+前置依赖：第 4 章（Provider Registry）。
+适用场景：当你想理解端到端 agent 系统为什么需要管模型部署。</p>
+</blockquote>
+<h2 id="端到端可控"><a class="header" href="#端到端可控">端到端可控</a></h2>
+<p>pods 是 pi-mono 中最"奇怪"的包 — 一个 coding agent 的仓库为什么要管 GPU pod 编排和 vLLM 部署？</p>
+<p>答案是<strong>端到端可控</strong>。如果 agent 只依赖第三方 API（OpenAI、Anthropic），那么模型的可用性、延迟、成本都不在自己掌控中。pods 让用户可以在 DataCrunch、RunPod、Vast.ai 等平台上部署自己的 vLLM 实例，暴露 OpenAI-compatible endpoint。部署完成后，用户在 pi 的 <code>models.json</code> 中配置自定义模型（指定 <code>baseUrl</code> 指向 pod 的 endpoint），pi 通过已有的 <code>openai-responses</code> 或 <code>openai-completions</code> API provider（第 4 章）即可调用 — pods 本身不注册新 provider，它只负责让 endpoint 可用。</p>
+<p>pods 的代码量很小（~1773 行），功能也很聚焦：SSH 配置 GPU 机器、启动/停止 vLLM、管理模型权重。它不是一个通用的 GPU 编排系统，而是一个让 pi 用户快速获得自有模型推理能力的快捷方式。</p>
+<h2 id="podstspod-管理命令"><a class="header" href="#podstspod-管理命令">pods.ts：Pod 管理命令</a></h2>
+<p>pods 的命令结构很直接。<code>pods.ts</code> 提供四个操作：</p>
+<pre><code class="language-typescript">// packages/pods/src/commands/pods.ts:14-39
+export const listPods = () =&gt; {
+  const config = loadConfig();
+  const podNames = Object.keys(config.pods);
+  if (podNames.length === 0) {
+    console.log("No pods configured. Use 'pi pods setup' to add.");
+    return;
+  }
+  for (const name of podNames) {
+    const pod = config.pods[name];
+    const isActive = config.active === name;
+    const marker = isActive ? chalk.green("*") : " ";
+    const gpuCount = pod.gpus?.length || 0;
+    const gpuInfo = gpuCount &gt; 0
+      ? `${gpuCount}x ${pod.gpus[0].name}` : "no GPUs detected";
+    console.log(`${marker} ${chalk.bold(name)} - ${gpuInfo} - ${pod.ssh}`);
+  }
+};
+</code></pre>
+<p>完整命令清单：</p>
+<div class="table-wrapper"><table><thead><tr><th>命令</th><th>函数</th><th>作用</th></tr></thead><tbody>
+<tr><td><code>pi pods list</code></td><td><code>listPods()</code></td><td>列出所有 pod，标记 active</td></tr>
+<tr><td><code>pi pods setup &lt;name&gt; &lt;ssh&gt;</code></td><td><code>setupPod()</code></td><td>配置新 pod（SSH + 环境安装）</td></tr>
+<tr><td><code>pi pods switch &lt;name&gt;</code></td><td><code>switchActivePod()</code></td><td>切换 active pod</td></tr>
+<tr><td><code>pi pods remove &lt;name&gt;</code></td><td><code>removePodCommand()</code></td><td>从配置中移除 pod</td></tr>
+</tbody></table>
+</div>
+<p>以及 <code>models.ts</code> 中的模型管理命令：</p>
+<div class="table-wrapper"><table><thead><tr><th>命令</th><th>函数</th><th>作用</th></tr></thead><tbody>
+<tr><td><code>pi start &lt;model&gt;</code></td><td><code>startModel()</code></td><td>启动 vLLM 实例</td></tr>
+<tr><td><code>pi stop &lt;name&gt;</code></td><td><code>stopModel()</code></td><td>停止模型</td></tr>
+<tr><td><code>pi stop --all</code></td><td><code>stopAllModels()</code></td><td>停止所有模型</td></tr>
+<tr><td><code>pi models</code></td><td><code>listModels()</code></td><td>列出运行中的模型</td></tr>
+<tr><td><code>pi logs &lt;name&gt;</code></td><td><code>viewLogs()</code></td><td>查看 vLLM 日志</td></tr>
+<tr><td><code>pi models known</code></td><td><code>showKnownModels()</code></td><td>列出预配置的模型</td></tr>
+</tbody></table>
+</div>
+<h2 id="ssh-setup-flow从零到可用"><a class="header" href="#ssh-setup-flow从零到可用">SSH Setup Flow：从零到可用</a></h2>
+<p><code>setupPod()</code> 是最复杂的命令，它自动化了 GPU 机器的完整配置流程：</p>
+<pre><code class="language-typescript">// packages/pods/src/commands/pods.ts:44-172
+export const setupPod = async (
+  name: string,
+  sshCmd: string,
+  options: {
+    mount?: string;
+    modelsPath?: string;
+    vllm?: "release" | "nightly" | "gpt-oss"
+  },
+) =&gt; {
+  // 1. 验证环境变量
+  const hfToken = process.env.HF_TOKEN;
+  const vllmApiKey = process.env.PI_API_KEY;
+  if (!hfToken) { /* 提示用户设置 HF_TOKEN */ }
+  if (!vllmApiKey) { /* 提示用户设置 PI_API_KEY */ }
+
+  // 2. 测试 SSH 连接
+  const testResult = await sshExec(sshCmd, "echo 'SSH OK'");
+
+  // 3. 复制安装脚本到远程机器
+  const scriptPath = join(__dirname, "../../scripts/pod_setup.sh");
+  await scpFile(sshCmd, scriptPath, "/tmp/pod_setup.sh");
+
+  // 4. 远程执行安装脚本（2-5 分钟）
+  let setupCmd = `bash /tmp/pod_setup.sh ` +
+    `--models-path '${modelsPath}' ` +
+    `--hf-token '${hfToken}' ` +
+    `--vllm-api-key '${vllmApiKey}'`;
+  await sshExecStream(sshCmd, setupCmd, { forceTTY: true });
+
+  // 5. 检测 GPU 配置
+  const gpuResult = await sshExec(sshCmd,
+    "nvidia-smi --query-gpu=index,name,memory.total " +
+    "--format=csv,noheader");
+  // 解析 GPU 信息...
+
+  // 6. 保存 pod 配置
+  addPod(name, { ssh: sshCmd, gpus, models: {}, modelsPath });
+};
+</code></pre>
+<p>整个流程的设计思路是<strong>一条命令完成所有事</strong>：</p>
+<ol>
+<li><strong>环境变量检查</strong>。HF_TOKEN（Hugging Face 下载模型权重）和 PI_API_KEY（vLLM 端点认证）是必需的</li>
+<li><strong>SSH 连通性测试</strong>。在开始耗时操作前先确认连接可用</li>
+<li><strong>SCP 脚本传输</strong>。用 <code>pod_setup.sh</code> 在远程机器上安装 Python、CUDA 工具链、vLLM</li>
+<li><strong>流式输出</strong>。<code>sshExecStream</code> 带 <code>forceTTY: true</code>，让用户看到安装进度</li>
+<li><strong>GPU 自动检测</strong>。通过 <code>nvidia-smi</code> 获取 GPU 数量、型号、显存</li>
+<li><strong>配置持久化</strong>。保存到本地 <code>~/.pi/pods.json</code>，后续操作引用</li>
+</ol>
+<h3 id="ssh-抽象层"><a class="header" href="#ssh-抽象层">SSH 抽象层</a></h3>
+<p>pods 没有使用任何 SSH 库 — 它直接调用系统的 <code>ssh</code> 和 <code>scp</code> 命令：</p>
+<pre><code class="language-typescript">// packages/pods/src/ssh.ts:12-68
+export const sshExec = async (
+  sshCmd: string,   // 如 "ssh user@host"
+  command: string,  // 要执行的远程命令
+): Promise&lt;{ stdout: string; stderr: string; exitCode: number }&gt;
+
+export const sshExecStream = async (
+  sshCmd: string,
+  command: string,
+  options?: { forceTTY?: boolean },
+): Promise&lt;number&gt;  // 返回 exit code
+
+export const scpFile = async (
+  sshCmd: string,
+  localPath: string,
+  remotePath: string,
+): Promise&lt;boolean&gt;
+</code></pre>
+<p>这是一个刻意的简化选择。<code>sshCmd</code> 参数接受完整的 SSH 命令（如 <code>ssh -i ~/.ssh/id_rsa user@host</code>），用户可以自由配置 SSH 代理、跳板机、端口转发等。pods 不需要理解 SSH 配置的细节。</p>
+<h2 id="vllm-管理模型启停"><a class="header" href="#vllm-管理模型启停">vLLM 管理：模型启停</a></h2>
+<p><code>startModel()</code> 是 pods 的核心功能 — 在远程 GPU 机器上启动一个 vLLM 实例：</p>
+<pre><code class="language-typescript">// packages/pods/src/commands/models.ts:78-197
+export const startModel = async (
+  modelId: string,
+  name: string,
+  options: {
+    pod?: string;
+    vllmArgs?: string[];
+    memory?: string;   // GPU 显存使用比例
+    context?: string;  // 上下文长度（4k/8k/16k...）
+    gpus?: number;     // GPU 数量
+  },
+) =&gt; {
+  const { name: podName, pod } = getPod(options.pod);
+
+  // 自动选择 GPU 配置
+  if (isKnownModel(modelId)) {
+    // 预配置模型：自动选择最优 GPU 数量和参数
+    for (let gpuCount = pod.gpus.length; gpuCount &gt;= 1; gpuCount--) {
+      modelConfig = getModelConfig(modelId, pod.gpus, gpuCount);
+      if (modelConfig) {
+        gpus = selectGPUs(pod, gpuCount);
+        vllmArgs = [...(modelConfig.args || [])];
+        break;
+      }
+    }
+  } else {
+    // 未知模型：默认单 GPU
+    gpus = selectGPUs(pod, 1);
+  }
+  // ... 启动 vLLM screen session
+};
+</code></pre>
+<p>GPU 分配策略：</p>
+<ol>
+<li><strong>预配置模型</strong>：<code>model-configs.ts</code> 为常用模型（Llama、Qwen、Mistral 等）维护了经过测试的 vLLM 参数。根据 pod 的 GPU 型号和数量自动选择最优配置</li>
+<li><strong>GPU 数量覆盖</strong>：<code>--gpus N</code> 让用户强制指定 GPU 数量，pods 验证是否有对应配置</li>
+<li><strong>显存/上下文覆盖</strong>：<code>--memory 90%</code> 和 <code>--context 32k</code> 覆盖默认值</li>
+<li><strong>自定义参数</strong>：<code>--vllm &lt;args&gt;</code> 完全绕过自动配置，直接传递 vLLM 参数</li>
+<li><strong>未知模型</strong>：默认单 GPU，不做任何假设</li>
+</ol>
+<h3 id="openai-compatible-endpoint"><a class="header" href="#openai-compatible-endpoint">OpenAI-Compatible Endpoint</a></h3>
+<p>vLLM 启动后会暴露 OpenAI-compatible API。这是 pods 和 pi 连接的关键 — pi 的 provider registry（第 4 章）天然支持 OpenAI API 格式：</p>
+<pre><code>用户 → pi CLI → Provider Registry → OpenAI-compatible API → vLLM → GPU
+                                      ↑
+                                  pods 部署的端点
+</code></pre>
+<p>pods 启动时配置的 <code>PI_API_KEY</code> 就是 vLLM 端点的认证 key。用户在 pi 中配置 provider 时，只需要指向远程机器的 IP 和端口。</p>
+<h3 id="模型生命周期管理"><a class="header" href="#模型生命周期管理">模型生命周期管理</a></h3>
+<pre><code>pi pods setup  →  配置 SSH + 安装环境
+      ↓
+pi start model →  启动 vLLM（screen session）
+      ↓
+pi models      →  查看运行状态
+      ↓
+pi logs model  →  查看 vLLM 日志
+      ↓
+pi stop model  →  停止 vLLM
+</code></pre>
+<p>vLLM 运行在 <code>screen</code> session 中（不是 Docker），这样 SSH 断开后进程继续运行。模型权重存储在 <code>modelsPath</code>（通常是挂载的 NFS/SFS），多个模型可以共享权重缓存。</p>
+<h2 id="本地-pi-如何连接远程-pod"><a class="header" href="#本地-pi-如何连接远程-pod">本地 pi 如何连接远程 pod</a></h2>
+<p>连接流程分三步：</p>
+<p><strong>Step 1：部署模型</strong></p>
+<pre><code class="language-bash">export HF_TOKEN=hf_xxx
+export PI_API_KEY=my-secret-key
+pi pods setup my-a100 "ssh root@1.2.3.4" \
+  --models-path /mnt/models
+pi start deepseek-ai/DeepSeek-V3 --name ds-v3
+</code></pre>
+<p><strong>Step 2：配置 provider</strong></p>
+<p>pods 启动 vLLM 后，打印端点地址（如 <code>http://1.2.3.4:8000</code>）。用户在 pi 的 provider 配置中添加这个端点，指向 OpenAI-compatible API。</p>
+<p><strong>Step 3：在 pi 中使用</strong></p>
+<p>pi CLI 的模型选择器（第 4 章的 <code>getModel()</code>）现在可以选择自部署的模型。对 agent 循环来说，自部署模型和第三方 API 没有任何区别 — 都是通过 <code>StreamFunction</code> 接口调用。</p>
+<h2 id="vllm-版本选择"><a class="header" href="#vllm-版本选择">vLLM 版本选择</a></h2>
+<p>pods 支持三种 vLLM 版本：</p>
+<div class="table-wrapper"><table><thead><tr><th>版本</th><th>适用场景</th></tr></thead><tbody>
+<tr><td><code>release</code></td><td>默认。稳定版 vLLM</td></tr>
+<tr><td><code>nightly</code></td><td>需要最新功能（如新模型支持）</td></tr>
+<tr><td><code>gpt-oss</code></td><td>专门为 GPT-OSS 模型优化的 fork</td></tr>
+</tbody></table>
+</div>
+<p>版本选择在 <code>setupPod()</code> 时确定，记录在 pod 配置中。<code>listPods()</code> 会显示 vLLM 版本信息，对 <code>gpt-oss</code> 版本额外警告其兼容性限制。</p>
+<h2 id="配置管理"><a class="header" href="#配置管理">配置管理</a></h2>
+<p>pods 的配置存储在 <code>~/.pi/pods.json</code>：</p>
+<pre><code class="language-typescript">// packages/pods/src/config.ts
+export const loadConfig = (): Config =&gt; { /* 读取 JSON */ };
+export const saveConfig = (config: Config): void =&gt; { /* 写入 JSON */ };
+export const getActivePod = (): { name: string; pod: Pod } | null;
+export const addPod = (name: string, pod: Pod): void;
+export const removePod = (name: string): void;
+export const setActivePod = (name: string): void;
+</code></pre>
+<p>配置包含：所有 pod 的 SSH 命令、GPU 信息、已部署的模型列表、模型路径、vLLM 版本。<code>active</code> 字段标记默认使用的 pod，大多数命令不需要显式指定 <code>--pod</code>。</p>
+<h2 id="取舍分析"><a class="header" href="#取舍分析">取舍分析</a></h2>
+<h3 id="得到了什么"><a class="header" href="#得到了什么">得到了什么</a></h3>
+<p><strong>模型自主权</strong>。用户可以运行自己的模型，不受第三方 API 的价格和策略变化影响。DataCrunch 上一台 4xA100 的月费可能只是调用 Claude API 一周费用的零头。</p>
+<p><strong>一键部署</strong>。从裸机 GPU 到可用的 OpenAI-compatible endpoint，一条命令搞定。这对不熟悉 vLLM、CUDA、模型部署的开发者来说，降低了巨大的门槛。</p>
+<p><strong>无缝集成</strong>。因为 vLLM 暴露标准 OpenAI API，pi 的 provider registry 无需修改就能对接。自部署模型和第三方 API 在 agent 层完全透明。</p>
+<h3 id="放弃了什么"><a class="header" href="#放弃了什么">放弃了什么</a></h3>
+<p><strong>职责边界模糊</strong>。把部署工具放在 agent 仓库里，让 monorepo 的范围从"agent 开发"扩展到了"模型运维"。但对于需要端到端控制的用户，这种"职责越界"反而是便利。</p>
+<p><strong>没有 GPU 编排能力</strong>。pods 不做多机调度、自动扩缩容、健康检查。它假设用户手动管理 GPU 机器的生命周期。对于需要生产级 GPU 集群管理的场景，应该使用 Kubernetes + GPU Operator 等专业工具。</p>
+<p><strong>SSH 依赖</strong>。直接调用系统 <code>ssh</code> 命令意味着用户必须先配置好 SSH 密钥和连接。这对有 SSH 经验的开发者很自然，但对新手可能是障碍。</p>
+<hr />
+<h3 id="版本演化说明"><a class="header" href="#版本演化说明">版本演化说明</a></h3>
+<blockquote>
+<p>本章核心分析基于 pi-mono v0.66.0。Pods 是 pi-mono 中变化最少的包 —
+它的核心功能（SSH 配置 + vLLM 管理）自引入以来保持稳定。
+近期添加了 <code>gpt-oss</code> vLLM 版本支持和更多预配置模型。</p>
+</blockquote>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch28-mom-slack.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="ch30-minimal-core.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch28-mom-slack.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="ch30-minimal-core.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="mermaid.min.js"></script>
+        <script src="mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

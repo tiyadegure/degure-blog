@@ -1,0 +1,467 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>附录 - pi 的设计艺术：构建生产级 Coding Agent 的架构决策</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/custom.css">
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "ayu" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">pi 的设计艺术：构建生产级 Coding Agent 的架构决策</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/ZhangHanDong/pi-book" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="附录"><a class="header" href="#附录">附录</a></h1>
+<h2 id="a-核心类型速查表"><a class="header" href="#a-核心类型速查表">A. 核心类型速查表</a></h2>
+<h3 id="pi-ai-层"><a class="header" href="#pi-ai-层">pi-ai 层</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>类型</th><th>文件</th><th>用途</th><th>关键字段</th></tr></thead><tbody>
+<tr><td><code>Model&lt;TApi&gt;</code></td><td>types.ts</td><td>模型定义</td><td><code>id: string</code> — 唯一标识（如 <code>claude-sonnet-4-5</code>）<br><code>provider: string</code> — 提供方（如 <code>anthropic</code>）<br><code>api: TApi</code> — API 类型标记<br><code>cost: { input, output, cacheRead, cacheWrite }</code> — 每 token 价格<br><code>contextWindow: number</code> — 上下文窗口大小<br><code>maxOutput?: number</code> — 最大输出 token 数</td></tr>
+<tr><td><code>Context</code></td><td>types.ts</td><td>LLM 调用上下文</td><td><code>systemPrompt?: string</code> — 可选系统提示词<br><code>messages: Message[]</code> — 对话历史<br><code>tools?: Tool[]</code> — 可用工具定义</td></tr>
+<tr><td><code>AssistantMessageEvent</code></td><td>types.ts</td><td>流式事件</td><td><code>start</code> — 初始化 partial assistant message<br><code>text_* / thinking_* / toolcall_*</code> — 分块流式更新<br><code>done</code> — 成功结束并携带最终消息<br><code>error</code> — 失败或中止结束并携带错误消息</td></tr>
+<tr><td><code>StreamFunction</code></td><td>types.ts</td><td>Provider 必须实现的流式函数</td><td>签名：<code>(model, context, options?) =&gt; AssistantMessageEventStream</code><br>契约：返回事件流，不通过抛异常传递运行期错误</td></tr>
+<tr><td><code>Usage</code></td><td>types.ts</td><td>Token 使用量</td><td><code>input: number</code> — 输入 token<br><code>output: number</code> — 输出 token<br><code>cacheRead: number</code> — 缓存读取<br><code>cacheWrite: number</code> — 缓存写入<br><code>cost: { input, output, cacheRead, cacheWrite, total }</code></td></tr>
+</tbody></table>
+</div>
+<h3 id="pi-agent-core-层"><a class="header" href="#pi-agent-core-层">pi-agent-core 层</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>类型</th><th>文件</th><th>用途</th><th>关键字段</th></tr></thead><tbody>
+<tr><td><code>AgentMessage</code></td><td>types.ts</td><td>扩展消息类型</td><td>联合类型：<code>Message | CustomAgentMessages[...]</code><br>标准消息来自 <code>pi-ai</code>：<code>user / assistant / toolResult</code><br>产品层可通过声明合并追加自定义消息</td></tr>
+<tr><td><code>AgentTool&lt;TParams&gt;</code></td><td>types.ts</td><td>工具定义</td><td><code>name: string</code> — 工具名称<br><code>parameters: TParams</code> — 参数（继承 Tool&lt;TParameters&gt;）<br><code>label: string</code> — UI 显示的可读名称<br><code>prepareArguments?: (args) =&gt; Static&lt;TParams&gt;</code> — 可选的参数预处理<br><code>execute(toolCallId, params, signal, onUpdate): Promise&lt;AgentToolResult&gt;</code> — 执行函数</td></tr>
+<tr><td><code>AgentEvent</code></td><td>types.ts</td><td>循环生命周期事件</td><td><code>type</code> 联合：<br><code>agent_start / agent_end</code> — 本轮运行开始/结束<br><code>turn_start / turn_end</code> — 一轮 assistant turn 开始/结束<br><code>message_start / message_update / message_end</code> — 消息流式生命周期<br><code>tool_execution_start / tool_execution_update / tool_execution_end</code> — 工具执行生命周期</td></tr>
+<tr><td><code>AgentLoopConfig</code></td><td>types.ts</td><td>循环引擎配置</td><td><code>model: Model</code> — 本轮使用的模型<br><code>convertToLlm</code> — <code>AgentMessage[] -&gt; Message[]</code> 转换<br><code>transformContext?</code> — LLM 调用前的上下文变换<br><code>beforeToolCall? / afterToolCall?</code> — 工具调用前后钩子<br><code>getSteeringMessages? / getFollowUpMessages?</code> — 运行中注入消息</td></tr>
+<tr><td><code>AgentState</code></td><td>agent.ts</td><td>Agent 可变状态</td><td><code>systemPrompt: string</code> — 当前系统提示词<br><code>model: Model</code> — 当前模型<br><code>thinkingLevel: ThinkingLevel</code> — 后续 turn 的思考级别<br><code>tools</code> / <code>messages</code> — 以 copy-on-assign 方式暴露的数组状态<br><code>isStreaming / streamingMessage / pendingToolCalls / errorMessage</code> — 当前运行态</td></tr>
+</tbody></table>
+</div>
+<h3 id="pi-coding-agent-层"><a class="header" href="#pi-coding-agent-层">pi-coding-agent 层</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>类型</th><th>文件</th><th>用途</th><th>关键字段</th></tr></thead><tbody>
+<tr><td><code>SessionEntry</code></td><td>session-manager.ts</td><td>会话持久化条目</td><td>9 种类型联合：<br><code>message</code> — 用户/助手消息<br><code>thinking_level_change</code> — 思考级别变更<br><code>model_change</code> — 模型切换<br><code>compaction</code> — 压缩记录<br><code>branch_summary</code> — 分支摘要<br><code>custom</code> — 自定义条目<br><code>custom_message</code> — 自定义消息<br><code>label</code> — 标签<br><code>session_info</code> — 会话信息<br>每条有 <code>id</code>, <code>parentId</code>, <code>timestamp</code></td></tr>
+<tr><td><code>AgentSessionEvent</code></td><td>agent-session.ts</td><td>产品层事件</td><td><code>AgentEvent</code> 的超集：额外包含 <code>queue_update</code>、<code>compaction_start / compaction_end</code>、<code>auto_retry_start / auto_retry_end</code></td></tr>
+<tr><td><code>AgentSession</code></td><td>agent-session.ts</td><td>产品层 agent 包装</td><td>组合了 <code>Agent</code> + <code>SessionManager</code> + <code>SettingsManager</code><br><code>prompt(text, options?)</code> — 发送消息并运行循环<br><code>compact(customInstructions?)</code> — 主动触发压缩<br><code>subscribe(listener)</code> — 订阅 <code>AgentSessionEvent</code><br><code>abort()</code> — 中止当前循环</td></tr>
+<tr><td><code>Skill</code></td><td>skills.ts</td><td>能力扩展定义</td><td><code>name: string</code> — 技能名称<br><code>description: string</code> — 描述<br><code>filePath: string</code> — SKILL.md 路径<br><code>baseDir: string</code> — 技能目录<br><code>sourceInfo</code> — 来源信息<br><code>disableModelInvocation</code> — 是否从 prompt 中隐藏</td></tr>
+<tr><td><code>Extension</code></td><td>core/extensions/types.ts</td><td>运行时扩展</td><td><code>name: string</code> — 扩展名称<br><code>setup(api)</code> — 初始化函数<br>API 提供：<code>registerTool</code>, <code>registerCommand</code>, <code>on(event, handler)</code> 等</td></tr>
+</tbody></table>
+</div>
+<h2 id="b-设计模式索引"><a class="header" href="#b-设计模式索引">B. 设计模式索引</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>模式</th><th>出现位置</th><th>章节</th><th>模式说明</th></tr></thead><tbody>
+<tr><td>插件注册（Map + register/get）</td><td>api-registry.ts, oauth/index.ts</td><td>第 4、7 章</td><td>用注册表 <code>Map</code> 存储，<code>register()</code> 添加，<code>get()</code> 查找。api-registry 按 <code>api</code> 键控，不用 DI 框架，不用反射</td></tr>
+<tr><td>有损变换（isSameModel 判断）</td><td>transform-messages.ts</td><td>第 5 章</td><td>跨模型消息变换时，标记信息丢失（如 thinking 块），便于下游处理</td></tr>
+<tr><td>流式契约（Must not throw）</td><td>StreamFn type, AgentLoopConfig</td><td>第 6、8 章</td><td>Provider 的 stream 函数承诺不抛异常，错误通过事件流传递。调用方不需要 try-catch</td></tr>
+<tr><td>双层循环（steering + follow-up）</td><td>agent-loop.ts runLoop()</td><td>第 8 章</td><td>外层 steering 循环处理模型切换和重试，内层 follow-up 循环处理工具调用后的后续对话</td></tr>
+<tr><td>三阶段工具执行（prepare/execute/finalize）</td><td>agent-loop.ts</td><td>第 9 章</td><td>prepare 获取资源/确认权限，execute 执行操作，finalize 清理/格式化结果。任何阶段可中止</td></tr>
+<tr><td>声明合并扩展（CustomAgentMessages）</td><td>types.ts</td><td>第 10 章</td><td>TypeScript <code>declare module</code> + interface merging，让产品层添加自定义消息类型而不修改内核</td></tr>
+<tr><td>Copy-on-assign（getter/setter + slice）</td><td>agent.ts MutableAgentState</td><td>第 10 章</td><td>读取 <code>messages</code> 返回浅拷贝，赋值 <code>messages = [...]</code> 替换整个数组。防止外部意外修改内部状态</td></tr>
+<tr><td>Append-only 树（JSONL + parentId）</td><td>session-manager.ts</td><td>第 11 章</td><td>每条记录有唯一 id 和 parentId。新分支从分支点的 id 开始，旧分支保留不删除。JSONL 格式支持崩溃恢复</td></tr>
+<tr><td>三级配置覆盖（全局/项目/目录）</td><td>settings-manager.ts, resource-loader</td><td>第 13 章</td><td>全局配置 &lt; 项目配置 &lt; 目录配置。就近原则，越具体越优先。类似 CSS 的层叠覆盖</td></tr>
+<tr><td>Pluggable I/O（EditOperations, BashOperations）</td><td>edit.ts, bash.ts, find.ts</td><td>第 19-23 章</td><td>工具不直接调用 <code>fs</code> 或 <code>child_process</code>，而是通过接口注入。测试用 mock，Docker 用远程执行</td></tr>
+<tr><td>极简组件接口（Component）</td><td>tui.ts</td><td>第 24 章</td><td>UI 组件实现 <code>render(width: number): string[]</code>，可选 <code>handleInput?(data)</code>，并要求实现 <code>invalidate()</code>。没有虚拟 DOM、没有状态管理框架</td></tr>
+<tr><td>消息队列串行化</td><td>agent.ts (mom)</td><td>第 28 章</td><td>所有 Slack API 调用通过 Promise 链串行执行，避免消息乱序。<code>enqueue()</code> 返回 void，错误内部处理</td></tr>
+<tr><td>委托模式（DockerExecutor → HostExecutor）</td><td>sandbox.ts</td><td>第 28 章</td><td>DockerExecutor 把命令包装为 <code>docker exec</code>，委托给 HostExecutor 执行。关注点分离</td></tr>
+</tbody></table>
+</div>
+<h2 id="c-一次完整请求的时序图"><a class="header" href="#c-一次完整请求的时序图">C. 一次完整请求的时序图</a></h2>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant User
+    participant Editor as Editor - TUI
+    participant Agent as Agent
+    participant Loop as agentLoop
+    participant Transform as transformContext
+    participant Convert as convertToLlm
+    participant Provider as LLM Provider
+    participant Tool as Tool Execute
+    participant Session as SessionManager
+
+    User-&gt;&gt;Editor: 输入消息 + Enter
+    Editor-&gt;&gt;Agent: agent.prompt(msg)
+    Note over Agent: 添加用户消息到 state.messages
+    Agent-&gt;&gt;Loop: runAgentLoop(prompts, context, config)
+    
+    rect rgb(230, 245, 255)
+        Note over Loop,Convert: 上下文准备阶段
+        Loop-&gt;&gt;Transform: transformContext(messages)
+        Note over Transform: 可注入 plan 指令、截断历史、&lt;br/&gt;过滤敏感信息
+        Transform--&gt;&gt;Loop: pruned messages
+        Loop-&gt;&gt;Convert: convertToLlm(messages)
+        Note over Convert: AgentMessage → ai 层 Message&lt;br/&gt;过滤/转换应用层消息
+        Convert--&gt;&gt;Loop: LLM-compatible messages
+    end
+    
+    rect rgb(255, 245, 230)
+        Note over Loop,Provider: 模型调用阶段
+        Loop-&gt;&gt;Provider: streamSimple(model, context)
+        Note over Provider: HTTP SSE 流式调用
+        Provider--&gt;&gt;Loop: events (text_delta, toolcall_end, done)
+        Loop-&gt;&gt;Agent: emit(message_end)
+        Agent-&gt;&gt;Session: persist entry
+    end
+    
+    alt has tool calls
+        rect rgb(230, 255, 230)
+            Note over Loop,Tool: 三阶段工具执行
+            Loop-&gt;&gt;Tool: prepareToolCall()
+            Note over Tool: 获取资源、权限检查&lt;br/&gt;beforeToolCall 钩子在此触发
+            Tool--&gt;&gt;Loop: prepared (or denied)
+            Loop-&gt;&gt;Tool: executePreparedToolCall()
+            Note over Tool: 实际执行操作&lt;br/&gt;（bash 命令、文件读写等）
+            Tool--&gt;&gt;Loop: result
+            Loop-&gt;&gt;Tool: finalizeExecutedToolCall()
+            Note over Tool: 格式化结果、截断过长输出
+            Tool--&gt;&gt;Loop: final result
+        end
+        Loop-&gt;&gt;Agent: emit(tool_execution_end)
+        Note over Agent: UI / extension 观察工具完成
+        Loop-&gt;&gt;Agent: emit(message_end)
+        Agent-&gt;&gt;Session: persist toolResult message
+        Note over Loop: 回到上下文准备阶段，进入下一轮
+        Loop-&gt;&gt;Provider: next LLM call (with tool results)
+    end
+    
+    Loop-&gt;&gt;Agent: emit(agent_end)
+    Agent-&gt;&gt;Session: session complete
+    Agent-&gt;&gt;Editor: render final state
+</code></pre>
+<h3 id="关键节点说明"><a class="header" href="#关键节点说明">关键节点说明</a></h3>
+<ol>
+<li><strong>transformContext 是 <code>AgentMessage[]</code> 级的预处理点</strong>。裁剪历史、注入额外上下文、实现 plan-like 控制通常放在这里</li>
+<li><strong>convertToLlm 是 <code>AgentMessage[] -&gt; Message[]</code> 的边界转换</strong>。它负责过滤或改写应用层消息；真正的跨 provider 兼容处理还会在 <code>pi-ai</code> 的 provider 层继续发生</li>
+<li><strong>三阶段工具执行保证了安全性</strong>。prepare 阶段可以拒绝执行（beforeToolCall 钩子），execute 阶段实际操作，finalize 阶段格式化输出</li>
+<li><strong>事件驱动的持久化主要挂在 <code>message_end</code> 上</strong>。<code>tool_execution_end</code> 主要用于 UI 和 extension 观测，真正写入会话的是随后产生的 <code>toolResult</code> 消息</li>
+</ol>
+<h2 id="d-compact-命令的端到端追踪"><a class="header" href="#d-compact-命令的端到端追踪">D. <code>/compact</code> 命令的端到端追踪</a></h2>
+<p>下面追踪用户在 pi CLI 中输入 <code>/compact</code> 命令时，系统内部发生的完整过程。</p>
+<h3 id="phase-1命令解析"><a class="header" href="#phase-1命令解析">Phase 1：命令解析</a></h3>
+<pre><code>用户输入: /compact
+    ↓
+interactive-mode: 识别 `/compact` 或 `/compact ...`
+    ↓
+handleCompactCommand(customInstructions)
+    ↓
+AgentSession.compact(customInstructions?)
+</code></pre>
+<p><code>/compact</code> 不经过 agent 循环本身。它先由 interactive mode 在本地识别，再直接调用 <code>AgentSession.compact(...)</code>。</p>
+<h3 id="phase-2compaction-触发"><a class="header" href="#phase-2compaction-触发">Phase 2：Compaction 触发</a></h3>
+<pre><code>compact handler
+    ↓
+SessionManager.getEntries()  → 获取当前所有会话条目
+    ↓
+estimateTokens(messages)     → 估算当前 context token 数
+    ↓
+Agent.state.messages         → 获取当前消息列表
+    ↓
+emit("compaction_start", { reason: "manual" })
+</code></pre>
+<h3 id="phase-3llm-总结"><a class="header" href="#phase-3llm-总结">Phase 3：LLM 总结</a></h3>
+<pre><code>compaction_start 事件
+    ↓
+构建 compaction prompt:
+  "请总结以下对话的关键信息..."
+  + 当前所有消息
+    ↓
+completeSimple(compactionModel, compactionContext)
+  → 调用 LLM 生成总结
+    ↓
+收集 LLM 输出 → summary text
+</code></pre>
+<p>Compaction 使用的模型可能和主对话模型不同（通常用更快更便宜的模型）。</p>
+<h3 id="phase-4状态更新"><a class="header" href="#phase-4状态更新">Phase 4：状态更新</a></h3>
+<pre><code>summary text
+    ↓
+SessionManager.appendCompaction(
+  summary,
+  firstKeptEntryId,
+  tokensBefore,
+  details?
+)
+  → 将 compaction 记录追加到 JSONL
+    ↓
+buildSessionContext()
+  → 从 entries 重建完整的 session context
+    ↓
+agent.state.messages = sessionContext.messages
+  → 用重建后的消息列表替换 agent 状态
+    ↓
+emit("compaction_end", { result: { summary, firstKeptEntryId, tokensBefore, details } })
+</code></pre>
+<h3 id="phase-5ui-更新"><a class="header" href="#phase-5ui-更新">Phase 5：UI 更新</a></h3>
+<pre><code>compaction_end 事件
+    ↓
+TUI 订阅者收到事件
+    ↓
+清空并重建 chat
+    ↓
+插入 compaction summary message
+    ↓
+刷新 footer / 状态显示
+</code></pre>
+<h3 id="完整数据流"><a class="header" href="#完整数据流">完整数据流</a></h3>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant User
+    participant TUI
+    participant Session as AgentSession
+    participant SM as SessionManager
+    participant LLM as Compaction LLM
+
+    User-&gt;&gt;TUI: /compact
+    TUI-&gt;&gt;TUI: 识别 /compact 并提取自定义指令
+    TUI-&gt;&gt;Session: compact(customInstructions?)
+    Session-&gt;&gt;SM: getEntries()
+    SM--&gt;&gt;Session: all entries
+    Session-&gt;&gt;Session: estimateTokens()
+    Note over Session: tokensBefore = 150,000
+    
+    Session-&gt;&gt;Session: emit(compaction_start)
+    TUI--&gt;&gt;TUI: 显示 "Compacting..."
+    
+    Session-&gt;&gt;LLM: completeSimple(summary prompt)
+    LLM--&gt;&gt;Session: summary text
+    
+    Session-&gt;&gt;SM: appendCompaction(summary, firstKeptEntryId, tokensBefore, details)
+    Note over SM: 写入 JSONL:&lt;br/&gt;{type: "compaction", summary, ...}
+    
+    Session-&gt;&gt;SM: buildSessionContext()
+    SM--&gt;&gt;Session: sessionContext
+    Note over Session: 从 entries 重建上下文
+    Session-&gt;&gt;Session: agent.state.messages = sessionContext.messages
+    
+    Session-&gt;&gt;Session: emit(compaction_end)
+    TUI--&gt;&gt;TUI: 重建 chat + 插入 summary message
+    
+    Note over User: 下次 LLM 调用只看到&lt;br/&gt;重建后的 context
+</code></pre>
+<h3 id="关键观察"><a class="header" href="#关键观察">关键观察</a></h3>
+<ol>
+<li><code>/compact</code> <strong>不经过 agent 循环</strong>。它是一次本地命令处理 + 一次独立的 LLM 调用</li>
+<li><strong>状态重建而非直接替换</strong>。<code>appendCompaction</code> 记录压缩事件后，<code>buildSessionContext()</code> 从 entries 重建上下文，再赋值给 <code>agent.state.messages</code>。不是直接构造一条 summary 消息替换</li>
+<li><strong>持久化保留历史</strong>。SessionManager 记录 compaction 事件，但不删除历史条目。JSONL 是 append-only 的，<code>buildSessionContext()</code> 负责根据 compaction 记录决定哪些 entries 构成当前 context</li>
+<li><strong>事件驱动 UI</strong>。TUI 不直接参与 compaction 逻辑，只订阅事件更新显示</li>
+</ol>
+<h2 id="e-二次开发入口清单"><a class="header" href="#e-二次开发入口清单">E. 二次开发入口清单</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>我想做什么</th><th>起点文件/函数</th><th>参考章节</th></tr></thead><tbody>
+<tr><td>加一个新 LLM provider</td><td><code>packages/ai</code> 中实现 provider + <code>registerApiProvider()</code> + model wiring</td><td>第 4、18 章</td></tr>
+<tr><td>加一个新工具</td><td>Extension API → <code>registerTool()</code></td><td>第 15、19 章</td></tr>
+<tr><td>加一个新 slash command</td><td>Extension API → <code>registerCommand()</code></td><td>第 15 章</td></tr>
+<tr><td>改 system prompt</td><td>创建 <code>SYSTEM.md</code> 或 <code>AGENTS.md</code></td><td>第 13-14 章</td></tr>
+<tr><td>自定义权限策略</td><td><code>beforeToolCall</code> 钩子</td><td>第 9 章</td></tr>
+<tr><td>改 compaction 策略</td><td>Extension hook: <code>on("session_before_compact", handler)</code></td><td>第 12 章</td></tr>
+<tr><td>加一个新 UI 模式</td><td>参考 <code>modes/rpc/</code> 实现新 mode</td><td>第 26 章</td></tr>
+<tr><td>支持新的消息类型</td><td><code>CustomAgentMessages</code> 声明合并</td><td>第 10 章</td></tr>
+<tr><td>加一个新 OAuth provider</td><td><code>registerOAuthProvider()</code></td><td>第 7 章</td></tr>
+<tr><td>自定义上下文管理</td><td><code>transformContext</code> 回调</td><td>第 8 章</td></tr>
+<tr><td>构建 Slack bot 产品</td><td>参考 <code>packages/mom/</code> 完整实现</td><td>第 28 章</td></tr>
+<tr><td>部署自有模型</td><td>参考 <code>packages/pods/</code> 的 SSH + vLLM 流程</td><td>第 29 章</td></tr>
+<tr><td>实现审计日志</td><td>订阅 <code>AgentEvent</code>，写入日志系统</td><td>第 10 章</td></tr>
+<tr><td>实现成本预算控制</td><td><code>transformContext</code> 中检查累计 token 使用量</td><td>第 8 章</td></tr>
+<tr><td>实现 A/B 测试（模型对比）</td><td>在 <code>getModel()</code> 中随机选择模型</td><td>第 4 章</td></tr>
+</tbody></table>
+</div>
+<h2 id="f-术语对照表"><a class="header" href="#f-术语对照表">F. 术语对照表</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>英文术语</th><th>本书用法</th><th>说明</th></tr></thead><tbody>
+<tr><td>Agent Loop</td><td>循环引擎 / agent 循环</td><td><code>agentLoop()</code> 函数实现的 LLM 调用 → 工具执行 → 再调用循环</td></tr>
+<tr><td>Compaction</td><td>上下文压缩</td><td>用 LLM 总结对话历史，减少 token 使用</td></tr>
+<tr><td>Extension</td><td>扩展</td><td>运行时代码扩展，可注册工具、命令、事件处理器</td></tr>
+<tr><td>Provider</td><td>提供方</td><td>LLM API 提供方（Anthropic、OpenAI 等）</td></tr>
+<tr><td>Skill</td><td>技能</td><td>纯 markdown 文件，注入 system prompt 引导 agent 行为</td></tr>
+<tr><td>Session</td><td>会话</td><td>一次用户与 agent 的完整交互，持久化为 JSONL</td></tr>
+<tr><td>Stream</td><td>流式</td><td>LLM 的流式响应，通过 SSE 或 WebSocket 传输</td></tr>
+<tr><td>Tool Call</td><td>工具调用</td><td>LLM 请求执行一个工具的指令</td></tr>
+<tr><td>Transform Context</td><td>上下文变换</td><td>在 LLM 调用前修改消息列表的回调</td></tr>
+<tr><td>TUI</td><td>终端 UI</td><td>Terminal User Interface，基于 ANSI 转义码的终端渲染</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h3 id="版本演化说明"><a class="header" href="#版本演化说明">版本演化说明</a></h3>
+<blockquote>
+<p>本附录基于 pi-mono v0.66.0。类型名、文件路径、函数签名可能随版本更新而变化。
+设计模式和二次开发入口的结构性建议预计长期有效。</p>
+</blockquote>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch32-boundaries.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch32-boundaries.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="mermaid.min.js"></script>
+        <script src="mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

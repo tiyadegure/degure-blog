@@ -1,0 +1,639 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Provider 不是 Adapter - pi 的设计艺术：构建生产级 Coding Agent 的架构决策</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/custom.css">
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "ayu" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">pi 的设计艺术：构建生产级 Coding Agent 的架构决策</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/ZhangHanDong/pi-book" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="第-4-章provider-不是-adapter"><a class="header" href="#第-4-章provider-不是-adapter">第 4 章：Provider 不是 Adapter</a></h1>
+<blockquote>
+<p><strong>定位</strong>：本章解剖 pi-ai 的核心抽象 — 用一个 98 行的注册表统一 20+ 家 LLM 厂商。
+前置依赖：第 2 章（分层架构）。
+适用场景：当你想理解如何设计一个多 provider LLM 抽象层，或者想为 pi 添加新的 LLM 供应商。</p>
+</blockquote>
+<h2 id="20-家厂商如何用一个接口统一"><a class="header" href="#20-家厂商如何用一个接口统一">20+ 家厂商，如何用一个接口统一？</a></h2>
+<p>这是本章的核心设计问题。</p>
+<p>打开 <code>packages/ai/src/types.ts</code>，前 43 行定义了 pi 对 LLM 世界的全部认知：</p>
+<pre><code class="language-typescript">// packages/ai/src/types.ts:5-17
+
+type KnownApi =
+  | "openai-completions"
+  | "mistral-conversations"
+  | "openai-responses"
+  | "azure-openai-responses"
+  | "openai-codex-responses"
+  | "anthropic-messages"
+  | "bedrock-converse-stream"
+  | "google-generative-ai"
+  | "google-gemini-cli"
+  | "google-vertex";
+
+type Api = KnownApi | (string &amp; {});
+</code></pre>
+<p>注意 <code>Api</code> 类型的设计：它是 <code>KnownApi</code>（已知的 10 种 API 协议）加上 <code>(string &amp; {})</code>（任意字符串）的联合。这个看似奇怪的 <code>(string &amp; {})</code> 是 TypeScript 的一个技巧 — 它让类型系统对已知值提供自动补全，同时允许任意新值。内建的 10 种协议有 IDE 提示，自定义协议可以用任意字符串注册。</p>
+<p><code>Provider</code> 类型列出了 23 个已知供应商，也允许扩展 — 但用的是普通的 <code>string</code> 联合而非 <code>(string &amp; {})</code> 技巧（IDE 补全效果略弱）：</p>
+<pre><code class="language-typescript">type Provider = KnownProvider | string;
+</code></pre>
+<p>这里隐含了 pi 最重要的设计决策之一：<strong>Provider 和 Api 是两个独立的维度</strong>。</p>
+<p>一个 provider（比如 <code>"google"</code>）可能暴露多种 api（<code>"google-generative-ai"</code> 和 <code>"google-vertex"</code>）。一种 api 协议（比如 <code>"openai-responses"</code>）可能被多个 provider 使用（<code>"openai"</code>、<code>"azure-openai-responses"</code>、<code>"github-copilot"</code>）。</p>
+<p>如果把 provider 和 api 绑死，每增加一个 Azure OpenAI 部署就要写一个新 provider。分离之后，Azure OpenAI 只需注册一个使用 <code>"azure-openai-responses"</code> api 的 provider。</p>
+<h2 id="modeltapi--携带一切上下文的值对象"><a class="header" href="#modeltapi--携带一切上下文的值对象"><code>Model&lt;TApi&gt;</code> — 携带一切上下文的值对象</a></h2>
+<p>在理解注册表之前，先看它操作的核心数据：<code>Model</code>。</p>
+<pre><code class="language-typescript">// packages/ai/src/types.ts:316-338
+
+export interface Model&lt;TApi extends Api&gt; {
+  id: string;
+  name: string;
+  api: TApi;
+  provider: Provider;
+  baseUrl: string;
+  reasoning: boolean;
+  input: ("text" | "image")[];
+  cost: {
+    input: number;   // $/million tokens
+    output: number;  // $/million tokens
+    cacheRead: number;
+    cacheWrite: number;
+  };
+  contextWindow: number;
+  maxTokens: number;
+  headers?: Record&lt;string, string&gt;;
+  compat?: /* conditional type based on TApi */ ;
+}
+</code></pre>
+<p><code>Model</code> 不只是一个"模型名称"，它是一个<strong>自描述的值对象</strong>，携带了调用一个 LLM 所需的全部元信息：</p>
+<ul>
+<li><strong>身份</strong>：<code>id</code>（如 <code>"claude-sonnet-4-20250514"</code>）、<code>name</code>（人类可读名称）、<code>provider</code>（<code>"anthropic"</code>）</li>
+<li><strong>协议</strong>：<code>api</code> 字段决定了用哪种 API 协议与这个模型通信</li>
+<li><strong>能力</strong>：<code>reasoning</code>（是否支持 extended thinking）、<code>input</code>（支持哪些输入模态）</li>
+<li><strong>约束</strong>：<code>contextWindow</code>（上下文窗口大小）、<code>maxTokens</code>（单次最大输出）</li>
+<li><strong>经济</strong>：<code>cost</code> 对象精确到四种计价维度 — 输入、输出、缓存读、缓存写</li>
+</ul>
+<h3 id="为什么-model-是泛型的"><a class="header" href="#为什么-model-是泛型的">为什么 Model 是泛型的？</a></h3>
+<p><code>Model&lt;TApi&gt;</code> 的泛型参数 <code>TApi extends Api</code> 是整个类型系统的支点。它的作用不在于 Model 本身的字段差异（大部分字段对所有 api 都一样），而在于<strong>向下传播协议信息</strong>。</p>
+<p>看 <code>compat</code> 字段的条件类型：</p>
+<pre><code class="language-typescript">compat?: TApi extends "openai-completions"
+  ? OpenAICompletionsCompat
+  : TApi extends "openai-responses"
+    ? OpenAIResponsesCompat
+    : never;
+</code></pre>
+<p>当 <code>TApi</code> 是 <code>"openai-completions"</code> 时，<code>compat</code> 的类型是 <code>OpenAICompletionsCompat</code>（包含兼容性开关如 <code>supportsStreaming</code>）。当 <code>TApi</code> 是 <code>"anthropic-messages"</code> 时，<code>compat</code> 是 <code>never</code> — 根本不存在这个字段。</p>
+<p>更重要的是，<code>Model&lt;TApi&gt;</code> 的泛型参数会传递给 <code>StreamFunction</code>：</p>
+<pre><code class="language-typescript">// packages/ai/src/types.ts:125-129
+
+export type StreamFunction&lt;
+  TApi extends Api = Api,
+  TOptions extends StreamOptions = StreamOptions
+&gt; = (
+  model: Model&lt;TApi&gt;,
+  context: Context,
+  options?: TOptions,
+) =&gt; AssistantMessageEventStream;
+</code></pre>
+<p>当一个 provider 声明自己的 stream 函数为 <code>StreamFunction&lt;"anthropic-messages", AnthropicOptions&gt;</code> 时，TypeScript 保证：</p>
+<ol>
+<li>传入的 <code>model</code> 一定是 <code>Model&lt;"anthropic-messages"&gt;</code>，即 <code>model.api</code> 一定是 <code>"anthropic-messages"</code></li>
+<li><code>options</code> 一定是 <code>AnthropicOptions</code>（包含 Anthropic 特有的 cache control 等选项）</li>
+</ol>
+<p>这种设计让每个 provider 的实现在<strong>类型层面就知道自己服务的是哪种协议</strong>，不需要运行时判断。</p>
+<h2 id="98-行的注册表"><a class="header" href="#98-行的注册表">98 行的注册表</a></h2>
+<p><code>api-registry.ts</code> 是整个 pi-ai 层的枢纽。它只有 98 行，是极简设计的范例。完整代码如下：</p>
+<pre><code class="language-typescript">// packages/ai/src/api-registry.ts:1-38（类型定义和状态）
+
+export type ApiStreamFunction = (
+  model: Model&lt;Api&gt;,
+  context: Context,
+  options?: StreamOptions,
+) =&gt; AssistantMessageEventStream;
+
+export type ApiStreamSimpleFunction = (
+  model: Model&lt;Api&gt;,
+  context: Context,
+  options?: SimpleStreamOptions,
+) =&gt; AssistantMessageEventStream;
+
+export interface ApiProvider&lt;
+  TApi extends Api = Api,
+  TOptions extends StreamOptions = StreamOptions
+&gt; {
+  api: TApi;
+  stream: StreamFunction&lt;TApi, TOptions&gt;;
+  streamSimple: StreamFunction&lt;TApi, SimpleStreamOptions&gt;;
+}
+
+interface ApiProviderInternal {
+  api: Api;
+  stream: ApiStreamFunction;
+  streamSimple: ApiStreamSimpleFunction;
+}
+
+type RegisteredApiProvider = {
+  provider: ApiProviderInternal;
+  sourceId?: string;
+};
+
+const apiProviderRegistry = new Map&lt;string, RegisteredApiProvider&gt;();
+</code></pre>
+<pre><code class="language-typescript">// packages/ai/src/api-registry.ts:66-98（公共 API）
+
+export function registerApiProvider&lt;TApi extends Api,
+  TOptions extends StreamOptions&gt;(
+  provider: ApiProvider&lt;TApi, TOptions&gt;,
+  sourceId?: string,
+): void {
+  apiProviderRegistry.set(provider.api, {
+    provider: {
+      api: provider.api,
+      stream: wrapStream(provider.api, provider.stream),
+      streamSimple: wrapStreamSimple(provider.api,
+        provider.streamSimple),
+    },
+    sourceId,
+  });
+}
+
+export function getApiProvider(api: Api) {
+  return apiProviderRegistry.get(api)?.provider;
+}
+
+export function getApiProviders(): ApiProviderInternal[] {
+  return Array.from(apiProviderRegistry.values(),
+    (entry) =&gt; entry.provider);
+}
+
+export function unregisterApiProviders(sourceId: string): void {
+  for (const [api, entry] of apiProviderRegistry.entries()) {
+    if (entry.sourceId === sourceId) {
+      apiProviderRegistry.delete(api);
+    }
+  }
+}
+
+export function clearApiProviders(): void {
+  apiProviderRegistry.clear();
+}
+</code></pre>
+<p>整个注册表的 API 面只有五个函数：<code>registerApiProvider</code>（注册）、<code>getApiProvider</code>（查找单个）、<code>getApiProviders</code>（列出全部）、<code>unregisterApiProviders</code>（按 sourceId 批量注销）、<code>clearApiProviders</code>（清空，用于测试）。其中前四个是常用的。</p>
+<h3 id="为什么-apiprovider-只有两个方法"><a class="header" href="#为什么-apiprovider-只有两个方法">为什么 <code>ApiProvider</code> 只有两个方法？</a></h3>
+<p><code>ApiProvider</code> 接口只要求实现者提供 <code>stream</code> 和 <code>streamSimple</code> 两个方法。没有 <code>complete</code>、没有 <code>embed</code>、没有 <code>tokenCount</code>：</p>
+<ul>
+<li><strong><code>stream</code></strong>：接收完整的 <code>StreamOptions</code>（包含 provider 特定选项），返回事件流</li>
+<li><strong><code>streamSimple</code></strong>：接收 <code>SimpleStreamOptions</code>（统一选项 + reasoning level），返回事件流</li>
+</ul>
+<p>为什么不直接用一个 <code>stream</code> 方法？因为两者的职责不同：</p>
+<p><code>stream</code> 是给<strong>知道自己在做什么</strong>的调用者用的 — 它传递 provider 特定的选项（比如 Anthropic 的 cache control、Google 的 safety settings）。类型是 <code>StreamFunction&lt;TApi, TOptions&gt;</code>，其中 <code>TOptions</code> 是泛型的。</p>
+<p><code>streamSimple</code> 是给<strong>不关心 provider 差异</strong>的调用者用的 — 它只传递统一选项（temperature、maxTokens、reasoning level）。循环引擎（第 8 章）用的就是 <code>streamSimple</code>。</p>
+<p><code>complete</code> 和 <code>completeSimple</code> 不在 provider 接口中，因为它们只是 <code>stream</code> + <code>await result()</code> 的语法糖 — 我们在下一节详述。</p>
+<h3 id="sourceid为动态注销准备"><a class="header" href="#sourceid为动态注销准备"><code>sourceId</code>：为动态注销准备</a></h3>
+<p><code>registerApiProvider</code> 接受一个可选的 <code>sourceId</code>。这个 ID 的用途是批量注销：</p>
+<pre><code class="language-typescript">export function unregisterApiProviders(sourceId: string): void {
+  for (const [api, entry] of apiProviderRegistry.entries()) {
+    if (entry.sourceId === sourceId) {
+      apiProviderRegistry.delete(api);
+    }
+  }
+}
+</code></pre>
+<p>当一个 extension 注册了多个自定义 provider，卸载时只需 <code>unregisterApiProviders(extensionId)</code>，不需要记住注册了哪些。这是"注册 / 注销对称性"的设计模式。</p>
+<h3 id="类型擦除桥接"><a class="header" href="#类型擦除桥接">类型擦除桥接</a></h3>
+<p><code>registerApiProvider</code> 内部做了一件微妙的事：把泛型的 <code>StreamFunction&lt;TApi, TOptions&gt;</code> 包装成非泛型的 <code>ApiStreamFunction</code>。这是整个注册表最精巧的部分，完整代码只有两个函数：</p>
+<pre><code class="language-typescript">// packages/ai/src/api-registry.ts:42-64
+
+function wrapStream&lt;TApi extends Api,
+  TOptions extends StreamOptions&gt;(
+  api: TApi,
+  stream: StreamFunction&lt;TApi, TOptions&gt;,
+): ApiStreamFunction {
+  return (model, context, options) =&gt; {
+    if (model.api !== api) {
+      throw new Error(
+        `Mismatched api: ${model.api} expected ${api}`);
+    }
+    return stream(
+      model as Model&lt;TApi&gt;, context, options as TOptions);
+  };
+}
+
+function wrapStreamSimple&lt;TApi extends Api&gt;(
+  api: TApi,
+  streamSimple: StreamFunction&lt;TApi, SimpleStreamOptions&gt;,
+): ApiStreamSimpleFunction {
+  return (model, context, options) =&gt; {
+    if (model.api !== api) {
+      throw new Error(
+        `Mismatched api: ${model.api} expected ${api}`);
+    }
+    return streamSimple(model as Model&lt;TApi&gt;, context, options);
+  };
+}
+</code></pre>
+<p>这两个函数做了同样的事：<strong>捕获</strong> <code>api</code> 值，在运行时检查 <code>model.api !== api</code>，然后用 <code>as</code> 把类型"恢复"回去。</p>
+<p>为什么需要类型擦除？因为 <code>Map&lt;string, RegisteredApiProvider&gt;</code> 只能存一种类型。如果 Map 的 value 类型带泛型参数（比如 <code>ApiProvider&lt;TApi, TOptions&gt;</code>），每个 entry 的泛型参数不同，TypeScript 无法表达"一个 Map，每个 value 的泛型参数各不相同"这种存在类型（existential type）。</p>
+<p>解决方案是经典的"入口检查 + 内部擦除"模式：</p>
+<ol>
+<li><strong>注册时</strong>：泛型约束保证 provider 的 <code>stream</code> 函数类型与 <code>api</code> 一致</li>
+<li><strong>存储时</strong>：<code>wrapStream</code> 把泛型函数包装为非泛型的 <code>ApiStreamFunction</code></li>
+<li><strong>取出时</strong>：<code>getApiProvider</code> 返回 <code>ApiProviderInternal</code>（非泛型），调用者拿到的函数签名丢失了 <code>TOptions</code> 信息</li>
+<li><strong>运行时</strong>：<code>model.api !== api</code> 检查保证不会把 Anthropic 的 model 传给 OpenAI 的 stream 函数</li>
+</ol>
+<p>类型安全的边界从编译时移到了运行时，但只在<strong>一个点</strong>（<code>wrapStream</code>）发生。这个权衡是值得的 — 它让注册表的使用者和实现者都保持简单，只在桥接层承担一次类型转换的代价。</p>
+<h2 id="streamts--薄到透明的公共-api-层"><a class="header" href="#streamts--薄到透明的公共-api-层"><code>stream.ts</code> — 薄到透明的公共 API 层</a></h2>
+<p>注册表本身不暴露给最终用户。用户看到的是 <code>stream.ts</code> 导出的四个函数。整个文件只有 59 行：</p>
+<pre><code class="language-typescript">// packages/ai/src/stream.ts:1-14
+
+import "./providers/register-builtins.js";
+
+import { getApiProvider } from "./api-registry.js";
+import type {
+  Api, AssistantMessage, AssistantMessageEventStream,
+  Context, Model, ProviderStreamOptions,
+  SimpleStreamOptions, StreamOptions,
+} from "./types.js";
+
+function resolveApiProvider(api: Api) {
+  const provider = getApiProvider(api);
+  if (!provider) {
+    throw new Error(
+      `No API provider registered for api: ${api}`);
+  }
+  return provider;
+}
+</code></pre>
+<p>第一行 <code>import "./providers/register-builtins.js"</code> 是一个<strong>副作用导入</strong> — 它不导入任何值，只确保 <code>register-builtins.ts</code> 被执行（我们在下一节详述）。</p>
+<p>然后是四个公共函数，每个都是"解析 provider + 委托"的一行逻辑：</p>
+<pre><code class="language-typescript">// packages/ai/src/stream.ts:25-59
+
+export function stream&lt;TApi extends Api&gt;(
+  model: Model&lt;TApi&gt;, context: Context,
+  options?: ProviderStreamOptions,
+): AssistantMessageEventStream {
+  const provider = resolveApiProvider(model.api);
+  return provider.stream(model, context, options);
+}
+
+export async function complete&lt;TApi extends Api&gt;(
+  model: Model&lt;TApi&gt;, context: Context,
+  options?: ProviderStreamOptions,
+): Promise&lt;AssistantMessage&gt; {
+  const s = stream(model, context, options);
+  return s.result();
+}
+
+export function streamSimple&lt;TApi extends Api&gt;(
+  model: Model&lt;TApi&gt;, context: Context,
+  options?: SimpleStreamOptions,
+): AssistantMessageEventStream {
+  const provider = resolveApiProvider(model.api);
+  return provider.streamSimple(model, context, options);
+}
+
+export async function completeSimple&lt;TApi extends Api&gt;(
+  model: Model&lt;TApi&gt;, context: Context,
+  options?: SimpleStreamOptions,
+): Promise&lt;AssistantMessage&gt; {
+  const s = streamSimple(model, context, options);
+  return s.result();
+}
+</code></pre>
+<p>四个函数的逻辑完全对称：</p>
+<div class="table-wrapper"><table><thead><tr><th>函数</th><th>选项类型</th><th>返回值</th><th>实质</th></tr></thead><tbody>
+<tr><td><code>stream</code></td><td><code>ProviderStreamOptions</code>（provider 特定）</td><td>事件流</td><td>委托 <code>provider.stream</code></td></tr>
+<tr><td><code>streamSimple</code></td><td><code>SimpleStreamOptions</code>（统一）</td><td>事件流</td><td>委托 <code>provider.streamSimple</code></td></tr>
+<tr><td><code>complete</code></td><td><code>ProviderStreamOptions</code></td><td><code>Promise&lt;AssistantMessage&gt;</code></td><td><code>stream</code> + <code>result()</code></td></tr>
+<tr><td><code>completeSimple</code></td><td><code>SimpleStreamOptions</code></td><td><code>Promise&lt;AssistantMessage&gt;</code></td><td><code>streamSimple</code> + <code>result()</code></td></tr>
+</tbody></table>
+</div>
+<p><code>complete</code> 和 <code>completeSimple</code> 根本不是独立的实现 — 它们只是对 stream 版本调用 <code>.result()</code> 的语法糖。这就是为什么 <code>ApiProvider</code> 接口只需要两个方法而不是四个：<strong>stream 是原语，complete 是派生</strong>。</p>
+<p>这个文件的存在证明了注册表设计的成功：98 行的 <code>api-registry.ts</code> 承担了全部复杂性，公共 API 层薄到几乎可以内联。对调用者来说，<code>stream(model, context, options)</code> 看起来就像在直接调用 provider，注册表完全隐形。</p>
+<h2 id="延迟加载--register-builtinsts-的启动策略"><a class="header" href="#延迟加载--register-builtinsts-的启动策略">延迟加载 — <code>register-builtins.ts</code> 的启动策略</a></h2>
+<p><code>stream.ts</code> 的第一行 <code>import "./providers/register-builtins.js"</code> 触发了一个精心设计的启动流程。<code>register-builtins.ts</code> 是一个 433 行的文件，但它的核心逻辑只有一个函数和一行调用：</p>
+<pre><code class="language-typescript">// packages/ai/src/providers/register-builtins.ts:366-433
+
+export function registerBuiltInApiProviders(): void {
+  registerApiProvider({
+    api: "anthropic-messages",
+    stream: streamAnthropic,
+    streamSimple: streamSimpleAnthropic,
+  });
+  registerApiProvider({
+    api: "openai-responses",
+    stream: streamOpenAIResponses,
+    streamSimple: streamSimpleOpenAIResponses,
+  });
+  // ... 8 more providers ...
+}
+
+registerBuiltInApiProviders(); // 模块加载时立即执行
+</code></pre>
+<p>但这里的 <code>streamAnthropic</code> 并不是真正的 Anthropic stream 函数 — 它是一个<strong>延迟加载的包装器</strong>。看它的创建方式：</p>
+<pre><code class="language-typescript">// packages/ai/src/providers/register-builtins.ts:345-346
+
+export const streamAnthropic =
+  createLazyStream(loadAnthropicProviderModule);
+export const streamSimpleAnthropic =
+  createLazySimpleStream(loadAnthropicProviderModule);
+</code></pre>
+<p><code>createLazyStream</code> 返回一个 <code>StreamFunction</code>，但它<strong>不会在注册时加载 provider 模块</strong>。真正的 <code>import("./anthropic.js")</code> 只在第一次调用 <code>streamAnthropic()</code> 时发生：</p>
+<pre><code class="language-typescript">// packages/ai/src/providers/register-builtins.ts:168-187
+
+function createLazyStream&lt;TApi extends Api,
+  TOptions extends StreamOptions,
+  TSimpleOptions extends SimpleStreamOptions&gt;(
+  loadModule: () =&gt; Promise&lt;
+    LazyProviderModule&lt;TApi, TOptions, TSimpleOptions&gt;&gt;,
+): StreamFunction&lt;TApi, TOptions&gt; {
+  return (model, context, options) =&gt; {
+    const outer = new AssistantMessageEventStream();
+    loadModule()
+      .then((module) =&gt; {
+        const inner = module.stream(model, context, options);
+        forwardStream(outer, inner);
+      })
+      .catch((error) =&gt; {
+        const message = createLazyLoadErrorMessage(model, error);
+        outer.push({ type: "error", reason: "error", error: message });
+        outer.end(message);
+      });
+    return outer;
+  };
+}
+</code></pre>
+<p>这个设计有三个关键特性：</p>
+<p><strong>1. 同步返回，异步加载。</strong> <code>createLazyStream</code> 返回的函数<strong>立即</strong>返回一个 <code>AssistantMessageEventStream</code>（<code>outer</code>）。模块加载和实际的 stream 调用在后台发生，事件通过 <code>forwardStream</code> 从内部流转发到外部流。调用者不需要知道 provider 是否已经加载。</p>
+<p><strong>2. 一次加载，永久缓存。</strong> 每个 provider 有一个 module-level 的 <code>Promise</code> 变量（如 <code>anthropicProviderModulePromise</code>）。<code>loadAnthropicProviderModule</code> 使用 <code>||=</code> 运算符确保 <code>import()</code> 只执行一次：</p>
+<pre><code class="language-typescript">// packages/ai/src/providers/register-builtins.ts:212-223
+
+function loadAnthropicProviderModule() {
+  anthropicProviderModulePromise ||=
+    import("./anthropic.js").then((module) =&gt; {
+      const provider = module as AnthropicProviderModule;
+      return {
+        stream: provider.streamAnthropic,
+        streamSimple: provider.streamSimpleAnthropic,
+      };
+    });
+  return anthropicProviderModulePromise;
+}
+</code></pre>
+<p>第一次调用触发 <code>import()</code>，后续调用直接返回同一个 Promise。即使多个并发请求同时到达，它们也会共享同一个 Promise，不会重复加载。</p>
+<p><strong>3. 加载失败不会崩溃。</strong> 如果某个 provider 的模块加载失败（比如缺少 native 依赖），错误会被编码为一个带 <code>stopReason: "error"</code> 的 <code>AssistantMessage</code>，通过事件流返回给调用者。整个系统不会因为一个 provider 的加载失败而崩溃。</p>
+<h3 id="为什么不在启动时全部加载"><a class="header" href="#为什么不在启动时全部加载">为什么不在启动时全部加载？</a></h3>
+<p>pi 支持 10 种内建 API 协议。如果在启动时 eager load 所有 provider 模块，会引入大量不需要的代码（每个 provider 模块都依赖对应厂商的 SDK）。一个只用 Anthropic 的用户不需要加载 Google Vertex 的 SDK；一个只用 OpenAI 的用户不需要加载 AWS Bedrock 的 SDK。</p>
+<p>延迟加载的代价是第一次调用某个 provider 时有一个微小的延迟（模块加载的时间）。但这个代价只发生一次，而且在 agent 场景下，第一次 LLM 调用的网络延迟远大于模块加载延迟。</p>
+<h2 id="实战添加一个新-provider-的完整步骤"><a class="header" href="#实战添加一个新-provider-的完整步骤">实战：添加一个新 provider 的完整步骤</a></h2>
+<p>为了让注册表的设计不停留在抽象层面，我们用一个具体例子走一遍完整流程。假设你要为 pi 添加一个新的 LLM 供应商 — 比如 DeepSeek，它使用 OpenAI 兼容的 API。</p>
+<p><strong>第一步：确定 Api 协议。</strong> DeepSeek 兼容 OpenAI 的 responses API，所以你不需要创建新的 api 类型。直接复用 <code>"openai-responses"</code>。这是 Provider 和 Api 分离带来的第一个好处 — 只要协议兼容，新 provider 就是零 api 代码。</p>
+<p><strong>第二步：在 <code>KnownProvider</code> 中添加名称。</strong> 在 <code>types.ts</code> 的 <code>KnownProvider</code> 联合中加入 <code>"deepseek"</code>。这不是必须的（<code>Provider = KnownProvider | string</code>，任意字符串都合法），但加入后 IDE 会提供自动补全。</p>
+<p><strong>第三步：定义 Model 对象。</strong> 在模型目录（model catalog）中添加 DeepSeek 的模型定义：</p>
+<pre><code class="language-typescript">const deepseekR1: Model&lt;"openai-responses"&gt; = {
+  id: "deepseek-reasoner",
+  name: "DeepSeek R1",
+  api: "openai-responses",
+  provider: "deepseek",
+  baseUrl: "https://api.deepseek.com/v1",
+  reasoning: true,
+  input: ["text"],
+  cost: { input: 0.55, output: 2.19,
+    cacheRead: 0.14, cacheWrite: 0.55 },
+  contextWindow: 64000,
+  maxTokens: 8192,
+};
+</code></pre>
+<p>注意 <code>api: "openai-responses"</code> — 这告诉注册表用 OpenAI responses 协议与 DeepSeek 通信。</p>
+<p><strong>第四步：结束。</strong> 没有第四步。</p>
+<p>因为 <code>"openai-responses"</code> 这个 api 已经在 <code>register-builtins.ts</code> 中注册了对应的 <code>stream</code> 和 <code>streamSimple</code> 实现，任何声明 <code>api: "openai-responses"</code> 的 model 都可以直接使用。用户调用 <code>stream(deepseekR1, context)</code> 时，注册表按 <code>model.api</code> 查找到 OpenAI responses 的 provider，然后将 <code>model.baseUrl</code>（<code>https://api.deepseek.com/v1</code>）传递给它。</p>
+<p>如果 DeepSeek 使用的是<strong>完全不兼容</strong>的私有协议，那么你需要：</p>
+<ol>
+<li>在 <code>KnownApi</code> 中添加 <code>"deepseek-native"</code>（或用任意字符串，不修改 KnownApi）</li>
+<li>创建 <code>providers/deepseek.ts</code>，实现 <code>stream</code> 和 <code>streamSimple</code> 两个函数</li>
+<li>在 <code>register-builtins.ts</code> 中添加延迟加载逻辑（约 20 行样板代码）</li>
+<li>调用 <code>registerApiProvider({ api: "deepseek-native", stream, streamSimple })</code></li>
+</ol>
+<p>即使是这种最复杂的情况，修改 <code>api-registry.ts</code> 的代码量也是 <strong>零行</strong>。注册表的代码从引入以来没有因为增加 provider 而改变过。这正是注册表模式的设计目标：<strong>核心不变，边缘生长</strong>。</p>
+<h2 id="取舍分析"><a class="header" href="#取舍分析">取舍分析</a></h2>
+<h3 id="得到了什么"><a class="header" href="#得到了什么">得到了什么</a></h3>
+<p><strong>1. 无限扩展性</strong>。任何人都可以在运行时注册新的 provider，不需要修改 pi-ai 的代码。Extension 可以在用户启动后动态加载 provider。</p>
+<p><strong>2. Provider 和 Api 的解耦</strong>。同一个 api 协议可以被多个 provider 复用。增加 Azure OpenAI 或 GitHub Copilot 不需要重写 OpenAI 的 api 实现。</p>
+<p><strong>3. 极简的公共 API</strong>。注册表只暴露 5 个函数。用户面对的 <code>stream.ts</code> 只有 4 个函数。新的 provider 开发者只需要实现 <code>stream</code> 和 <code>streamSimple</code> 两个方法。</p>
+<p><strong>4. 启动零成本</strong>。延迟加载确保了只有实际使用的 provider 模块才会被加载。10 个内建 provider 中，一次会话通常只加载 1-2 个。</p>
+<p><strong>5. 复杂性集中</strong>。整个 pi-ai 层的"设计复杂性"集中在 98 行的 <code>api-registry.ts</code> 中。<code>stream.ts</code> 是纯粹的委托；<code>register-builtins.ts</code> 是纯粹的样板。理解了注册表，就理解了一切。</p>
+<h3 id="放弃了什么"><a class="header" href="#放弃了什么">放弃了什么</a></h3>
+<p><strong>1. 静态分析能力</strong>。因为 provider 是运行时注册的，编译器不知道哪些 provider 可用。你不能写 <code>if (api === "openai-responses")</code> 然后让编译器保证这个 provider 一定存在。</p>
+<p><strong>2. 类型擦除的代价</strong>。存储时的类型擦除意味着 <code>getApiProvider</code> 返回的是非泛型的 <code>ApiProviderInternal</code>。调用者拿到的函数签名丢失了 <code>TOptions</code> 的具体类型信息。在 <code>stream.ts</code> 中，<code>options</code> 被类型为 <code>ProviderStreamOptions</code>（即 <code>StreamOptions &amp; Record&lt;string, unknown&gt;</code>），这是一个"什么都可以传"的类型 — provider 特定的选项在类型层面不受检查。</p>
+<p><strong>3. 运行时才知道 provider 是否可用</strong>。如果用户配置了一个尚未注册的 provider，错误只会在第一次调用 <code>stream</code> 时发生（<code>resolveApiProvider</code> 抛出 <code>No API provider registered for api</code>），而不是在配置时。</p>
+<p><strong>4. 延迟加载的第一次调用延迟</strong>。虽然通常可以忽略，但在极端场景下（冷启动 + 第一次调用 + provider 模块很大），用户可能感受到一个短暂的停顿。</p>
+<p>对于 pi 的定位 — 支持 20+ 家厂商且允许用户扩展 — 运行时注册是唯一可行的选择。静态注册意味着每增加一个 provider 就要改核心代码、重新编译、重新发布。注册表用 98 行代码买到了无限扩展性，这笔交易划算。</p>
+<hr />
+<h3 id="版本演化说明"><a class="header" href="#版本演化说明">版本演化说明</a></h3>
+<blockquote>
+<p>本章核心分析基于 pi-mono v0.66.0。<code>api-registry.ts</code> 自引入以来结构保持稳定。
+<code>sourceId</code> 机制是后来为支持 extension 动态注册/注销而添加的。
+<code>KnownApi</code> 和 <code>KnownProvider</code> 的列表会随新 provider 的加入而增长，但注册表的设计不变。
+延迟加载模式（<code>createLazyStream</code>）在早期版本中不存在，是随着 provider 数量增长到 10+ 后引入的性能优化。</p>
+</blockquote>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch03-reading-map.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="ch05-message-transform.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch03-reading-map.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="ch05-message-transform.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="mermaid.min.js"></script>
+        <script src="mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

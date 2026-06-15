@@ -1,0 +1,558 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>统一事件流设计 - pi 的设计艺术：构建生产级 Coding Agent 的架构决策</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/custom.css">
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "ayu" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">pi 的设计艺术：构建生产级 Coding Agent 的架构决策</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/ZhangHanDong/pi-book" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="第-6-章统一事件流设计"><a class="header" href="#第-6-章统一事件流设计">第 6 章：统一事件流设计</a></h1>
+<blockquote>
+<p><strong>定位</strong>：本章解析 pi-ai 的流式事件契约 — 整个系统的"最底层脉搏"。
+前置依赖：第 4 章（Provider Registry）。
+适用场景：当你想理解为什么 pi 选择流式事件而非一次性响应，或者想为自己的系统设计流式 API。</p>
+</blockquote>
+<h2 id="为什么不返回一个-promise而是返回一个事件流"><a class="header" href="#为什么不返回一个-promise而是返回一个事件流">为什么不返回一个 Promise，而是返回一个事件流？</a></h2>
+<p>这是本章的核心设计问题。</p>
+<p>最简单的 LLM API 设计是 <code>async function complete(prompt): Promise&lt;string&gt;</code>。调用、等待、拿结果。但 pi 从最底层就选择了流式设计 — 即使是不需要流式渲染的场景（比如后台任务），底层 API 仍然返回事件流。</p>
+<p>这个选择的原因不是"流式渲染更快"（虽然确实如此），而是<strong>事件流是唯一能完整捕获 LLM 交互过程的数据模型</strong>。一个 <code>Promise&lt;string&gt;</code> 能告诉你结果，但不能告诉你过程中发生了什么 — thinking 阶段用了多长时间、模型输出的每个 token 的时间分布、tool call 是在什么位置开始出现的。事件流把这些过程信息保留了下来。</p>
+<h2 id="streamfunction-的契约"><a class="header" href="#streamfunction-的契约"><code>StreamFunction</code> 的契约</a></h2>
+<p>pi-ai 层最重要的一段注释在 <code>types.ts</code> 的 <code>StreamFunction</code> 类型定义上：</p>
+<pre><code class="language-typescript">// packages/ai/src/types.ts:117-129
+
+// Contract:
+// - Must return an AssistantMessageEventStream.
+// - Once invoked, request/model/runtime failures should be encoded in the
+//   returned stream, not thrown.
+// - Error termination must produce an AssistantMessage with stopReason
+//   "error" or "aborted" and errorMessage, emitted via the stream protocol.
+export type StreamFunction&lt;TApi extends Api, TOptions extends StreamOptions&gt; = (
+  model: Model&lt;TApi&gt;,
+  context: Context,
+  options?: TOptions,
+) =&gt; AssistantMessageEventStream;
+</code></pre>
+<p>这三条规则定义了整个系统的错误处理哲学：</p>
+<p><strong>规则 1：必须返回事件流</strong>。不是 Promise，不是回调，是 <code>AssistantMessageEventStream</code>。调用者总是拿到一个流对象，然后 <code>for await</code> 消费事件。</p>
+<p><strong>规则 2：一旦调用，错误编码进流里</strong>。<code>StreamFunction</code> 本身不抛异常。网络超时、API 限流、模型不存在 — 所有失败都通过流中的事件传递。这意味着调用者不需要 try-catch。</p>
+<p><strong>规则 3：错误终止必须产出完整的 <code>AssistantMessage</code></strong>。即使请求失败了，流也必须产出一个带 <code>stopReason: "error"</code> 和 <code>errorMessage</code> 的 <code>AssistantMessage</code>。调用者总是可以调 <code>stream.result()</code> 拿到一个消息对象 — 成功的或失败的。</p>
+<h2 id="eventstream发布-消费的桥梁"><a class="header" href="#eventstream发布-消费的桥梁"><code>EventStream</code>：发布-消费的桥梁</a></h2>
+<p><code>AssistantMessageEventStream</code> 的底层实现是一个通用的 <code>EventStream&lt;T, R&gt;</code> 类。这个类只有 66 行，却是整个流式架构的基石。我们完整地展示它，然后逐段分析。</p>
+<h3 id="完整实现"><a class="header" href="#完整实现">完整实现</a></h3>
+<pre><code class="language-typescript">// packages/ai/src/utils/event-stream.ts:4-66
+
+export class EventStream&lt;T, R = T&gt; implements AsyncIterable&lt;T&gt; {
+  private queue: T[] = [];
+  private waiting: ((value: IteratorResult&lt;T&gt;) =&gt; void)[] = [];
+  private done = false;
+  private finalResultPromise: Promise&lt;R&gt;;
+  private resolveFinalResult!: (result: R) =&gt; void;
+
+  constructor(
+    private isComplete: (event: T) =&gt; boolean,
+    private extractResult: (event: T) =&gt; R,
+  ) {
+    this.finalResultPromise = new Promise((resolve) =&gt; {
+      this.resolveFinalResult = resolve;
+    });
+  }
+
+  push(event: T): void {
+    if (this.done) return;
+    if (this.isComplete(event)) {
+      this.done = true;
+      this.resolveFinalResult(this.extractResult(event));
+    }
+    const waiter = this.waiting.shift();
+    if (waiter) {
+      waiter({ value: event, done: false });
+    } else {
+      this.queue.push(event);
+    }
+  }
+
+  end(result?: R): void {
+    this.done = true;
+    if (result !== undefined) {
+      this.resolveFinalResult(result);
+    }
+    while (this.waiting.length &gt; 0) {
+      const waiter = this.waiting.shift()!;
+      waiter({ value: undefined as any, done: true });
+    }
+  }
+</code></pre>
+<pre><code class="language-typescript">// packages/ai/src/utils/event-stream.ts:49-66
+
+  async *[Symbol.asyncIterator](): AsyncIterator&lt;T&gt; {
+    while (true) {
+      if (this.queue.length &gt; 0) {
+        yield this.queue.shift()!;
+      } else if (this.done) {
+        return;
+      } else {
+        const result = await new Promise&lt;IteratorResult&lt;T&gt;&gt;(
+          (resolve) =&gt; this.waiting.push(resolve)
+        );
+        if (result.done) return;
+        yield result.value;
+      }
+    }
+  }
+
+  result(): Promise&lt;R&gt; {
+    return this.finalResultPromise;
+  }
+}
+</code></pre>
+<h3 id="queuewaiting-consumer-模式"><a class="header" href="#queuewaiting-consumer-模式">Queue/Waiting Consumer 模式</a></h3>
+<p><code>EventStream</code> 的核心是一对互补的数组：<code>queue</code> 和 <code>waiting</code>。这个设计实现了生产者和消费者之间的无锁协调：</p>
+<ul>
+<li><code>queue: T[]</code> — 事件缓冲区。当事件到达但没有消费者在等待时，事件排队等候。</li>
+<li><code>waiting: ((value: IteratorResult&lt;T&gt;) =&gt; void)[]</code> — 消费者等待队列。当消费者需要下一个事件但队列为空时，消费者把自己的 resolve 函数注册到这里。</li>
+</ul>
+<p>这两个数组<strong>互斥</strong>使用：在任何时刻，要么 <code>queue</code> 里有积压的事件（消费者慢于生产者），要么 <code>waiting</code> 里有挂起的消费者（消费者快于生产者），要么两个都为空（恰好平衡）。不可能同时两个数组都有内容 — 如果有积压的事件，新来的消费者会立即拿走一个；如果有等待的消费者，新来的事件会立即送达。</p>
+<p>这个模式本质上是一个<strong>无界异步通道</strong>（unbounded async channel），但用不到 50 行代码实现了。没有引入任何第三方依赖，没有用 <code>EventEmitter</code>，没有用 <code>ReadableStream</code> — 就是两个数组和 Promise 的组合。</p>
+<h3 id="push-的工作流"><a class="header" href="#push-的工作流"><code>push()</code> 的工作流</a></h3>
+<pre><code>push(event) 被调用
+  │
+  ├── done 为 true？→ 静默丢弃，直接返回
+  │
+  ├── isComplete(event) 为 true？
+  │     → 标记 done = true
+  │     → 用 extractResult(event) resolve finalResultPromise
+  │
+  └── 尝试投递事件
+        ├── waiting 中有消费者？→ 取出第一个 waiter，直接投递
+        └── 没有消费者？→ 推入 queue 缓冲
+</code></pre>
+<p>注意 <code>push()</code> 的一个关键设计：<strong>即使事件触发了完成（<code>isComplete</code> 返回 true），该事件仍然会被投递给消费者</strong>。设置 <code>done = true</code> 和 resolve <code>finalResultPromise</code> 发生在投递之前，但投递本身不会被跳过。这意味着消费者通过 <code>for await</code> 迭代时，一定能收到 <code>done</code> 或 <code>error</code> 这个终止事件本身 — 它不会被"吞掉"。</p>
+<h3 id="end-的工作流"><a class="header" href="#end-的工作流"><code>end()</code> 的工作流</a></h3>
+<p><code>end()</code> 是为异常情况准备的"紧急关闭"方法：</p>
+<pre><code>end(result?) 被调用
+  │
+  ├── 标记 done = true
+  │
+  ├── result 不为 undefined？→ resolve finalResultPromise
+  │
+  └── 通知所有等待的消费者：发送 { done: true }
+        → 每个 waiter 收到后，asyncIterator 中的循环 return
+</code></pre>
+<p><code>end()</code> 和 <code>push()</code> 触发完成的区别在于：<code>push()</code> 是通过一个"完成事件"自然结束（流的正常终止路径），而 <code>end()</code> 是外部强制关闭流（比如 provider 代码捕获到异常后需要清理）。两者都会 resolve <code>finalResultPromise</code>，但 <code>end()</code> 不投递任何事件 — 它只是告诉所有等待中的消费者"没有更多数据了"。</p>
+<h3 id="result-和-finalresultpromise"><a class="header" href="#result-和-finalresultpromise"><code>result()</code> 和 <code>finalResultPromise</code></a></h3>
+<p><code>result()</code> 方法返回 <code>finalResultPromise</code> — 一个在构造时就创建好的 Promise。这个 Promise 在两种情况下被 resolve：</p>
+<ol>
+<li><code>push()</code> 收到一个使 <code>isComplete()</code> 返回 true 的事件时，用 <code>extractResult(event)</code> 的返回值 resolve。</li>
+<li><code>end(result)</code> 被显式传入 result 时，用这个 result 直接 resolve。</li>
+</ol>
+<p><code>result()</code> 的存在使得<strong>流式消费和一次性消费使用同一个底层机制</strong>。如果你需要流式渲染，<code>for await (const event of stream)</code> 逐个处理事件。如果你只需要最终结果，<code>await stream.result()</code> 直接等待。这就是 <code>completeSimple</code> 的实现方式：</p>
+<pre><code class="language-typescript">// 非流式用法：直接等最终结果
+const message = await stream(model, context, options).result();
+</code></pre>
+<p>一行代码，把流式 API 变成了同步 API。消费者不需要知道底层是不是流式的 — 接口是统一的。</p>
+<h3 id="asynciterator-的三态循环"><a class="header" href="#asynciterator-的三态循环"><code>asyncIterator</code> 的三态循环</a></h3>
+<p><code>[Symbol.asyncIterator]()</code> 是一个 async generator，它的 <code>while(true)</code> 循环在每次迭代中检查三种状态：</p>
+<ol>
+<li><strong><code>queue</code> 非空</strong> — 直接 shift 一个事件 yield 出去。这是"追赶"模式：生产者曾经比消费者快，积累了缓冲，消费者现在快速消耗。</li>
+<li><strong><code>done</code> 为 true 且 <code>queue</code> 为空</strong> — 流结束，return。不再产出任何值。</li>
+<li><strong><code>queue</code> 为空且 <code>done</code> 为 false</strong> — 消费者比生产者快，没有事件可消费。创建一个 Promise 并把 resolve 函数推入 <code>waiting</code>。消费者挂起在这个 Promise 上，直到 <code>push()</code> 或 <code>end()</code> 来唤醒它。</li>
+</ol>
+<p>这三态检查的顺序很重要：先检查 queue，再检查 done，最后挂起等待。这保证了即使流已经结束（<code>done</code> 为 true），消费者也会先把 queue 中的剩余事件消费完。</p>
+<h2 id="assistantmessageeventstream具体化的-llm-响应流"><a class="header" href="#assistantmessageeventstream具体化的-llm-响应流"><code>AssistantMessageEventStream</code>：具体化的 LLM 响应流</a></h2>
+<p>通用的 <code>EventStream&lt;T, R&gt;</code> 需要被具体化为 LLM 响应场景。这就是 <code>AssistantMessageEventStream</code> 的工作：</p>
+<pre><code class="language-typescript">// packages/ai/src/utils/event-stream.ts:68-82
+
+export class AssistantMessageEventStream
+  extends EventStream&lt;AssistantMessageEvent, AssistantMessage&gt; {
+  constructor() {
+    super(
+      (event) =&gt; event.type === "done" || event.type === "error",
+      (event) =&gt; {
+        if (event.type === "done") {
+          return event.message;
+        } else if (event.type === "error") {
+          return event.error;
+        }
+        throw new Error("Unexpected event type for final result");
+      },
+    );
+  }
+}
+</code></pre>
+<p>它做了两件事：</p>
+<ol>
+<li><strong>定义完成条件</strong>：<code>isComplete</code> 检查事件是否为 <code>done</code> 或 <code>error</code> 类型。只有这两种事件标志着流的终止。</li>
+<li><strong>定义结果提取</strong>：<code>extractResult</code> 从 <code>done</code> 事件取 <code>event.message</code>，从 <code>error</code> 事件取 <code>event.error</code>。两者都是 <code>AssistantMessage</code> 类型 — 成功和失败返回的是同一种数据结构，只是 <code>stopReason</code> 字段不同。</li>
+</ol>
+<h2 id="事件类型assistantmessageevent-联合类型"><a class="header" href="#事件类型assistantmessageevent-联合类型">事件类型：<code>AssistantMessageEvent</code> 联合类型</a></h2>
+<p><code>AssistantMessageEvent</code> 是一个 discriminated union，通过 <code>type</code> 字段区分 12 种事件。我们按功能分组来看：</p>
+<h3 id="生命周期事件"><a class="header" href="#生命周期事件">生命周期事件</a></h3>
+<pre><code class="language-typescript">// packages/ai/src/types.ts:238
+| { type: "start"; partial: AssistantMessage }
+</code></pre>
+<p><strong><code>start</code></strong> — 流的第一个事件。provider 在开始接收 API 响应后立即发射。携带一个初始的 <code>partial</code> AssistantMessage，此时 content 数组通常为空，但 <code>model</code>、<code>provider</code>、<code>api</code> 等元数据已经填充。消费者可以用这个事件来显示"正在生成..."的状态。</p>
+<h3 id="文本内容事件"><a class="header" href="#文本内容事件">文本内容事件</a></h3>
+<pre><code class="language-typescript">// packages/ai/src/types.ts:239-241
+| { type: "text_start"; contentIndex: number; partial: AssistantMessage }
+| { type: "text_delta"; contentIndex: number; delta: string; partial: AssistantMessage }
+| { type: "text_end"; contentIndex: number; content: string; partial: AssistantMessage }
+</code></pre>
+<p><strong><code>text_start</code></strong> — 一段文本内容开始。<code>contentIndex</code> 指向 <code>AssistantMessage.content</code> 数组中的位置。</p>
+<p><strong><code>text_delta</code></strong> — 文本增量。<code>delta</code> 是新增的文本片段（通常是一个或几个 token）。这是流式渲染的核心事件 — TUI 收到 <code>text_delta</code> 后立即追加显示。</p>
+<p><strong><code>text_end</code></strong> — 一段文本结束。<code>content</code> 是这段文本的完整内容（所有 delta 的拼接结果）。消费者可以用它来做最终校验，而不需要自己累积 delta。</p>
+<h3 id="thinking-事件"><a class="header" href="#thinking-事件">Thinking 事件</a></h3>
+<pre><code class="language-typescript">// packages/ai/src/types.ts:242-244
+| { type: "thinking_start"; contentIndex: number; partial: AssistantMessage }
+| { type: "thinking_delta"; contentIndex: number; delta: string; partial: AssistantMessage }
+| { type: "thinking_end"; contentIndex: number; content: string; partial: AssistantMessage }
+</code></pre>
+<p><strong><code>thinking_start/delta/end</code></strong> — 与文本事件结构完全相同，但语义不同。这些事件对应模型的 extended thinking 输出（如 Claude 的 thinking blocks）。消费者可以选择性地显示或隐藏 thinking 内容。版本演化说明：这组事件是后来添加的，最初的设计只有 text 和 toolcall。</p>
+<h3 id="tool-call-事件"><a class="header" href="#tool-call-事件">Tool Call 事件</a></h3>
+<pre><code class="language-typescript">// packages/ai/src/types.ts:245-247
+| { type: "toolcall_start"; contentIndex: number; partial: AssistantMessage }
+| { type: "toolcall_delta"; contentIndex: number; delta: string; partial: AssistantMessage }
+| { type: "toolcall_end"; contentIndex: number; toolCall: ToolCall; partial: AssistantMessage }
+</code></pre>
+<p><strong><code>toolcall_start</code></strong> — 模型开始生成一个 tool call。此时工具名称可能已经确定，但参数还在流式生成中。</p>
+<p><strong><code>toolcall_delta</code></strong> — 工具调用参数的增量。<code>delta</code> 是 JSON 参数字符串的一部分。与 text_delta 不同，tool call 的 delta 通常是不可直接渲染的 JSON 片段。</p>
+<p><strong><code>toolcall_end</code></strong> — 工具调用完成。<code>toolCall</code> 字段携带完整的 <code>ToolCall</code> 对象，包含 <code>id</code>、<code>name</code>、<code>arguments</code>。这是循环引擎（第 8 章）真正需要的事件 — 拿到完整的 tool call 后，引擎可以开始执行工具。</p>
+<h3 id="终止事件"><a class="header" href="#终止事件">终止事件</a></h3>
+<pre><code class="language-typescript">// packages/ai/src/types.ts:248-249
+| { type: "done"; reason: "stop" | "length" | "toolUse"; message: AssistantMessage }
+| { type: "error"; reason: "error" | "aborted"; error: AssistantMessage }
+</code></pre>
+<p>终止事件是整个事件协议中最关键的部分。它分为两种：</p>
+<p><strong><code>done</code></strong> — 正常终止。<code>reason</code> 告诉消费者<strong>为什么</strong>流结束了：</p>
+<ul>
+<li><code>"stop"</code> — 模型自然结束输出。最常见的情况，表示模型认为回答已经完整。</li>
+<li><code>"length"</code> — 达到 max tokens 限制，输出被截断。这不是错误，但消费者应该知道回答可能不完整。</li>
+<li><code>"toolUse"</code> — 模型决定调用工具。注意这里是 <code>"toolUse"</code> 而不是 <code>"tool_use"</code> — pi 使用驼峰命名作为内部统一值，而不是照搬某个具体 provider 的命名。</li>
+</ul>
+<p><strong><code>error</code></strong> — 错误终止。<code>reason</code> 区分两种错误：</p>
+<ul>
+<li><code>"error"</code> — 请求失败。网络超时、API 限流、模型返回错误响应等。</li>
+<li><code>"aborted"</code> — 用户主动中止。通常是 AbortSignal 触发的取消操作。</li>
+</ul>
+<p>两种终止事件都携带完整的 <code>AssistantMessage</code> 对象（<code>done.message</code> 和 <code>error.error</code>）。注意类型定义使用了 TypeScript 的 <code>Extract</code> 工具类型来约束 reason 的可选值 — <code>done</code> 只能携带 <code>"stop" | "length" | "toolUse"</code>，<code>error</code> 只能携带 <code>"error" | "aborted"</code>。这是编译时保证，不是运行时检查。</p>
+<h3 id="contentindex-和-partial-的设计意图"><a class="header" href="#contentindex-和-partial-的设计意图"><code>contentIndex</code> 和 <code>partial</code> 的设计意图</a></h3>
+<p>每个中间事件（除了 <code>start</code>、<code>done</code>、<code>error</code>）都携带两个公共字段：</p>
+<ul>
+<li><strong><code>contentIndex: number</code></strong> — 指向 <code>AssistantMessage.content</code> 数组中的位置。一次 LLM 响应可能包含多个内容块（先 thinking，再 text，再 tool call），<code>contentIndex</code> 标识当前事件属于哪个块。</li>
+<li><strong><code>partial: AssistantMessage</code></strong> — 到当前事件为止的累积状态。这个 partial 对象随着事件推进不断更新。消费者不需要自己维护状态 — 任何时候拿最新的 <code>partial</code> 就是当前的完整快照。</li>
+</ul>
+<p><code>partial</code> 的设计是一个有意的冗余。它增加了每个事件的数据量，但换来了消费者实现的极大简化。一个只关心最终文本的消费者，可以在收到任何事件时直接读取 <code>partial.content</code>，而不需要自己累积 delta。</p>
+<h2 id="assistantmessage最终结果类型"><a class="header" href="#assistantmessage最终结果类型"><code>AssistantMessage</code>：最终结果类型</a></h2>
+<p>无论流式消费还是一次性消费，最终拿到的都是 <code>AssistantMessage</code>：</p>
+<pre><code class="language-typescript">// packages/ai/src/types.ts:190-201
+
+export interface AssistantMessage {
+  role: "assistant";
+  content: (TextContent | ThinkingContent | ToolCall)[];
+  api: Api;
+  provider: Provider;
+  model: string;
+  responseId?: string;
+  usage: Usage;
+  stopReason: StopReason;
+  errorMessage?: string;
+  timestamp: number; // Unix timestamp in milliseconds
+}
+</code></pre>
+<p>逐字段分析：</p>
+<ul>
+<li><strong><code>role: "assistant"</code></strong> — 固定值。与 <code>UserMessage</code>（<code>role: "user"</code>）和 <code>ToolResultMessage</code>（<code>role: "toolResult"</code>）一起构成三种消息类型，用于对话历史的类型区分。</li>
+<li><strong><code>content: (TextContent | ThinkingContent | ToolCall)[]</code></strong> — 内容数组。一次响应可以包含多种类型的内容块：纯文本（<code>TextContent</code>）、思考过程（<code>ThinkingContent</code>）、工具调用（<code>ToolCall</code>）。数组的顺序对应模型输出的顺序。</li>
+<li><strong><code>api: Api</code></strong> — 使用的 API 类型，如 <code>"anthropic-messages"</code> 或 <code>"openai-responses"</code>。</li>
+<li><strong><code>provider: Provider</code></strong> — 使用的 provider，如 <code>"anthropic"</code> 或 <code>"openai"</code>。</li>
+<li><strong><code>model: string</code></strong> — 实际使用的模型名称，如 <code>"claude-sonnet-4-20250514"</code>。</li>
+<li><strong><code>responseId?: string</code></strong> — 上游 API 返回的响应标识符（可选）。不同 provider 的含义不同。</li>
+<li><strong><code>usage: Usage</code></strong> — token 使用统计，包含 <code>input</code>、<code>output</code>、<code>cacheRead</code>、<code>cacheWrite</code>、<code>totalTokens</code>，以及对应的 <code>cost</code> 计算。</li>
+<li><strong><code>stopReason: StopReason</code></strong> — 停止原因。类型为 <code>"stop" | "length" | "toolUse" | "error" | "aborted"</code>，与终止事件的 reason 对应。</li>
+<li><strong><code>errorMessage?: string</code></strong> — 当 <code>stopReason</code> 为 <code>"error"</code> 或 <code>"aborted"</code> 时，携带错误描述。</li>
+<li><strong><code>timestamp: number</code></strong> — Unix 时间戳（毫秒）。</li>
+</ul>
+<p><code>Usage</code> 类型值得单独展开：</p>
+<pre><code class="language-typescript">// packages/ai/src/types.ts:167-180
+
+export interface Usage {
+  input: number;
+  output: number;
+  cacheRead: number;
+  cacheWrite: number;
+  totalTokens: number;
+  cost: {
+    input: number;
+    output: number;
+    cacheRead: number;
+    cacheWrite: number;
+    total: number;
+  };
+}
+</code></pre>
+<p><code>Usage</code> 同时记录 token 数量和费用。<code>cacheRead</code> 和 <code>cacheWrite</code> 是 prompt caching 相关的统计 — 不是所有 provider 都支持，不支持的填 0。<code>cost</code> 嵌套对象把 token 数量按各 provider 的价格转换成了美元金额，让上层不需要知道定价细节。</p>
+<h2 id="一次典型-llm-响应的事件序列"><a class="header" href="#一次典型-llm-响应的事件序列">一次典型 LLM 响应的事件序列</a></h2>
+<p>理论分析完了，让我们看一个具体的场景：用户要求 coding agent 读取一个文件。模型决定调用 <code>read</code> 工具，同时输出一段说明文本。整个过程产生的事件序列如下：</p>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant P as Provider
+    participant S as EventStream
+    participant C as Consumer via for-await
+
+    P-&gt;&gt;S: start {partial: {content: [], model: "claude-sonnet-4-..."}}
+    
+    Note over P,S: 模型先输出思考过程
+    P-&gt;&gt;S: thinking_start {contentIndex: 0}
+    P-&gt;&gt;S: thinking_delta {contentIndex: 0, delta: "用户需要读取文件..."}
+    P-&gt;&gt;S: thinking_delta {contentIndex: 0, delta: "我应该调用 read..."}
+    P-&gt;&gt;S: thinking_end {contentIndex: 0, content: "用户需要读取文件...我应该调用 read..."}
+    
+    Note over P,S: 然后输出给用户看的文本
+    P-&gt;&gt;S: text_start {contentIndex: 1}
+    P-&gt;&gt;S: text_delta {contentIndex: 1, delta: "让我读取"}
+    P-&gt;&gt;S: text_delta {contentIndex: 1, delta: "这个文件的内容。"}
+    P-&gt;&gt;S: text_end {contentIndex: 1, content: "让我读取这个文件的内容。"}
+
+    Note over P,S: 最后输出工具调用
+    P-&gt;&gt;S: toolcall_start {contentIndex: 2}
+    P-&gt;&gt;S: toolcall_delta {contentIndex: 2, delta: '{"path":"/src/'}
+    P-&gt;&gt;S: toolcall_delta {contentIndex: 2, delta: 'main.ts"}'}
+    P-&gt;&gt;S: toolcall_end {contentIndex: 2, toolCall: {id: "tc_1", name: "read", arguments: {path: "/src/main.ts"}}}
+
+    Note over P,S: 因为有 tool call，reason 是 toolUse
+    P-&gt;&gt;S: done {reason: "toolUse", message: AssistantMessage}
+    Note over S: isComplete() → true, resolve finalResultPromise
+    S-&gt;&gt;C: 所有事件按序 yield
+</code></pre>
+<p>关键观察：</p>
+<ol>
+<li><strong><code>contentIndex</code> 递增</strong>：thinking 是 0，text 是 1，tool call 是 2。这个数字对应最终 <code>AssistantMessage.content</code> 数组的下标。</li>
+<li><strong>每个内容块都有完整的 start/delta/end 周期</strong>。消费者可以用 <code>_start</code> 和 <code>_end</code> 作为状态机的转换边界。</li>
+<li><strong><code>done</code> 的 reason 是 <code>"toolUse"</code></strong>，不是 <code>"stop"</code>。因为模型输出了 tool call，循环引擎（第 8 章）收到这个 reason 后知道需要执行工具并继续循环。</li>
+<li><strong>每个中间事件都携带 <code>partial</code></strong>。如果消费者在收到第二个 <code>text_delta</code> 后崩溃了，重启后只需要看最后一个 <code>partial</code> 就知道完整状态。</li>
+</ol>
+<p>对比另一个场景 — 纯文本回答（没有 tool call）：</p>
+<p>事件序列会简单得多：<code>start</code> → <code>text_start</code> → 多个 <code>text_delta</code> → <code>text_end</code> → <code>done {reason: "stop"}</code>。没有 thinking（如果模型不支持或未启用 extended thinking），没有 tool call，<code>contentIndex</code> 始终为 0。</p>
+<p>再对比一个错误场景 — API 限流：</p>
+<p><code>start</code> → <code>error {reason: "error", error: AssistantMessage{stopReason: "error", errorMessage: "Rate limited: retry after 30s"}}</code>。流可能只有两个事件就结束了。但消费者的处理逻辑不需要特殊化 — <code>for await</code> 正常迭代，<code>stream.result()</code> 正常返回一个 <code>AssistantMessage</code>，只是 <code>stopReason</code> 是 <code>"error"</code>。</p>
+<h2 id="取舍分析"><a class="header" href="#取舍分析">取舍分析</a></h2>
+<h3 id="得到了什么"><a class="header" href="#得到了什么">得到了什么</a></h3>
+<p><strong>1. 会话录制和回放</strong>。因为所有交互都是事件流，只需序列化事件就能录制完整的会话过程。回放时重放事件，不需要重新调用 LLM。</p>
+<p><strong>2. 统一的错误处理路径</strong>。成功和失败走同一条路 — 都是事件流里的事件。调用者不需要两套处理逻辑（try-catch + event handler）。</p>
+<p><strong>3. 消费者解耦</strong>。生产者（provider）和消费者（循环引擎、TUI、session manager）通过事件流解耦。provider 不知道谁在消费事件，消费者不知道事件来自哪个 provider。</p>
+<p><strong>4. 流式和非流式的统一</strong>。<code>stream.result()</code> 让不关心过程的调用者用一行代码拿到最终结果。底层机制完全相同，不需要维护两套 API。</p>
+<p><strong>5. 渐进式消费</strong>。<code>partial</code> 字段让消费者可以在任何时刻获取当前的完整快照，而不需要自己维护累积状态。这大幅简化了 TUI 渲染逻辑。</p>
+<h3 id="放弃了什么"><a class="header" href="#放弃了什么">放弃了什么</a></h3>
+<p><strong>1. 每个消费者都要写状态机</strong>。消费事件流比消费 <code>Promise&lt;string&gt;</code> 复杂得多。消费者需要跟踪 <code>start</code>/<code>delta</code>/<code>end</code> 状态，处理部分消息的累积。这是流式设计的固有复杂性。（<code>partial</code> 字段在一定程度上缓解了这个问题，但消费者仍然需要理解事件协议。）</p>
+<p><strong>2. 调试更困难</strong>。事件流的执行过程是异步的、交错的。当出问题时，需要查看完整的事件序列才能定位原因，比查看一个同步的函数调用栈要困难。</p>
+<p><strong>3. "Must not throw"契约需要每个 provider 遵守</strong>。如果某个 provider 的实现不小心抛了异常而没有编码进事件流，调用者的 <code>for await</code> 会收到一个意外的 rejection，整个调用链可能崩溃。这个契约是信任性的，没有编译时强制。</p>
+<p><strong>4. <code>partial</code> 的内存开销</strong>。每个中间事件都携带完整的 <code>partial</code> AssistantMessage 快照。对于一个长回答，可能有数百个 delta 事件，每个都带一份完整快照。这是用内存换取消费者的简单性。</p>
+<hr />
+<h3 id="版本演化说明"><a class="header" href="#版本演化说明">版本演化说明</a></h3>
+<blockquote>
+<p>本章核心分析基于 pi-mono v0.66.0。事件流设计自 pi-ai 创建以来是最稳定的部分。
+<code>EventStream</code> 类的实现几乎没有改变。事件类型随 provider 能力的增加而扩展
+（比如 <code>thinking_start/delta/end</code> 是后来为支持 extended thinking 而添加的）。</p>
+</blockquote>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch05-message-transform.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="ch07-oauth.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch05-message-transform.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="ch07-oauth.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="mermaid.min.js"></script>
+        <script src="mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

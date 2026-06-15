@@ -1,0 +1,501 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>agentLoop — 发动机只管转 - pi 的设计艺术：构建生产级 Coding Agent 的架构决策</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/custom.css">
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "ayu" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">pi 的设计艺术：构建生产级 Coding Agent 的架构决策</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/ZhangHanDong/pi-book" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="第-8-章agentloop--发动机只管转"><a class="header" href="#第-8-章agentloop--发动机只管转">第 8 章：<code>agentLoop</code> — 发动机只管转</a></h1>
+<blockquote>
+<p><strong>定位</strong>：本章解剖 pi 整个系统真正的发动机 — 无状态的 agent 循环引擎。
+前置依赖：第 6 章（事件流设计）。
+适用场景：当你想理解"一次 agent 执行到底经历了什么"，或者想把 pi 的循环引擎用在自己的系统里。</p>
+</blockquote>
+<h2 id="一个-agent-循环应该知道多少"><a class="header" href="#一个-agent-循环应该知道多少">一个 agent 循环应该知道多少？</a></h2>
+<p>这是本章的核心设计问题。</p>
+<p>一个直觉上的答案是"越多越好" — 循环引擎应该知道怎么管理会话、怎么重试失败的请求、怎么压缩超长上下文、怎么持久化中间状态。毕竟，这些都是"循环过程中"会遇到的问题。</p>
+<p>但 pi 给出了一个反直觉的答案：<strong>循环引擎应该知道尽可能少的东西。</strong></p>
+<p>打开 <code>packages/agent/src/agent-loop.ts</code>，文件头的注释只有一句话：</p>
+<pre><code>Agent loop that works with AgentMessage throughout.
+Transforms to Message[] only at the LLM call boundary.
+</code></pre>
+<p>这句话定义了整个循环引擎的边界：它只管把消息送进 LLM、把 LLM 的响应拿回来、如果响应里有工具调用就执行工具、然后决定要不要继续。它不知道消息从哪来，不知道消息要存到哪去，不知道哪些工具应该被允许，不知道上下文快溢出了。</p>
+<p>这个选择的代价是：所有这些"循环之外"的功能都必须由上层来实现。</p>
+<p>这个选择的收益是：循环引擎可以被任何上层随意组合 — 终端 CLI、Slack bot、Web UI、甚至一个测试用例，都可以用同一个循环，只要提供不同的配置。</p>
+<p>接下来我们拆解这个引擎的内部结构。</p>
+<h2 id="双层循环内层忙碌外层等待"><a class="header" href="#双层循环内层忙碌外层等待">双层循环：内层忙碌，外层等待</a></h2>
+<p><code>agentLoop</code> 的核心是一个约 70 行的 <code>runLoop()</code> 函数。它的设计可以用一张图概括：</p>
+<pre><code class="language-mermaid">flowchart TB
+    Start([agentLoop 启动]) --&gt; CheckSteering{有 steering\n消息?}
+    
+    CheckSteering --&gt;|有| InjectMessages[注入 steering 消息到上下文]
+    CheckSteering --&gt;|无| StreamLLM
+    InjectMessages --&gt; StreamLLM[调用 LLM\n获取 assistant 响应]
+    
+    StreamLLM --&gt; CheckError{响应是\nerror/aborted?}
+    CheckError --&gt;|是| EmitEnd([emit agent_end\n退出])
+    
+    CheckError --&gt;|否| CheckToolCalls{响应含\ntool calls?}
+    
+    CheckToolCalls --&gt;|有| ExecuteTools[执行工具调用]
+    ExecuteTools --&gt; PollSteering{再次检查\nsteering 消息}
+    PollSteering --&gt;|有| InjectMessages
+    PollSteering --&gt;|无| CheckToolCalls2{还有\ntool calls?}
+    CheckToolCalls2 --&gt;|有| StreamLLM
+    CheckToolCalls2 --&gt;|无| ExitInner
+    
+    CheckToolCalls --&gt;|无| ExitInner[内层循环结束]
+    
+    ExitInner --&gt; CheckFollowUp{有 follow-up\n消息?}
+    CheckFollowUp --&gt;|有| SetPending[设为 pending\n重新进入内层]
+    SetPending --&gt; CheckSteering
+    CheckFollowUp --&gt;|无| Done([emit agent_end\n退出])
+    
+    style Start fill:#e1f5fe
+    style EmitEnd fill:#ffcdd2
+    style Done fill:#c8e6c9
+    style StreamLLM fill:#fff3e0
+    style ExecuteTools fill:#f3e5f5
+</code></pre>
+<p>这张图展示了两个嵌套的 <code>while</code> 循环各自的职责：</p>
+<p><strong>内层循环</strong>负责"持续工作"：调用 LLM → 执行工具 → 检查 steering 消息 → 再调用 LLM。只要还有工具调用要执行，或者有用户的 steering 消息要注入，它就不停。</p>
+<p><strong>外层循环</strong>负责"被唤醒"：当内层循环结束（agent 本来要停下来），外层检查有没有 follow-up 消息。有的话，把它设为 pending，重新启动内层循环。</p>
+<p>为什么要分两层？因为 steering 和 follow-up 的语义不同：</p>
+<ul>
+<li><strong>Steering</strong>（转向）：用户在 agent 工作过程中插入一条新指令，比如"别改那个文件，换一种方式"。它在当前 turn 的工具执行完成后注入，影响下一次 LLM 调用。</li>
+<li><strong>Follow-up</strong>（追加）：用户在 agent 完成后追加一条新任务，比如"好的，现在写测试"。它只在 agent 本来要退出时才被消费。</li>
+</ul>
+<p>这两种消息的消费时机不同，所以需要两层循环来区分。如果只有一层循环，就没法区分"agent 还在干活时插入的指令"和"agent 干完活后追加的新任务"。</p>
+<h2 id="源码解剖runloop-的-80-行"><a class="header" href="#源码解剖runloop-的-80-行">源码解剖：<code>runLoop()</code> 的 80 行</a></h2>
+<p>让我们看看实际代码。为了聚焦设计，这里展示 <code>runLoop()</code> 的核心结构（简化版，省略了 <code>turn_start</code>/<code>turn_end</code> 事件发射和 <code>firstTurn</code> 首轮保护逻辑，完整版见源码）：</p>
+<pre><code class="language-typescript">// packages/agent/src/agent-loop.ts:155-232（简化）
+
+async function runLoop(
+  currentContext: AgentContext,
+  newMessages: AgentMessage[],
+  config: AgentLoopConfig,
+  signal: AbortSignal | undefined,
+  emit: AgentEventSink,
+  streamFn?: StreamFn,
+): Promise&lt;void&gt; {
+  let pendingMessages: AgentMessage[] =
+    (await config.getSteeringMessages?.()) || [];
+
+  // 外层循环：处理 follow-up 消息
+  while (true) {
+    let hasMoreToolCalls = true;
+
+    // 内层循环：处理 tool calls 和 steering 消息
+    while (hasMoreToolCalls || pendingMessages.length &gt; 0) {
+      // emit turn_start（首轮由调用者发射，此处省略）
+
+      // 1. 注入 pending 消息，每条发射 message_start/end
+      if (pendingMessages.length &gt; 0) {
+        for (const message of pendingMessages) {
+          // emit message_start, message_end
+          currentContext.messages.push(message);
+          newMessages.push(message);
+        }
+        pendingMessages = [];
+      }
+
+      // 2. 调用 LLM，获取 assistant 响应
+      const message = await streamAssistantResponse(
+        currentContext, config, signal, emit, streamFn
+      );
+      newMessages.push(message);
+
+      // 3. 错误或中止 → emit turn_end + agent_end，退出
+      if (message.stopReason === "error"
+        || message.stopReason === "aborted") {
+        return;
+      }
+
+      // 4. 提取 tool calls，有则执行
+      const toolCalls = message.content
+        .filter((c) =&gt; c.type === "toolCall");
+      hasMoreToolCalls = toolCalls.length &gt; 0;
+
+      if (hasMoreToolCalls) {
+        const toolResults = await executeToolCalls(
+          currentContext, message, config, signal, emit
+        );
+        for (const result of toolResults) {
+          currentContext.messages.push(result);
+          newMessages.push(result);
+        }
+      }
+
+      // emit turn_end
+      // 5. 检查有无 steering 消息
+      pendingMessages =
+        (await config.getSteeringMessages?.()) || [];
+    }
+
+    // 内层结束，检查 follow-up 消息
+    const followUpMessages =
+      (await config.getFollowUpMessages?.()) || [];
+    if (followUpMessages.length &gt; 0) {
+      pendingMessages = followUpMessages;
+      continue; // 重新进入内层
+    }
+
+    break; // 无 follow-up，真正退出
+  }
+}
+</code></pre>
+<p>整个函数只有一个 <code>return</code>（错误退出）和一个 <code>break</code>（正常退出）。控制流清晰到可以逐行朗读。</p>
+<p>注意几个设计细节：</p>
+<p><strong>1. <code>pendingMessages</code> 的复用</strong>。无论是 steering 消息还是 follow-up 消息，都通过同一个 <code>pendingMessages</code> 变量注入内层循环。外层循环的唯一动作就是把 follow-up 消息赋值给 <code>pendingMessages</code>，然后 <code>continue</code> 重新进入内层。两种消息共享同一条注入通道，但消费时机不同。</p>
+<p><strong>2. 错误通过 <code>stopReason</code> 传递，而不是异常</strong>。当 LLM 调用失败时，<code>streamAssistantResponse</code> 不会抛异常 — 它返回一个 <code>stopReason</code> 为 <code>"error"</code> 的消息。这和第 6 章讲的"错误编码进事件流"的设计一脉相承。循环引擎不需要 try-catch，它只需要检查 <code>stopReason</code>。</p>
+<p><strong>3. 函数签名是纯函数式的</strong>。<code>runLoop</code> 接收 context、config、signal，返回 void（通过 <code>newMessages</code> 数组收集产出）。它不持有任何状态，不修改任何外部变量（除了 <code>currentContext.messages</code> 和 <code>newMessages</code> 这两个被调用者传入的可变引用）。</p>
+<h2 id="消息变换管道只在-llm-边界发生"><a class="header" href="#消息变换管道只在-llm-边界发生">消息变换管道：只在 LLM 边界发生</a></h2>
+<p><code>runLoop()</code> 把"调 LLM"委托给了 <code>streamAssistantResponse()</code>。这个函数做了一件非常重要的事：<strong>把 AgentMessage 世界和 LLM Message 世界桥接起来</strong>。</p>
+<pre><code class="language-typescript">// packages/agent/src/agent-loop.ts:238-271（简化，完整的流式
+// 事件处理约 90 行，这里只展示管道结构）
+
+async function streamAssistantResponse(
+  context: AgentContext,
+  config: AgentLoopConfig,
+  signal: AbortSignal | undefined,
+  emit: AgentEventSink,
+  streamFn?: StreamFn,
+): Promise&lt;AssistantMessage&gt; {
+  // 第一步：AgentMessage[] → AgentMessage[]（可选裁剪）
+  let messages = context.messages;
+  if (config.transformContext) {
+    messages = await config.transformContext(messages, signal);
+  }
+
+  // 第二步：AgentMessage[] → Message[]（格式转换）
+  const llmMessages = await config.convertToLlm(messages);
+
+  // 第三步：组装 LLM 上下文并调用
+  const llmContext: Context = {
+    systemPrompt: context.systemPrompt,
+    messages: llmMessages,
+    tools: context.tools,
+  };
+
+  const response = await streamFunction(
+    config.model, llmContext, { ...config, signal }
+  );
+  // ... 事件流处理 ...
+}
+</code></pre>
+<p>这里有一条关键的设计边界：<strong>AgentMessage 和 LLM Message 是两种不同的类型</strong>。</p>
+<p><code>AgentMessage</code> 是 pi 的内部消息格式，它可以包含自定义消息类型（通过 <code>CustomAgentMessages</code> 声明合并扩展），可以包含 UI 通知、compaction 摘要、分支标记等 LLM 根本不需要看到的内容。</p>
+<p><code>Message</code> 是 pi-ai 层定义的 LLM 兼容消息格式，只包含 LLM 能理解的内容：<code>user</code>、<code>assistant</code>、<code>toolResult</code>。</p>
+<p>两者之间的转换通过一条两步管道完成：</p>
+<pre><code>AgentMessage[]
+    │
+    ├── transformContext()  ← 可选：裁剪、注入外部上下文
+    │
+    ├── convertToLlm()     ← 必须：过滤自定义消息、格式转换
+    │
+    ▼
+Message[] → LLM
+</code></pre>
+<p><strong>为什么 <code>transformContext</code> 和 <code>convertToLlm</code> 要分开？</strong></p>
+<p><code>transformContext</code> 操作的是 <code>AgentMessage[]</code>，它知道所有自定义消息类型。典型用途是 context window 管理 — 当消息太多时，裁剪老消息或替换为摘要。这个操作必须在 <code>AgentMessage</code> 层面完成，因为自定义消息可能包含裁剪决策所需的元数据。</p>
+<p><code>convertToLlm</code> 操作的是从 <code>AgentMessage[]</code> 到 <code>Message[]</code> 的转换。它过滤掉 LLM 不认识的消息类型（比如 <code>notification</code>、<code>compaction_summary</code>），把自定义消息转换成 LLM 能理解的格式。</p>
+<p>如果把这两步合成一步，<code>transformContext</code> 就必须同时理解 AgentMessage 语义和 LLM 消息格式 — 关注点耦合了。</p>
+<p><strong>为什么转换只在 LLM 调用边界发生？</strong></p>
+<p>文件头注释给出了答案：<code>Agent loop that works with AgentMessage throughout. Transforms to Message[] only at the LLM call boundary.</code></p>
+<p>循环内部全程使用 <code>AgentMessage</code>。工具执行返回的是 <code>ToolResultMessage</code>（AgentMessage 的一种），用户的 steering 消息也是 <code>AgentMessage</code>。转换只在调用 LLM 的那一刻发生。</p>
+<p>这意味着循环内部可以处理任意的自定义消息类型，而不需要关心 LLM 是否认识它们。自定义消息在循环内部是一等公民，只在出门见 LLM 时才被过滤。</p>
+<h2 id="agentloopconfig循环引擎的全部知识"><a class="header" href="#agentloopconfig循环引擎的全部知识"><code>AgentLoopConfig</code>：循环引擎的全部知识</a></h2>
+<p>一个"无状态引擎"需要知道什么才能工作？答案就藏在 <code>AgentLoopConfig</code> 里。这个类型定义了循环引擎的全部外部依赖：</p>
+<pre><code class="language-typescript">// packages/agent/src/types.ts:96-214（关键字段，简化）
+
+interface AgentLoopConfig extends SimpleStreamOptions {
+  model: Model&lt;any&gt;;
+
+  // 消息变换管道
+  convertToLlm: (messages: AgentMessage[])
+    =&gt; Message[] | Promise&lt;Message[]&gt;;
+  transformContext?: (messages: AgentMessage[], signal?: AbortSignal)
+    =&gt; Promise&lt;AgentMessage[]&gt;;
+
+  // 消息队列
+  getSteeringMessages?: () =&gt; Promise&lt;AgentMessage[]&gt;;
+  getFollowUpMessages?: () =&gt; Promise&lt;AgentMessage[]&gt;;
+
+  // 工具执行控制
+  beforeToolCall?: (context, signal?)
+    =&gt; Promise&lt;BeforeToolCallResult | undefined&gt;;
+  afterToolCall?: (context, signal?)
+    =&gt; Promise&lt;AfterToolCallResult | undefined&gt;;
+  toolExecution?: "sequential" | "parallel";
+
+  // API 密钥动态解析（支持同步或异步返回）
+  getApiKey?: (provider: string)
+    =&gt; Promise&lt;string | undefined&gt; | string | undefined;
+}
+</code></pre>
+<p>注意这个设计的纪律：</p>
+<ul>
+<li><code>convertToLlm</code> 是必须提供的（循环没有默认的转换逻辑，但 <code>Agent</code> 类提供了一个默认实现：只保留 <code>user</code>、<code>assistant</code>、<code>toolResult</code> 三种角色）</li>
+<li><code>transformContext</code> 是可选的（不提供就不裁剪）</li>
+<li><code>getSteeringMessages</code> 和 <code>getFollowUpMessages</code> 是可选的（不提供就没有消息队列）</li>
+<li><code>beforeToolCall</code> 和 <code>afterToolCall</code> 是可选的（不提供就没有工具钩子；返回 <code>undefined</code> 表示不做任何修改）</li>
+<li><code>getApiKey</code> 是可选的（注释说明了用途："important for expiring tokens"，支持同步或异步返回以适配不同的认证后端）</li>
+</ul>
+<p>循环引擎不假设任何可选功能的存在。它只在功能被提供时使用它们。这就是为什么同一个循环可以被极简的测试用例使用（只提供 <code>model</code> 和 <code>convertToLlm</code>），也可以被全功能的 coding agent 使用（提供所有字段）。</p>
+<p>多数回调函数的注释里有一条统一的契约：<strong>"Contract: must not throw or reject."</strong> 这和 <code>StreamFn</code> 的契约一脉相承（详见第 6 章）。<code>convertToLlm</code>、<code>transformContext</code>、<code>getApiKey</code>、<code>getSteeringMessages</code>、<code>getFollowUpMessages</code> 都遵守此契约 — 循环引擎不对它们做错误恢复，如果抛了异常整个循环会意外终止。</p>
+<p>但 <code>beforeToolCall</code> 和 <code>afterToolCall</code> 例外 — 它们<strong>没有</strong>此契约。循环引擎对它们做了防御性 try-catch（详见第 9 章）。这个区别反映了一个设计判断：消息变换管道是系统内部代码，有义务保证不出错；而工具钩子可能是外部扩展代码，引擎需要为它们兜底。</p>
+<h2 id="事件发射循环的唯一输出通道"><a class="header" href="#事件发射循环的唯一输出通道">事件发射：循环的唯一输出通道</a></h2>
+<p><code>runLoop()</code> 的返回值是 <code>Promise&lt;void&gt;</code> — 它不返回任何东西。循环的所有产出都通过 <code>emit</code> 回调发射：</p>
+<pre><code class="language-typescript">type AgentEventSink = (event: AgentEvent) =&gt; Promise&lt;void&gt; | void;
+</code></pre>
+<p>这是一个故意的设计选择：<strong>循环引擎不决定谁消费它的产出</strong>。它只管往 <code>emit</code> 里塞事件，至于这些事件是被 TUI 渲染、被 session manager 持久化、还是被测试用例断言，循环不知道也不关心。</p>
+<p>事件类型形成了一个完整的生命周期：</p>
+<pre><code>agent_start
+  └── turn_start
+        ├── message_start (user/steering message)
+        ├── message_end
+        ├── message_start (assistant response)
+        ├── message_update (streaming delta)
+        ├── message_end
+        ├── tool_execution_start
+        ├── tool_execution_update (partial result)
+        ├── tool_execution_end
+        └── turn_end
+  └── turn_start (next turn)
+        └── ...
+agent_end
+</code></pre>
+<p>每个订阅者都能从这个事件流中重建整个执行过程的完整状态。这也是为什么 pi 能做会话录制和回放 — 只需要序列化事件流。</p>
+<h2 id="取舍分析"><a class="header" href="#取舍分析">取舍分析</a></h2>
+<p>现在让我们退后一步，评估这个设计的得失。</p>
+<h3 id="得到了什么"><a class="header" href="#得到了什么">得到了什么</a></h3>
+<p><strong>1. 极致的可组合性</strong>。循环引擎是一个纯函数 — 给它输入（context + config），它产出事件流。任何上层都可以组合它：</p>
+<ul>
+<li>CLI 的 Agent 类用它跑交互式会话</li>
+<li>Slack bot 的 mom 用它跑一次性回复</li>
+<li>测试用例直接调用 <code>runAgentLoop()</code> 验证行为</li>
+<li>甚至可以用两个循环嵌套实现 sub-agent（外层循环的工具调用里启动内层循环）</li>
+</ul>
+<p><strong>2. 可测试性</strong>。因为循环不持有状态，测试只需要构造输入和检查输出。不需要 mock 数据库、不需要启动 UI、不需要连接真实的 LLM（提供一个假的 <code>streamFn</code> 就行）。</p>
+<p><strong>3. 关注点分离</strong>。会话持久化是 session manager 的事；UI 渲染是 TUI 的事；错误重试是上层的事；context 压缩是 compaction 模块的事。循环不参与其中任何一个。</p>
+<h3 id="放弃了什么"><a class="header" href="#放弃了什么">放弃了什么</a></h3>
+<p><strong>1. 不能自己管理会话</strong>。循环不知道"会话"这个概念的存在。它每次调用都接收一个新鲜的 <code>AgentContext</code>，不关心这个 context 是从哪来的（内存、JSONL 文件、数据库、测试固件）。如果你想要会话持久化，必须在上层实现。</p>
+<p><strong>2. 不能自己重试</strong>。当 LLM 返回错误时，循环直接退出。它不会自动重试，不会 backoff，不会切换备用模型。所有重试逻辑必须由调用者实现（通常是 Agent 类或 AgentSession）。</p>
+<p><strong>3. 不能自己压缩上下文</strong>。当 context window 快满时，循环不会自动触发 compaction。它只是把消息传给 <code>transformContext</code> — 如果调用者没提供这个回调，循环会带着越来越长的上下文继续调用 LLM，直到 provider 拒绝请求。</p>
+<p><strong>4. 需要上层正确组装 <code>AgentLoopConfig</code></strong>。循环的灵活性是以配置复杂度为代价的。<code>AgentLoopConfig</code> 有十几个字段，每个回调都有自己的契约（must not throw）。如果上层组装错了 — 比如 <code>convertToLlm</code> 遗漏了某种自定义消息类型 — 循环不会报错，只会产生意外的 LLM 行为。</p>
+<h3 id="这个取舍值得吗"><a class="header" href="#这个取舍值得吗">这个取舍值得吗？</a></h3>
+<p>对于 pi 的定位 — 一个支撑多种产品形态的 agent 运行时 — 这个取舍是值得的。</p>
+<p>如果循环引擎自己管理会话，Slack bot（用 channel 做会话）和 CLI（用 JSONL 文件做会话）就需要不同的循环实现。如果循环引擎自己重试，有些场景（自动化管道）想要快速失败，有些场景（交互式 CLI）想要无限重试，循环就要为不同的重试策略膨胀。</p>
+<p><strong>把循环做薄，是为了让上层做厚时有足够的自由度。</strong></p>
+<p>这正是整本书的主线：如何用尽可能薄的内核，撑起尽可能丰富的产品。在循环引擎这一层，这条主线得到了最纯粹的体现。</p>
+<hr />
+<h3 id="版本演化说明"><a class="header" href="#版本演化说明">版本演化说明</a></h3>
+<blockquote>
+<p>本章核心分析基于 pi-mono v0.66.0。<code>runLoop()</code> 的双层循环结构自引入以来保持稳定，
+steering/follow-up 消息队列的设计在早期版本中从单队列拆分为双队列。</p>
+</blockquote>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch07-oauth.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="ch09-tool-execution.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch07-oauth.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="ch09-tool-execution.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="mermaid.min.js"></script>
+        <script src="mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

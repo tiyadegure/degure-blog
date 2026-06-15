@@ -1,0 +1,365 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>read 的设计 — 为什么不是简单的 cat - pi 的设计艺术：构建生产级 Coding Agent 的架构决策</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/custom.css">
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "ayu" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">pi 的设计艺术：构建生产级 Coding Agent 的架构决策</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/ZhangHanDong/pi-book" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="第-21-章read-的设计--为什么不是简单的-cat"><a class="header" href="#第-21-章read-的设计--为什么不是简单的-cat">第 21 章：<code>read</code> 的设计 — 为什么不是简单的 <code>cat</code></a></h1>
+<blockquote>
+<p><strong>定位</strong>：本章解析 read 工具如何在"给 LLM 看文件"时做保护性设计。
+前置依赖：第 19 章（工具设计原则）。
+适用场景：当你想理解为什么 read 工具不直接 <code>cat</code> 文件给 LLM。</p>
+</blockquote>
+<h2 id="为什么不直接-cat"><a class="header" href="#为什么不直接-cat">为什么不直接 <code>cat</code>？</a></h2>
+<p><code>cat</code> 的问题是它没有任何保护。一个 100MB 的二进制文件会被原样输出到 LLM context 中，消耗全部 token 窗口而不产生任何有用信息。</p>
+<p>pi 的 read 工具做了三层保护：</p>
+<p><strong>1. 偏移与分页</strong>。<code>offset</code> 和 <code>limit</code> 参数让 LLM 可以只读文件的一部分。LLM 不需要一次加载整个大文件。</p>
+<p><strong>2. 截断策略</strong>。超过一定大小的输出会被截断，附带提示信息告诉 LLM "还有更多内容，请用偏移参数继续读"。</p>
+<p><strong>3. 续读提示</strong>。如果输出被截断，read 会附带续读提示告知 LLM "还有更多内容，请用 offset 参数继续读"。这让 LLM 可以按需增量读取大文件，而不是一次性加载。</p>
+<h2 id="schema-定义三个参数撑起整个读取逻辑"><a class="header" href="#schema-定义三个参数撑起整个读取逻辑">Schema 定义：三个参数撑起整个读取逻辑</a></h2>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/tools/read.ts:17-21
+const readSchema = Type.Object({
+  path: Type.String({
+    description: "Path to the file to read (relative or absolute)"
+  }),
+  offset: Type.Optional(Type.Number({
+    description: "Line number to start reading from (1-indexed)"
+  })),
+  limit: Type.Optional(Type.Number({
+    description: "Maximum number of lines to read"
+  })),
+});
+</code></pre>
+<p>注意 <code>offset</code> 是 1-indexed。LLM 如果需要从第 42 行继续读，直接传 <code>offset: 42</code> 就可以。截断提示中会告知总行数和当前读到的位置，让 LLM 知道如何继续。</p>
+<h2 id="截断的双重限制"><a class="header" href="#截断的双重限制">截断的双重限制</a></h2>
+<p>read 工具的截断不是简单的"只看前 N 行"。它有两个独立的限制条件，先触发的那个生效：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/tools/truncate.ts:11-13
+export const DEFAULT_MAX_LINES = 2000;
+export const DEFAULT_MAX_BYTES = 50 * 1024; // 50KB
+</code></pre>
+<p>为什么需要两个限制？因为行数和字节数衡量的是不同维度的资源消耗：</p>
+<ul>
+<li><strong>2000 行限制</strong>防止 LLM context 被大量短行填满（比如一个巨大的 JSON 文件，每行都很短但总行数惊人）</li>
+<li><strong>50KB 字节限制</strong>防止少量超长行消耗大量 token（比如 minified JavaScript，一行就可能有几百 KB）</li>
+</ul>
+<p><code>TruncationResult</code> 类型记录了完整的截断元信息：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/tools/truncate.ts:15-38
+export interface TruncationResult {
+  content: string;
+  truncated: boolean;
+  truncatedBy: "lines" | "bytes" | null;
+  totalLines: number;
+  totalBytes: number;
+  outputLines: number;
+  outputBytes: number;
+  lastLinePartial: boolean;
+  firstLineExceedsLimit: boolean;
+  maxLines: number;
+  maxBytes: number;
+}
+</code></pre>
+<p><code>firstLineExceedsLimit</code> 是一个有趣的边界情况处理：如果文件的第一行就超过了 50KB 限制（比如 minified CSS），read 不会返回一个被截断到一半的行，而是返回一条提示让 LLM 用 bash 的 <code>sed</code> + <code>head -c</code> 来读取。这比返回半截内容更有用 — 半截的 minified CSS 对 LLM 没有任何帮助。</p>
+<h2 id="图片读取自动检测与-base64-编码"><a class="header" href="#图片读取自动检测与-base64-编码">图片读取：自动检测与 base64 编码</a></h2>
+<p>Read 工具不仅读文本 — 它能检测并正确返回图片文件。这对多模态 LLM 至关重要：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/tools/read.ts:32-40
+export interface ReadOperations {
+  readFile: (absolutePath: string) =&gt; Promise&lt;Buffer&gt;;
+  access: (absolutePath: string) =&gt; Promise&lt;void&gt;;
+  detectImageMimeType?: (
+    absolutePath: string
+  ) =&gt; Promise&lt;string | null | undefined&gt;;
+}
+</code></pre>
+<p>当 <code>detectImageMimeType</code> 返回非空值时，read 走图片路径而非文本路径。流程是：</p>
+<ol>
+<li>读取文件为 <code>Buffer</code></li>
+<li>转换为 base64 编码字符串</li>
+<li>如果 <code>autoResizeImages</code> 开启（默认），调用 <code>resizeImage()</code> 将图片缩放到 2000x2000 以内</li>
+<li>返回一个包含 <code>TextContent</code>（描述信息）和 <code>ImageContent</code>（base64 数据）的数组</li>
+</ol>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/tools/read.ts:157-183
+const mimeType = ops.detectImageMimeType
+  ? await ops.detectImageMimeType(absolutePath)
+  : undefined;
+
+if (mimeType) {
+  const buffer = await ops.readFile(absolutePath);
+  const base64 = buffer.toString("base64");
+  if (autoResizeImages) {
+    const resized = await resizeImage({
+      type: "image", data: base64, mimeType
+    });
+    if (!resized) {
+      content = [{
+        type: "text",
+        text: `Read image file [${mimeType}]\n` +
+          `[Image omitted: could not be resized ...]`
+      }];
+    } else {
+      content = [
+        { type: "text", text: `Read image file [${resized.mimeType}]` },
+        { type: "image", data: resized.data, mimeType: resized.mimeType }
+      ];
+    }
+  }
+}
+</code></pre>
+<p><code>autoResizeImages</code> 的默认值是 <code>true</code>。这意味着用户截图一个 4K 显示器的屏幕（几 MB 的 PNG），read 会自动缩小到合理尺寸再发送给 LLM。这避免了图片 token 消耗失控 — API 按图片像素数计费，一张 4K 截图可能消耗几千 token。</p>
+<p>resize 失败时不会报错，而是返回一条 "Image omitted" 的文本提示。这种优雅降级确保了 read 工具永远不会因为图片处理失败而让整个 tool call 失败。</p>
+<h2 id="非文本文件的处理边界"><a class="header" href="#非文本文件的处理边界">非文本文件的处理边界</a></h2>
+<p>read 工具的 schema 只有 <code>path</code>、<code>offset</code>、<code>limit</code> 三个参数 — 没有 PDF 页码范围、Jupyter cell 选择等专用参数。它的设计重心是<strong>文本文件和图片</strong>。</p>
+<p>对于 PDF 和 Jupyter notebook 等格式，read 工具不提供专用的参数化支持。如果 LLM 需要处理这些格式，通常会退回到 bash 工具使用专门的命令行工具（如 <code>pdftotext</code>）。这是"专用工具做专用事"原则的体现 — read 不试图成为万能的文件解析器。</p>
+<h2 id="readoperations-的-pluggable-设计"><a class="header" href="#readoperations-的-pluggable-设计"><code>ReadOperations</code> 的 Pluggable 设计</a></h2>
+<p>和其他工具一样，read 通过接口抽象了底层操作：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/tools/read.ts:42-46
+const defaultReadOperations: ReadOperations = {
+  readFile: (path) =&gt; fsReadFile(path),
+  access: (path) =&gt; fsAccess(path, constants.R_OK),
+  detectImageMimeType: detectSupportedImageMimeTypeFromFile,
+};
+</code></pre>
+<p>默认实现直接调用 Node.js 的 <code>fs</code> 模块读取本地文件。但 <code>ReadOperations</code> 可以被替换为：</p>
+<ul>
+<li><strong>SSH 远程读取</strong>：通过 SSH 连接读取远程服务器上的文件</li>
+<li><strong>Docker 容器读取</strong>：读取容器内的文件系统</li>
+<li><strong>Git blob 读取</strong>：直接从 git object store 读取文件内容</li>
+</ul>
+<p>这种可插拔设计让 read 工具在不修改核心逻辑的情况下适应不同的执行环境。</p>
+<h2 id="tui-中的渲染语法高亮与折叠"><a class="header" href="#tui-中的渲染语法高亮与折叠">TUI 中的渲染：语法高亮与折叠</a></h2>
+<p>read 结果在 TUI 中的展示也经过了精心设计。<code>formatReadResult</code> 函数会：</p>
+<ol>
+<li>根据文件扩展名检测语言（<code>getLanguageFromPath</code>）</li>
+<li>对代码内容做语法高亮（<code>highlightCode</code>）</li>
+<li>默认只显示前 10 行，更多内容需要用户手动展开</li>
+<li>截断信息用 warning 色显示，提示 LLM 输出被限制了</li>
+</ol>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/tools/read.ts:93-98
+const maxLines = options.expanded ? lines.length : 10;
+const displayLines = lines.slice(0, maxLines);
+const remaining = lines.length - maxLines;
+if (remaining &gt; 0) {
+  text += `... (${remaining} more lines, press key to expand)`;
+}
+</code></pre>
+<p>这里有一个微妙的分层：LLM 看到的是完整的截断后内容（最多 2000 行/50KB），但用户在 TUI 中看到的默认只有 10 行。两个截断分别服务不同的受众 — LLM 需要足够的上下文做决策，用户只需要确认 read 读对了文件。</p>
+<h2 id="取舍分析"><a class="header" href="#取舍分析">取舍分析</a></h2>
+<h3 id="得到了什么"><a class="header" href="#得到了什么">得到了什么</a></h3>
+<p><strong>安全的文件探索</strong>。LLM 不会因为读了一个大文件而耗尽 context。<code>offset/limit</code> 配合续读提示让 read → read 的增量探索工作流更流畅。双重截断限制（行数 + 字节数）覆盖了不同类型文件的边界情况。</p>
+<p><strong>文本与图片支持</strong>。同一个 read 工具处理文本文件和图片，LLM 不需要为这两种常见格式学习不同的工具。图片通过自动检测 MIME 类型走 base64 路径。</p>
+<p><strong>可插拔的执行后端</strong>。<code>ReadOperations</code> 接口让 read 工具可以适应本地、远程、容器等不同环境。</p>
+<h3 id="放弃了什么"><a class="header" href="#放弃了什么">放弃了什么</a></h3>
+<p><strong>截断丢失上下文</strong>。截断意味着 LLM 可能需要多次 read 调用才能获取完整信息。但相比一次性加载大文件耗尽 context window 的后果，这个开销值得。</p>
+<p><strong>图片 resize 可能丢失细节</strong>。自动缩放到 2000x2000 以内意味着 LLM 看不到高分辨率的细节。对于需要像素级精度的场景（比如 UI 截图中的小字体），这是一个潜在的问题。但对大多数场景，缩放后的图片已经足够。</p>
+<hr />
+<h3 id="版本演化说明"><a class="header" href="#版本演化说明">版本演化说明</a></h3>
+<blockquote>
+<p>本章核心分析基于 pi-mono v0.66.0。Read 工具支持文本文件读取（带截断保护）
+和图片读取（自动检测图片格式并返回 base64 编码）。
+<code>ReadOperations</code> 的 pluggable 设计在图片支持添加时一同引入。</p>
+</blockquote>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch20-edit-tool.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="ch22-bash-tool.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch20-edit-tool.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="ch22-bash-tool.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="mermaid.min.js"></script>
+        <script src="mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

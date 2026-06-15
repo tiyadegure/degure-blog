@@ -1,0 +1,661 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>会话树：比&quot;聊天记录&quot;更好的数据模型 - pi 的设计艺术：构建生产级 Coding Agent 的架构决策</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/custom.css">
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "ayu" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">pi 的设计艺术：构建生产级 Coding Agent 的架构决策</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/ZhangHanDong/pi-book" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="第-11-章会话树--比聊天记录更好的数据模型"><a class="header" href="#第-11-章会话树--比聊天记录更好的数据模型">第 11 章：会话树 — 比"聊天记录"更好的数据模型</a></h1>
+<blockquote>
+<p><strong>定位</strong>：本章解析 pi 的会话持久化设计 — 为什么用树而不是列表，为什么用 JSONL 而不是数据库。
+前置依赖：第 10 章（Agent 类的状态管理）。
+适用场景：当你想理解 coding agent 为什么需要分支和回溯，或者想为自己的 agent 系统设计会话存储。</p>
+</blockquote>
+<h2 id="coding-agent-的会话为什么不是线性的"><a class="header" href="#coding-agent-的会话为什么不是线性的">Coding agent 的会话为什么不是线性的？</a></h2>
+<p>这是本章的核心设计问题。</p>
+<p>聊天机器人的会话是线性的 — 一问一答，从头到尾。但 coding agent 的工作流本质上是非线性的：</p>
+<ul>
+<li>用户让 agent 重构一段代码，agent 改了 5 个文件。用户发现改错了，想<strong>回到改之前</strong>，用不同的方式重试</li>
+<li>agent 执行了一个 bash 命令，结果不对。用户想<strong>从那个命令之前</strong>重新开始，换个命令</li>
+<li>用户在第 20 轮发现第 5 轮的一个决策不对，想<strong>跳回第 5 轮</strong>创建一个新分支</li>
+</ul>
+<p>如果用线性列表存储，这些操作要么不可能（无法回溯），要么需要复制整个会话历史（浪费存储）。</p>
+<p>pi 的解决方案是<strong>会话树</strong> — 每条消息有一个 <code>parentId</code>，指向它的前驱消息。分支就是同一个父节点下的多个子节点。</p>
+<h2 id="jsonl--parentid极简的树形存储"><a class="header" href="#jsonl--parentid极简的树形存储">JSONL + parentId：极简的树形存储</a></h2>
+<p>会话文件是一个 JSONL（JSON Lines）文件，每行一个 JSON 对象。第一行是 session header，后续行是 session entries：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/session-manager.ts:29-36
+
+interface SessionHeader {
+  type: "session";
+  version?: number;  // 当前 v3
+  id: string;
+  timestamp: string;
+  cwd: string;
+  parentSession?: string;  // fork 来源
+}
+</code></pre>
+<p><code>SessionHeader</code> 是会话文件的第一行，它不参与树结构，而是记录会话级别的元信息。<code>version</code> 字段驱动向后兼容的迁移逻辑（后文详述）。<code>parentSession</code> 在用户从一个分支创建新 session 文件时，记录来源 session 的路径，形成 session 之间的溯源链。</p>
+<p>每个 entry 都有 <code>id</code> 和 <code>parentId</code>，形成树形结构：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/session-manager.ts:43-48
+
+interface SessionEntryBase {
+  type: string;
+  id: string;
+  parentId: string | null;  // null = 根节点
+  timestamp: string;
+}
+</code></pre>
+<p><code>id</code> 是 8 位十六进制字符串，由 <code>randomUUID().slice(0, 8)</code> 生成，并通过碰撞检查确保唯一性。为什么不用完整的 UUID？因为这些 id 会出现在 TUI 的分支导航中，短 id 对人类更友好。<code>parentId</code> 指向前驱 entry 的 id，<code>null</code> 表示这是树的根节点（通常是用户的第一条消息）。</p>
+<pre><code class="language-mermaid">graph TD
+    H["SessionHeader\nv3, id: abc"]
+    E1["msg:user '重构这段代码'\nid:a1, parent:null"]
+    E2["msg:assistant '好的...'\nid:a2, parent:a1"]
+    E3["msg:user '不对，换种方式'\nid:a3, parent:a1"]
+    E4["msg:assistant '那试试...'\nid:a4, parent:a3"]
+    E5["compaction '摘要...'\nid:a5, parent:a2"]
+    E6["msg:user '继续'\nid:a6, parent:a5"]
+    
+    H --&gt; E1
+    E1 --&gt; E2
+    E1 --&gt; E3
+    E3 --&gt; E4
+    E2 --&gt; E5
+    E5 --&gt; E6
+    
+    style E3 fill:#fff3e0
+    style E4 fill:#fff3e0
+    style E5 fill:#e3f2fd
+</code></pre>
+<p>这张图中，<code>a3</code>（"不对，换种方式"）和 <code>a2</code>（"好的..."）共享同一个父节点 <code>a1</code>。这就是一个分支点。用户在 <code>a1</code> 之后走了两条路。<code>a5</code> 是一个 compaction entry — 它把 <code>a1→a2</code> 的对话压缩成摘要，<code>a6</code> 从摘要继续。</p>
+<h2 id="9-种-entry-类型"><a class="header" href="#9-种-entry-类型">9 种 Entry 类型</a></h2>
+<p><code>SessionEntry</code> 是 9 种类型的联合：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/session-manager.ts:137-146
+
+type SessionEntry =
+  | SessionMessageEntry      // 对话消息（user/assistant/toolResult）
+  | ThinkingLevelChangeEntry // 思考级别变更
+  | ModelChangeEntry         // 模型切换
+  | CompactionEntry          // 上下文压缩摘要
+  | BranchSummaryEntry       // 分支摘要
+  | CustomEntry              // extension 数据（不进 LLM context）
+  | CustomMessageEntry       // extension 消息（进 LLM context）
+  | LabelEntry               // 用户书签
+  | SessionInfoEntry;        // 会话元数据（显示名称）
+</code></pre>
+<p>这 9 种类型分为三层。理解这三层是理解整个 session 系统的关键。</p>
+<h3 id="核心层影响-llm-context"><a class="header" href="#核心层影响-llm-context">核心层：影响 LLM context</a></h3>
+<p>核心层的 3 种类型直接参与 LLM context 的构建 — <code>buildSessionContext()</code> 函数在遍历树时，只有这些类型会被转换成发送给 LLM 的消息。</p>
+<p><strong>SessionMessageEntry</strong> — 对话的基本单元：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/session-manager.ts:50-53
+
+interface SessionMessageEntry extends SessionEntryBase {
+  type: "message";
+  message: AgentMessage;
+}
+</code></pre>
+<p><code>message</code> 字段是 <code>AgentMessage</code> 类型，来自 pi-agent-core 层。它可以是 user 消息、assistant 消息、或 tool result。注意 <code>SessionMessageEntry</code> 本身并不区分消息角色 — 角色信息在 <code>message.role</code> 内部。这意味着一个 user 消息和一个 assistant 消息在 session 树中的地位是完全相同的：都是节点，都有 <code>parentId</code>，都可以被分支。</p>
+<p><strong>CompactionEntry</strong> — 上下文压缩的结果（第 12 章详述）：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/session-manager.ts:66-75
+
+interface CompactionEntry&lt;T = unknown&gt; extends SessionEntryBase {
+  type: "compaction";
+  summary: string;
+  firstKeptEntryId: string;
+  tokensBefore: number;
+  details?: T;
+  fromHook?: boolean;
+}
+</code></pre>
+<p>当对话变长、token 数接近 LLM 窗口限制时，pi 会把前面的对话压缩成一个摘要。<code>summary</code> 是压缩后的文本，<code>firstKeptEntryId</code> 标记从哪个 entry 开始保留原文（压缩点之后的消息不丢弃），<code>tokensBefore</code> 记录压缩前的 token 数。<code>details</code> 是一个泛型字段，让 extension 在压缩时附带结构化数据（比如文件操作索引）。<code>fromHook</code> 标记这个压缩是由 extension hook 生成的还是 pi 内置逻辑生成的。</p>
+<p><strong>BranchSummaryEntry</strong> — 分支时对被放弃路径的摘要：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/session-manager.ts:77-85
+
+interface BranchSummaryEntry&lt;T = unknown&gt; extends SessionEntryBase {
+  type: "branch_summary";
+  fromId: string;
+  summary: string;
+  details?: T;
+  fromHook?: boolean;
+}
+</code></pre>
+<p>当用户跳回某个节点创建新分支时，pi 可以为被放弃的对话路径生成一个摘要，注入到新分支的上下文中。这样 LLM 在新分支中知道"之前尝试过什么、为什么不行"，避免重复犯错。<code>fromId</code> 指向分支点，<code>summary</code> 是旧路径的摘要。</p>
+<h3 id="元数据层影响-session-状态"><a class="header" href="#元数据层影响-session-状态">元数据层：影响 session 状态</a></h3>
+<p>元数据层的 3 种类型记录会话过程中的配置变化。它们不生成 LLM 消息，但在 session reload 时恢复状态。</p>
+<p><strong>ThinkingLevelChangeEntry</strong> — 用户在对话中途切换了 thinking level（如从 <code>off</code> 切到 <code>high</code>）。<code>buildSessionContext()</code> 在遍历路径时会跟踪这个值，返回当前路径最后生效的 thinking level。</p>
+<p><strong>ModelChangeEntry</strong> — 用户在对话中途切换了模型（如从 Claude Sonnet 切到 Claude Opus）。同样在路径遍历时被提取，恢复到最后一次切换的状态。</p>
+<p><strong>SessionInfoEntry</strong> — 会话元数据，目前只有一个字段：<code>name</code>（用户自定义的会话显示名称）。这不是在树遍历中提取的，而是通过 <code>getSessionName()</code> 方法从后往前扫描最新的 <code>session_info</code> entry。</p>
+<p>这三种类型的共同设计特点是：它们记录<strong>事件</strong>而非<strong>状态</strong>。不维护一个"当前配置"对象，而是把每次变更作为事件追加。最终状态通过重放事件得出。这是 event sourcing 的思想 — 在 append-only 的存储中，这是唯一合理的做法。</p>
+<h3 id="扩展层为-extension-和用户提供扩展点"><a class="header" href="#扩展层为-extension-和用户提供扩展点">扩展层：为 extension 和用户提供扩展点</a></h3>
+<p>扩展层的 3 种类型是为生态设计的。它们让 extension 和用户可以在 session 中持久化自己的数据，而不需要修改 pi 的核心代码。</p>
+<p><strong>CustomEntry</strong> — extension 的私有数据仓库：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/session-manager.ts:97-101
+
+interface CustomEntry&lt;T = unknown&gt; extends SessionEntryBase {
+  type: "custom";
+  customType: string;
+  data?: T;
+}
+</code></pre>
+<p><strong>不参与</strong> LLM context。<code>customType</code> 是 extension 的标识符（如 <code>"my-extension:state"</code>），<code>data</code> 是任意结构化数据。用途：extension 在 session 中持久化内部状态。例如，一个代码审查 extension 可以把已审查的文件列表存为 <code>CustomEntry</code>，session reload 时扫描 <code>customType</code> 恢复状态。</p>
+<p><strong>CustomMessageEntry</strong> — extension 注入的 LLM 消息：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/session-manager.ts:128-134
+
+interface CustomMessageEntry&lt;T = unknown&gt; extends SessionEntryBase {
+  type: "custom_message";
+  customType: string;
+  content: string | (TextContent | ImageContent)[];
+  details?: T;
+  display: boolean;
+}
+</code></pre>
+<p><strong>参与</strong> LLM context — <code>buildSessionContext()</code> 会把它转换成 user 消息发送给 LLM。<code>content</code> 可以是纯文本或富媒体内容（文字 + 图片）。<code>display</code> 控制 TUI 渲染：<code>false</code> 表示完全隐藏（LLM 能看到但用户在界面上看不到），<code>true</code> 表示用特殊样式渲染（与普通 user 消息视觉区分）。<code>details</code> 存放 extension 私有元数据，不发送给 LLM。</p>
+<p><code>CustomEntry</code> 和 <code>CustomMessageEntry</code> 的关键区别值得再强调一次：</p>
+<ul>
+<li><code>CustomEntry</code>：<strong>不污染</strong> LLM 对话。extension 的内部状态，LLM 看不到</li>
+<li><code>CustomMessageEntry</code>：<strong>影响</strong> LLM 的输入。extension 主动向 LLM 注入额外上下文</li>
+</ul>
+<p>这个区分让 extension 既能存储自己的状态（不干扰 LLM 对话质量），又能在需要时影响 LLM 的行为（比如注入项目约定、代码规范等上下文）。</p>
+<p><strong>LabelEntry</strong> — 用户书签：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/session-manager.ts:104-108
+
+interface LabelEntry extends SessionEntryBase {
+  type: "label";
+  targetId: string;
+  label: string | undefined;
+}
+</code></pre>
+<p><code>targetId</code> 指向被标记的 entry，<code>label</code> 是用户定义的标签文本。传 <code>undefined</code> 或空字符串表示清除标签。注意 <code>LabelEntry</code> 本身也是树节点（有 <code>id</code> 和 <code>parentId</code>），但它的语义是"对另一个 entry 的标注"。<code>buildSessionContext()</code> 完全忽略它。标签通过 <code>SessionManager</code> 内部的 <code>labelsById</code> Map 解析，在 <code>getTree()</code> 返回的树节点中作为 <code>label</code> 字段附带。</p>
+<h2 id="sessiontreenode从-entry-列表到内存中的树"><a class="header" href="#sessiontreenode从-entry-列表到内存中的树">SessionTreeNode：从 entry 列表到内存中的树</a></h2>
+<p>JSONL 文件是扁平的 — 所有 entry 按追加顺序排列，树结构隐含在 <code>parentId</code> 链中。要进行树操作（找分支、遍历路径、显示树形视图），需要先把扁平列表构建成内存中的树。这就是 <code>SessionTreeNode</code> 的角色：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/session-manager.ts:152-159
+
+interface SessionTreeNode {
+  entry: SessionEntry;
+  children: SessionTreeNode[];
+  /** Resolved label for this entry, if any */
+  label?: string;
+  /** Timestamp of the latest label change */
+  labelTimestamp?: string;
+}
+</code></pre>
+<p><code>getTree()</code> 方法负责构建这棵树：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/session-manager.ts:1070-1107
+
+getTree(): SessionTreeNode[] {
+  const entries = this.getEntries();
+  const nodeMap = new Map&lt;string, SessionTreeNode&gt;();
+  const roots: SessionTreeNode[] = [];
+
+  // 第一遍：创建所有节点，解析 label
+  for (const entry of entries) {
+    const label = this.labelsById.get(entry.id);
+    const labelTimestamp = this.labelTimestampsById.get(entry.id);
+    nodeMap.set(entry.id, { entry, children: [], label, labelTimestamp });
+  }
+
+  // 第二遍：建立父子关系
+  for (const entry of entries) {
+    const node = nodeMap.get(entry.id)!;
+    if (entry.parentId === null || entry.parentId === entry.id) {
+      roots.push(node);
+    } else {
+      const parent = nodeMap.get(entry.parentId);
+      if (parent) {
+        parent.children.push(node);
+      } else {
+        roots.push(node);  // 孤儿节点 → 当作根
+      }
+    }
+  }
+  // ... 按时间排序 children
+  return roots;
+}
+</code></pre>
+<p>构建逻辑分两遍遍历：第一遍为每个 entry 创建 <code>SessionTreeNode</code>，同时从 <code>labelsById</code> Map 解析标签；第二遍根据 <code>parentId</code> 建立父子关系。如果某个 entry 的 <code>parentId</code> 指向不存在的 id（可能是数据损坏），它被当作孤儿节点推入 <code>roots</code> 数组。最后，每个节点的 <code>children</code> 按时间戳排序，确保旧分支在前、新分支在后。</p>
+<p>注意 <code>getTree()</code> 返回的是"防御性浅拷贝" — <code>entry</code> 对象是原始引用，但树结构（<code>children</code> 数组）是新建的。这意味着调用者可以安全地遍历树，而不会意外修改 <code>SessionManager</code> 的内部状态。</p>
+<p>一个设计细节：正常的 session 应该只有一个根节点（第一条用户消息）。但 <code>getTree()</code> 返回的是 <code>SessionTreeNode[]</code>（数组），允许多个根。这是防御性设计 — 处理数据损坏或 <code>resetLeaf()</code> 后创建的多棵子树。</p>
+<h2 id="buildsessioncontext从树到-llm-消息数组"><a class="header" href="#buildsessioncontext从树到-llm-消息数组">buildSessionContext：从树到 LLM 消息数组</a></h2>
+<p><code>buildSessionContext()</code> 是 session 存储和 Agent 运行时之间的桥梁。Agent 需要一个线性的消息数组来调用 LLM，而 session 是一棵树。这个函数的职责是：给定一个叶节点，沿 <code>parentId</code> 链回溯到根节点，收集路径上的消息，构建 <code>SessionContext</code>。</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/session-manager.ts:310-348
+
+function buildSessionContext(
+  entries: SessionEntry[],
+  leafId?: string | null,
+  byId?: Map&lt;string, SessionEntry&gt;,
+): SessionContext {
+  // 1. 构建 id→entry 索引（如果没传入）
+  if (!byId) {
+    byId = new Map&lt;string, SessionEntry&gt;();
+    for (const entry of entries) {
+      byId.set(entry.id, entry);
+    }
+  }
+
+  // 2. 找到叶节点
+  let leaf: SessionEntry | undefined;
+  if (leafId === null) {
+    return { messages: [], thinkingLevel: "off", model: null };
+  }
+  if (leafId) {
+    leaf = byId.get(leafId);
+  }
+  if (!leaf) {
+    leaf = entries[entries.length - 1];  // 默认取最后一个
+  }
+
+  // 3. 从叶到根收集路径
+  const path: SessionEntry[] = [];
+  let current: SessionEntry | undefined = leaf;
+  while (current) {
+    path.unshift(current);
+    current = current.parentId ? byId.get(current.parentId) : undefined;
+  }
+  // ...
+}
+</code></pre>
+<p>路径收集之后，函数进入两个阶段：</p>
+<p><strong>阶段一：提取元数据。</strong> 遍历路径上的每个 entry，跟踪最后生效的 <code>thinkingLevel</code> 和 <code>model</code>，以及路径上最后一个 <code>CompactionEntry</code>。</p>
+<p><strong>阶段二：构建消息数组。</strong> 这里有两种情况：</p>
+<ol>
+<li>
+<p><strong>无 compaction</strong>：路径上所有 <code>message</code>、<code>custom_message</code>、<code>branch_summary</code> 类型的 entry 依次转换成 <code>AgentMessage</code>，其他类型（<code>thinking_level_change</code>、<code>model_change</code>、<code>custom</code>、<code>label</code>、<code>session_info</code>）被跳过。</p>
+</li>
+<li>
+<p><strong>有 compaction</strong>：先输出压缩摘要消息，然后输出从 <code>firstKeptEntryId</code> 到 compaction 之间的保留消息，最后输出 compaction 之后的消息。这保证了 LLM 看到的是"摘要 + 保留的近期对话 + 最新对话"，而不是完整的历史。</p>
+</li>
+</ol>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/session-manager.ts:373-383
+
+const appendMessage = (entry: SessionEntry) =&gt; {
+  if (entry.type === "message") {
+    messages.push(entry.message);
+  } else if (entry.type === "custom_message") {
+    messages.push(
+      createCustomMessage(entry.customType, entry.content,
+        entry.display, entry.details, entry.timestamp),
+    );
+  } else if (entry.type === "branch_summary" &amp;&amp; entry.summary) {
+    messages.push(createBranchSummaryMessage(
+      entry.summary, entry.fromId, entry.timestamp));
+  }
+};
+</code></pre>
+<p><code>appendMessage</code> 是一个局部函数，它定义了"哪些 entry 类型产生 LLM 消息"的规则。注意 <code>CustomMessageEntry</code> 被转换成 <code>CustomMessage</code>（一种特殊的 user 消息），而 <code>BranchSummaryEntry</code> 被转换成 <code>BranchSummaryMessage</code>。这些转换由 <code>messages.ts</code> 中的工厂函数完成，确保消息格式符合 LLM API 的要求。</p>
+<p>返回的 <code>SessionContext</code> 包含三个字段：</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/session-manager.ts:161-165
+
+interface SessionContext {
+  messages: AgentMessage[];      // 发送给 LLM 的消息数组
+  thinkingLevel: string;         // 当前路径的 thinking level
+  model: { provider: string; modelId: string } | null;
+}
+</code></pre>
+<p>Agent 拿到 <code>SessionContext</code> 后，用 <code>messages</code> 调用 LLM，用 <code>thinkingLevel</code> 和 <code>model</code> 恢复当前配置。整个流程形成一条清晰的数据管线：<strong>JSONL 文件 → entry 列表 → 树遍历 → 路径提取 → 消息数组 → LLM 调用</strong>。</p>
+<h2 id="session-版本迁移v1--v2--v3"><a class="header" href="#session-版本迁移v1--v2--v3">Session 版本迁移：v1 → v2 → v3</a></h2>
+<p>会话格式经历了三个版本。向后兼容至关重要 — 用户的历史 session 文件不能因为升级 pi 而丢失。</p>
+<p><strong>v1：纯线性列表。</strong> 最早的版本没有 <code>id</code> 和 <code>parentId</code>，entry 按顺序排列，不支持分支。</p>
+<p><strong>v2：加入树形结构。</strong> 为每个 entry 生成 <code>id</code>，将前后关系转换成 <code>parentId</code> 链。</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/session-manager.ts:211-237
+
+function migrateV1ToV2(entries: FileEntry[]): void {
+  const ids = new Set&lt;string&gt;();
+  let prevId: string | null = null;
+
+  for (const entry of entries) {
+    if (entry.type === "session") {
+      entry.version = 2;
+      continue;
+    }
+
+    entry.id = generateId(ids);
+    entry.parentId = prevId;
+    prevId = entry.id;
+
+    // 转换 compaction 的索引引用为 id 引用
+    if (entry.type === "compaction") {
+      const comp = entry as CompactionEntry
+        &amp; { firstKeptEntryIndex?: number };
+      if (typeof comp.firstKeptEntryIndex === "number") {
+        const targetEntry = entries[comp.firstKeptEntryIndex];
+        if (targetEntry &amp;&amp; targetEntry.type !== "session") {
+          comp.firstKeptEntryId = targetEntry.id;
+        }
+        delete comp.firstKeptEntryIndex;
+      }
+    }
+  }
+}
+</code></pre>
+<p>迁移逻辑很直接：遍历所有 entry，为每个生成唯一 id，<code>parentId</code> 指向前一个 entry（因为 v1 是线性的，所以父节点就是前一个）。特殊处理 <code>CompactionEntry</code> — v1 用数组索引（<code>firstKeptEntryIndex</code>）标记保留起点，v2 改用 entry id（<code>firstKeptEntryId</code>）。</p>
+<p><strong>v3：重命名 hookMessage → custom。</strong> 早期 extension 消息的角色名叫 <code>hookMessage</code>，v3 统一改为 <code>custom</code>。这是一个语义清理。</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/session-manager.ts:239-255
+
+function migrateV2ToV3(entries: FileEntry[]): void {
+  for (const entry of entries) {
+    if (entry.type === "session") {
+      entry.version = 3;
+      continue;
+    }
+    if (entry.type === "message") {
+      const msgEntry = entry as SessionMessageEntry;
+      if (msgEntry.message
+        &amp;&amp; (msgEntry.message as { role: string }).role
+          === "hookMessage") {
+        (msgEntry.message as { role: string }).role = "custom";
+      }
+    }
+  }
+}
+</code></pre>
+<p>所有迁移由 <code>migrateToCurrentVersion()</code> 统一调度，在 <code>setSessionFile()</code> 加载文件时自动执行。迁移是就地修改（mutate in place），修改后用 <code>_rewriteFile()</code> 重写整个文件。这意味着迁移是单向的、不可逆的 — 一旦文件被升级到 v3，旧版本的 pi 无法读取它。这是一个有意识的取舍：pi 的更新频率足够高，不需要支持降级。</p>
+<pre><code class="language-typescript">// packages/coding-agent/src/core/session-manager.ts:261-271
+
+function migrateToCurrentVersion(entries: FileEntry[]): boolean {
+  const header = entries.find((e) =&gt; e.type === "session")
+    as SessionHeader | undefined;
+  const version = header?.version ?? 1;
+
+  if (version &gt;= CURRENT_SESSION_VERSION) return false;
+
+  if (version &lt; 2) migrateV1ToV2(entries);
+  if (version &lt; 3) migrateV2ToV3(entries);
+
+  return true;
+}
+</code></pre>
+<p>版本号采用递增整数（不是 semver），迁移链是线性的。加新版本时，只需在末尾加一个 <code>if (version &lt; N) migrateVN_1ToVN(entries)</code>。这种"梯级迁移"模式简单、可组合、不容易出错。</p>
+<h2 id="具体案例5-轮对话--在第-3-轮创建分支"><a class="header" href="#具体案例5-轮对话--在第-3-轮创建分支">具体案例：5 轮对话 + 在第 3 轮创建分支</a></h2>
+<p>让我们用一个具体的例子来理解 session tree 的工作流。</p>
+<p>用户开始一个新 session，聊了 5 轮（10 条消息）。然后发现第 3 轮的方向不对，跳回第 3 轮的用户消息处创建新分支。</p>
+<h3 id="第一阶段正常的-5-轮对话"><a class="header" href="#第一阶段正常的-5-轮对话">第一阶段：正常的 5 轮对话</a></h3>
+<p>JSONL 文件内容（简化，只保留关键字段）：</p>
+<pre><code class="language-json">{"type":"session","version":3,"id":"sess-001","timestamp":"...","cwd":"/project"}
+{"type":"message","id":"e1","parentId":null,"message":{"role":"user","content":"分析 auth 模块"}}
+{"type":"message","id":"e2","parentId":"e1","message":{"role":"assistant","content":"好的，我来看看..."}}
+{"type":"message","id":"e3","parentId":"e2","message":{"role":"user","content":"重构 login 函数"}}
+{"type":"message","id":"e4","parentId":"e3","message":{"role":"assistant","content":"我建议用策略模式..."}}
+{"type":"message","id":"e5","parentId":"e4","message":{"role":"user","content":"继续"}}
+{"type":"message","id":"e6","parentId":"e5","message":{"role":"assistant","content":"已重构完成..."}}
+{"type":"message","id":"e7","parentId":"e6","message":{"role":"user","content":"添加测试"}}
+{"type":"message","id":"e8","parentId":"e7","message":{"role":"assistant","content":"已添加 3 个测试..."}}
+{"type":"message","id":"e9","parentId":"e8","message":{"role":"user","content":"检查覆盖率"}}
+{"type":"message","id":"ea","parentId":"e9","message":{"role":"assistant","content":"覆盖率 85%..."}}
+</code></pre>
+<p>此时 <code>leafId = "ea"</code>，树是一条直线：<code>e1 → e2 → e3 → e4 → e5 → e6 → e7 → e8 → e9 → ea</code>。</p>
+<h3 id="第二阶段在第-3-轮创建分支"><a class="header" href="#第二阶段在第-3-轮创建分支">第二阶段：在第 3 轮创建分支</a></h3>
+<p>用户发现策略模式太重了，想回到 <code>e3</code>（"重构 login 函数"）换一种方式。TUI 调用 <code>sessionManager.branch("e3")</code>，然后用户输入新消息。</p>
+<p>pi 不修改任何已有 entry，只追加新行：</p>
+<pre><code class="language-json">{"type":"branch_summary","id":"eb","parentId":"e3","fromId":"e3","summary":"之前尝试用策略模式重构 login，完成了重构并添加了 3 个测试，覆盖率 85%"}
+{"type":"message","id":"ec","parentId":"eb","message":{"role":"user","content":"用简单的 if-else 重构"}}
+{"type":"message","id":"ed","parentId":"ec","message":{"role":"assistant","content":"好的，更简单的方式..."}}
+</code></pre>
+<p>此时 <code>leafId = "ed"</code>，树变成了：</p>
+<pre><code class="language-mermaid">graph TD
+    E1["e1: user '分析 auth 模块'"]
+    E2["e2: assistant '好的...'"]
+    E3["e3: user '重构 login 函数'"]
+    E4["e4: assistant '策略模式...'"]
+    E5["e5: user '继续'"]
+    E6["e6: assistant '已重构完成...'"]
+    E7["e7: user '添加测试'"]
+    E8["e8: assistant '已添加测试...'"]
+    E9["e9: user '检查覆盖率'"]
+    EA["ea: assistant '覆盖率 85%...'"]
+    EB["eb: branch_summary '之前尝试策略模式...'"]
+    EC["ec: user '用 if-else 重构'"]
+    ED["ed: assistant '更简单的方式...'"]
+
+    E1 --&gt; E2 --&gt; E3
+    E3 --&gt; E4 --&gt; E5 --&gt; E6 --&gt; E7 --&gt; E8 --&gt; E9 --&gt; EA
+    E3 --&gt; EB --&gt; EC --&gt; ED
+
+    style EB fill:#e8f5e9
+    style EC fill:#fff3e0
+    style ED fill:#fff3e0
+</code></pre>
+<h3 id="llm-看到的消息"><a class="header" href="#llm-看到的消息">LLM 看到的消息</a></h3>
+<p>调用 <code>buildSessionContext(entries, "ed")</code> 时，函数从 <code>ed</code> 沿 <code>parentId</code> 回溯到根：<code>e1 → e2 → e3 → eb → ec → ed</code>。注意旧分支的 <code>e4</code> 到 <code>ea</code> 完全不在这条路径上。</p>
+<p>LLM 收到的消息数组是：</p>
+<ol>
+<li><code>user: "分析 auth 模块"</code> ← e1</li>
+<li><code>assistant: "好的，我来看看..."</code> ← e2</li>
+<li><code>user: "重构 login 函数"</code> ← e3</li>
+<li><code>user: "[Branch Summary] 之前尝试用策略模式重构..."</code> ← eb（BranchSummaryEntry 转换的消息）</li>
+<li><code>user: "用简单的 if-else 重构"</code> ← ec</li>
+<li><code>assistant: "好的，更简单的方式..."</code> ← ed</li>
+</ol>
+<p>LLM 知道之前试过策略模式（通过 branch summary），但上下文中只有新分支的对话。旧分支的 6 条消息不占用 token 预算。</p>
+<h3 id="jsonl-文件的关键特性"><a class="header" href="#jsonl-文件的关键特性">JSONL 文件的关键特性</a></h3>
+<p>整个过程中，JSONL 文件只做了 append 操作。原始的 10 行没有被修改或删除。分支操作的"成本"是 3 行新 entry（branch_summary + 2 条新消息），而不是复制前 6 行。这就是 <code>parentId</code> 树结构的核心价值：<strong>分支是零拷贝的</strong>。</p>
+<h2 id="取舍分析"><a class="header" href="#取舍分析">取舍分析</a></h2>
+<h3 id="得到了什么"><a class="header" href="#得到了什么">得到了什么</a></h3>
+<p><strong>1. Append-only 的容错性。</strong> JSONL 是 append-only 的 — 新 entry 只追加到文件末尾，不修改已有内容。即使进程在写入过程中崩溃，最坏情况是最后一行不完整（被丢弃），之前的所有 entry 完好无损。数据库在崩溃时可能损坏索引或事务日志。<code>parseSessionEntries()</code> 中的 <code>try/catch</code> 正是为此设计 — 跳过格式错误的行，解析剩余内容。</p>
+<p><strong>2. 人类可读可修复。</strong> JSONL 文件可以用任何文本编辑器打开、阅读、甚至手动修复。如果某个 entry 出了问题，用户可以直接删除那一行。<code>LabelEntry</code> 可以通过设置 <code>label: undefined</code> 来"删除"标签 — 不需要修改原始 entry，只需追加一个新的 label entry。</p>
+<p><strong>3. 零依赖。</strong> 不需要 SQLite、LevelDB 或任何外部存储引擎。<code>fs.appendFileSync</code> 就够了。pi 的 <code>_persist</code> 方法在有了第一条 assistant 消息后，要么 flush 全部内容，要么 append 单条 entry — 全部是同步文件 I/O，没有连接池、事务、WAL 日志等复杂性。</p>
+<p><strong>4. 天然支持分支。</strong> <code>parentId</code> 让分支和跳转变成了简单的"追加一个新 entry，它的 parentId 指向目标节点"。不需要复制任何数据。<code>branch()</code> 方法只有一行核心逻辑：<code>this.leafId = branchFromId</code>。</p>
+<h3 id="放弃了什么"><a class="header" href="#放弃了什么">放弃了什么</a></h3>
+<p><strong>1. 没有随机访问。</strong> 要找到某个 entry，必须从头读到尾构建 <code>byId</code> Map。对于长会话（几百轮），这意味着每次加载时要解析整个 JSONL 文件。实际的性能特征取决于文件大小：</p>
+<ul>
+<li>10 轮对话（~20 entry，~10KB）：解析时间 &lt; 1ms，可以忽略</li>
+<li>100 轮对话（~200 entry，~100KB）：解析时间几毫秒，用户无感知</li>
+<li>500 轮对话（~1000 entry，带 tool result 可能 ~5MB）：解析时间几十毫秒，首次加载有轻微延迟</li>
+</ul>
+<p><code>buildSessionContext()</code> 的时间复杂度是 O(N)（N = 总 entry 数），因为即使只需要一条路径，也要先构建 <code>byId</code> 索引。不过索引构建后，路径遍历本身是 O(D)（D = 树的深度，即路径长度）。</p>
+<p><strong>2. 没有索引。</strong> 不能按工具名、时间范围、文件路径等维度快速查询。全部依赖遍历。如果需要"找到所有修改了 auth.ts 的 tool call"，必须遍历所有 entry 并检查消息内容。</p>
+<p><strong>3. 文件会持续增长。</strong> compaction 压缩了 LLM context，但 JSONL 文件中的原始 entry 仍然保留。一个长时间使用的 session 可能有几 MB 的 JSONL 文件。<code>createBranchedSession()</code> 提供了一种"修剪"方式 — 提取单条路径到新文件，丢弃其他分支。但这创建的是新 session，不是原地修剪。</p>
+<p><strong>4. 树的遍历需要全量加载。</strong> 要构建树、找到某个分支、确定叶节点，都需要先把所有 entry 加载到内存。<code>SessionManager</code> 通过 <code>byId</code> Map 做了一层缓存，加载后的所有操作（<code>getBranch</code>、<code>getEntry</code>、<code>getChildren</code>）都是 O(1) 或 O(D) 的。但首次加载（<code>setSessionFile</code>）和迁移（<code>migrateToCurrentVersion</code>）必须全量读取和解析。</p>
+<p><strong>5. 单进程写入。</strong> <code>appendFileSync</code> 是同步阻塞调用，不支持并发写入。如果多个 pi 实例同时操作同一个 session 文件，会出现竞争条件。这对 pi 的使用场景不是问题 — 每个终端窗口是独立 session — 但对多用户场景（如团队共享 session）不适用。</p>
+<p>对于 pi 的使用场景 — 单用户、本地文件系统、会话大小通常在 KB 到低 MB 级别 — JSONL 的简单性远胜于数据库的复杂性。选择一个"够用的简单方案"而不是"面面俱到的复杂方案"，这本身就是一个值得学习的工程决策。</p>
+<hr />
+<h3 id="版本演化说明"><a class="header" href="#版本演化说明">版本演化说明</a></h3>
+<blockquote>
+<p>本章核心分析基于 pi-mono v0.66.0。Session 格式经历了 3 个版本：
+v1（无 id/parentId，纯线性）→ v2（加入 id/parentId 树形结构）→ v3（当前，统一 custom 角色名）。
+<code>CustomEntry</code>、<code>CustomMessageEntry</code>、<code>LabelEntry</code>、<code>SessionInfoEntry</code> 是后来添加的，
+为 extension 生态和用户体验提供扩展点。旧版 session 文件通过 <code>migrateV1ToV2</code> 和 <code>migrateV2ToV3</code> 自动升级。</p>
+</blockquote>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch10-agent-class.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="ch12-compaction.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch10-agent-class.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="ch12-compaction.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="mermaid.min.js"></script>
+        <script src="mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

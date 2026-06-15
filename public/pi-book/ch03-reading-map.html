@@ -1,0 +1,338 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>怎样高效阅读这个仓库 - pi 的设计艺术：构建生产级 Coding Agent 的架构决策</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/custom.css">
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "ayu" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">pi 的设计艺术：构建生产级 Coding Agent 的架构决策</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/ZhangHanDong/pi-book" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="第-3-章怎样高效阅读这个仓库"><a class="header" href="#第-3-章怎样高效阅读这个仓库">第 3 章：怎样高效阅读这个仓库</a></h1>
+<blockquote>
+<p><strong>定位</strong>：本章告诉读者怎样高效读码，避免迷失在细节中。
+前置依赖：第 2 章。
+适用场景：当你打算直接看源码。</p>
+</blockquote>
+<h2 id="先读的-10-个文件"><a class="header" href="#先读的-10-个文件">先读的 10 个文件</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>优先级</th><th>文件</th><th>理由</th></tr></thead><tbody>
+<tr><td>1</td><td><code>packages/agent/src/types.ts</code></td><td>定义了 Agent 系统的全部类型</td></tr>
+<tr><td>2</td><td><code>packages/ai/src/api-registry.ts</code></td><td>98 行，极简的 provider 注册</td></tr>
+<tr><td>3</td><td><code>packages/agent/src/agent-loop.ts</code></td><td>循环引擎核心</td></tr>
+<tr><td>4</td><td><code>packages/agent/src/agent.ts</code></td><td>有状态壳</td></tr>
+<tr><td>5</td><td><code>packages/ai/src/stream.ts</code></td><td>公共 API 入口</td></tr>
+<tr><td>6</td><td><code>packages/ai/src/types.ts</code></td><td>Model、Context、Event 定义</td></tr>
+<tr><td>7</td><td><code>packages/coding-agent/src/core/session-manager.ts</code></td><td>会话树</td></tr>
+<tr><td>8</td><td><code>packages/coding-agent/src/core/system-prompt.ts</code></td><td>Prompt 装配</td></tr>
+<tr><td>9</td><td><code>packages/coding-agent/src/core/tools/edit.ts</code></td><td>工具设计范例</td></tr>
+<tr><td>10</td><td><code>packages/coding-agent/src/core/extensions/types.ts</code></td><td>Extension API 面</td></tr>
+</tbody></table>
+</div>
+<h3 id="每个文件你会看到什么"><a class="header" href="#每个文件你会看到什么">每个文件你会看到什么</a></h3>
+<p><strong>1. <code>packages/agent/src/types.ts</code></strong> — 这是整个 agent 系统的 "schema"。你会在这里找到 <code>AgentMessage</code>（所有消息类型的联合）、<code>AgentTool</code>（工具的定义接口）、<code>AgentEvent</code>（循环引擎产出的事件流）和 <code>AgentLoopConfig</code>（循环的配置项）。理解这些类型后，你看任何其他文件都能立刻知道数据流的形状。这个文件不长，但信息密度极高 — 建议逐行读完。</p>
+<p><strong>2. <code>packages/ai/src/api-registry.ts</code></strong> — 只有 98 行的 API provider 注册表。你会看到 <code>registerApiProvider</code> 函数和 <code>getApiProvider</code> 函数 — 前者把一个 <code>api</code> 标识和一组流式调用函数绑定在一起，后者根据 <code>model.api</code> 取出对应实现。整个系统的 LLM 调用多态性就建立在这 98 行之上。读完它你会理解为什么添加一个新 provider 如此简单。</p>
+<p><strong>3. <code>packages/agent/src/agent-loop.ts</code></strong> — 循环引擎的完整实现。你会看到一个 <code>while(true)</code> 循环，里面的逻辑是：调用 LLM → 收集事件 → 如果有 tool call 就执行 → 把 tool result 放回消息列表 → 继续循环。关键点是：这个函数是<strong>纯函数式</strong>的 — 它的所有输入（消息、工具、配置）都从参数传入，所有输出都通过事件流返回。第 8 章会详细分析这个设计。</p>
+<p><strong>4. <code>packages/agent/src/agent.ts</code></strong> — agentLoop 的有状态包装器。你会看到 <code>Agent</code> 类持有消息历史、工具列表、abort controller 等状态，然后在内部调用 agentLoop。它的存在回答了一个问题：如果循环引擎是无状态的，状态保存在哪里？答案是这个薄壳。它是 "stateful convenience layer"。</p>
+<p><strong>5. <code>packages/ai/src/stream.ts</code></strong> — pi-ai 层的公共 API 入口。你会看到 <code>stream</code> 函数 — 给定一个 model 和 context，返回一个 <code>AssistantMessageEventStream</code>。这是整个系统中离 "调用 LLM" 最近的接口。它的实现很简单：按 <code>model.api</code> 从 api-registry 取出对应实现，然后调用它。简单是因为复杂性被推到了各个 provider 的实现中。</p>
+<p><strong>6. <code>packages/ai/src/types.ts</code></strong> — pi-ai 层的类型系统。你会找到 <code>Model</code> 类型（一个模型的完整元数据：id、provider、cost、context window 等）、<code>Context</code> 类型（发送给 LLM 的完整上下文：messages、tools、system prompt 等）和各种事件类型。这些类型定义了 pi-ai 层的 "公共 API 契约" — 上层代码（agent-core）只通过这些类型与 ai 层交互。</p>
+<p><strong>7. <code>packages/coding-agent/src/core/session-manager.ts</code></strong> — 会话的持久化和分支管理。你会看到会话如何被序列化到磁盘（JSONL 文件）、如何创建分支（fork）、如何回退到历史节点。这是让 pi 的对话可以"时间旅行"的关键机制。如果你想理解 pi 的交互模型为什么比简单的聊天框更强大，这是入口。</p>
+<p><strong>8. <code>packages/coding-agent/src/core/system-prompt.ts</code></strong> — Prompt 装配的完整逻辑。你会看到 system prompt 是如何从多个来源（基础模板、AGENTS.md 文件、用户自定义、extension 注入）层层拼装的。理解这个文件的关键在于：system prompt 不是一个静态字符串，而是一个运行时动态组装的产物。这解释了为什么 pi 可以根据项目上下文、用户配置、已加载的 skill 动态调整 agent 的行为。</p>
+<p><strong>9. <code>packages/coding-agent/src/core/tools/edit.ts</code></strong> — 文件编辑工具的实现。你会看到一个完整的工具定义：tool schema（告诉 LLM 这个工具接受什么参数）、执行逻辑（实际操作文件系统）、结果格式（返回什么给 LLM）。这是理解 "pi 的工具是怎么设计的" 最好的范例 — 不是因为它最复杂，而是因为它最能代表设计模式。读完一个工具，你就知道其他所有工具的结构。</p>
+<p><strong>10. <code>packages/coding-agent/src/core/extensions/types.ts</code></strong> — Extension API 的完整类型定义。你会看到 Extension 可以做什么：注册新工具（tools）、注册新命令（commands）、快捷键和 CLI flag，以及通过 context 访问会话和 UI。这个文件定义了 pi 的<strong>可扩展性边界</strong> — Extension 能做什么、不能做什么，全由这些类型决定。</p>
+<h2 id="最后读的-10-个文件"><a class="header" href="#最后读的-10-个文件">最后读的 10 个文件</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>文件</th><th>理由</th></tr></thead><tbody>
+<tr><td><code>packages/tui/src/components/editor.ts</code></td><td>交互细节，不是设计核心</td></tr>
+<tr><td><code>packages/coding-agent/src/modes/interactive/components/*.ts</code></td><td>35+ UI 组件，按需查看</td></tr>
+<tr><td><code>packages/ai/src/providers/anthropic.ts</code> 等</td><td>具体 provider 实现</td></tr>
+<tr><td><code>packages/coding-agent/src/core/slash-commands.ts</code></td><td>命令列表，不是设计</td></tr>
+<tr><td><code>packages/coding-agent/src/modes/interactive/theme/theme.ts</code></td><td>UI 主题</td></tr>
+<tr><td><code>packages/ai/src/models.generated.ts</code></td><td>自动生成的模型目录</td></tr>
+<tr><td><code>packages/coding-agent/src/core/export-html/</code></td><td>HTML 导出，工程实现</td></tr>
+<tr><td><code>packages/tui/src/components/list.ts</code></td><td>列表组件渲染，UI 细节</td></tr>
+<tr><td><code>packages/web-ui/src/components/</code></td><td>Web 组件，另一种 UI 实现</td></tr>
+<tr><td><code>packages/mom/src/slack/</code></td><td>Slack API 对接，平台细节</td></tr>
+</tbody></table>
+</div>
+<p>这些文件不是不重要 — 它们只是不应该<strong>先</strong>读。它们是"设计的消费者"，不是"设计本身"。</p>
+<h2 id="类型如何串连整个系统"><a class="header" href="#类型如何串连整个系统">类型如何串连整个系统</a></h2>
+<p>pi 的设计中，类型不仅是编译器检查的工具，更是<strong>跨层通信的契约</strong>。理解类型的依赖链，就理解了系统的数据流。</p>
+<h3 id="类型依赖链"><a class="header" href="#类型依赖链">类型依赖链</a></h3>
+<pre><code class="language-mermaid">graph TD
+    subgraph pi-ai["pi-ai/src/types.ts"]
+        Model["Model&lt;TApi&gt;"]
+        Context["Context"]
+        Event["AssistantMessageEvent"]
+        Stream["AssistantMessageEventStream"]
+    end
+    
+    subgraph pi-agent["pi-agent-core/src/types.ts"]
+        AgentMsg["AgentMessage\n(ai 层 Message + 自定义消息)"]
+        AgentTool["AgentTool\n(扩展自 ai 层 Tool)"]
+        AgentEvent["AgentEvent\n(高层运行时事件)"]
+        AgentConfig["AgentLoopConfig"]
+    end
+    
+    subgraph pi-coding["pi-coding-agent 各模块"]
+        Session["会话系统\n(围绕 AgentMessage[] 组织)"]
+        Tool["具体工具实现\n(实现 AgentTool)"]
+        ExtType["Extension\n(注册 AgentTool[])"]
+    end
+    
+    Model --&gt; Context
+    Context --&gt; Stream
+    Stream --&gt; Event
+    
+    Event --&gt; AgentEvent
+    Context --&gt; AgentConfig
+    
+    AgentMsg --&gt; Session
+    AgentTool --&gt; Tool
+    AgentTool --&gt; ExtType
+    
+    style pi-ai fill:#e3f2fd
+    style pi-agent fill:#fff3e0
+    style pi-coding fill:#e8f5e9
+</code></pre>
+<p>从图中可以看到三个关键的类型边界：</p>
+<p><strong>pi-ai → pi-agent-core</strong>：<code>toolResult</code> 其实已经在 ai 层的 <code>Message</code> 联合里了。agent-core 在此基础上做的主要扩展有两件事：一是通过 <code>CustomAgentMessages</code> 开放自定义消息类型，二是把 ai 层的 <code>AssistantMessageEvent</code> 嵌入 <code>AgentEvent.message_update</code> 这类更高层的运行时事件中。</p>
+<p><strong>pi-agent-core → pi-coding-agent</strong>：coding-agent 的 <code>AgentSession</code> / <code>SessionManager</code> 围绕 <code>AgentMessage[]</code> 来组织会话上下文。具体的工具（edit、bash、read 等）实现 <code>AgentTool</code> 接口。Extension 向系统注册新的 <code>AgentTool[]</code>。</p>
+<p><strong>泛型边界</strong>：<code>Model&lt;TApi&gt;</code> 和 <code>StreamFunction&lt;TApi, TOptions&gt;</code> 这类 provider 层接口是泛型的，用来约束“这个模型对应哪种 API 族”。但到了通用的 <code>Context</code>，消息和工具格式已经被统一，不再按 provider 继续分化。也就是说，类型安全主要集中在 provider/stream 边界，而不是把 <code>Context</code> 一路参数化到底。</p>
+<h3 id="跟着一个类型读代码的例子"><a class="header" href="#跟着一个类型读代码的例子">跟着一个类型读代码的例子</a></h3>
+<p>假设你想理解 "工具调用的结果是怎么流回 LLM 的"。可以这样跟踪：</p>
+<ol>
+<li>在 <code>agent/src/types.ts</code> 中找到 <code>AgentTool</code> — 它的 <code>execute</code> 方法返回 <code>AgentToolResult</code></li>
+<li>在 <code>agent/src/agent-loop.ts</code> 中搜索 <code>AgentToolResult</code> 或 <code>ToolResultMessage</code> — 你会看到循环引擎把工具执行结果包装成 <code>ToolResultMessage</code> 并加入消息列表</li>
+<li>在 <code>ai/src/types.ts</code> 中找到 <code>ToolResultMessage</code> — 它是 <code>Context.messages</code> 数组中合法的消息类型之一</li>
+<li>在 <code>ai/src/providers/anthropic.ts</code> 中搜索 <code>ToolResultMessage</code> — 你会看到它被转换成 Anthropic API 要求的 <code>tool_result</code> content block</li>
+</ol>
+<p>整个链路：<code>工具执行 → AgentToolResult → ToolResultMessage → 消息列表 → Provider 转换 → API 请求</code>。每一步都有对应的类型。</p>
+<h2 id="阅读策略"><a class="header" href="#阅读策略">阅读策略</a></h2>
+<p><strong>不要从 TUI 开始读</strong>。TUI 组件有 35+ 个文件，大量的交互细节。它们是"上层消费者"，不是"设计核心"。先理解内核（第 1-6 项），再看 TUI 如何消费事件。</p>
+<p><strong>不要从 provider 实现开始读</strong>。<code>anthropic.ts</code>、<code>openai-responses.ts</code> 等文件是"api-registry 的用户"，不是设计本身。先理解注册表，再看具体实现。</p>
+<p><strong>跟着类型走</strong>。<code>agent/src/types.ts</code> 定义了 <code>AgentMessage</code>、<code>AgentEvent</code>、<code>AgentTool</code>、<code>AgentLoopConfig</code> — 这些类型串起了整个系统。从类型出发，看哪些函数使用它们。</p>
+<p><strong>用搜索代替目录浏览</strong>。pi-mono 有 298 个源文件。逐文件浏览效率极低。更好的策略是：找到一个你关心的类型或函数名，在整个仓库中搜索它的使用处。工具推荐：<code>grep -rn "AgentTool" packages/</code>。</p>
+<h2 id="常见阅读误区"><a class="header" href="#常见阅读误区">常见阅读误区</a></h2>
+<p>在阅读 pi 源码时，有几个容易踩的坑：</p>
+<h3 id="误区-1把-agentloop-当作唯一入口"><a class="header" href="#误区-1把-agentloop-当作唯一入口">误区 1：把 agentLoop 当作唯一入口</a></h3>
+<p>很多人一上来就找 <code>main</code> 函数或启动入口。pi 的启动路径是 <code>cli.ts</code> → <code>session-manager.ts</code> → <code>agent.ts</code> → <code>agent-loop.ts</code>，但<strong>理解系统不应该从启动路径开始</strong>。启动路径包含大量初始化逻辑（参数解析、配置读取、资源加载），这些会分散你对核心设计的注意力。</p>
+<p>正确做法：先读 <code>agent-loop.ts</code> 理解循环引擎，再倒推它的调用者是谁。</p>
+<h3 id="误区-2试图理解所有-provider-实现"><a class="header" href="#误区-2试图理解所有-provider-实现">误区 2：试图理解所有 provider 实现</a></h3>
+<p>pi-ai 支持 10+ 个 provider（Anthropic、OpenAI Responses、OpenAI Completions、Google、Bedrock、Mistral、Azure、Copilot、OpenRouter、Vercel Gateway 等）。每个 provider 有不同的 API 格式和特殊处理。</p>
+<p>如果你试图读完所有 provider 再理解系统，你会花很长时间且收获不大。正确做法：只读 <code>anthropic.ts</code>（最简洁的实现），理解 provider 的接口契约后，其他 provider 按需查看。</p>
+<h3 id="误区-3忽略-modelsgeneratedts"><a class="header" href="#误区-3忽略-modelsgeneratedts">误区 3：忽略 <code>models.generated.ts</code></a></h3>
+<p>这个文件有上万行，是自动生成的模型目录。很多人看到它会直接跳过。但它的存在本身就是一个设计决策：pi 为什么选择在构建时生成模型目录，而不是运行时从 API 查询？（答案：离线可用 + 启动速度。第 18 章详述。）</p>
+<p>正确做法：不需要读它的内容（确实是机器生成的），但需要理解它为什么存在、怎么生成。</p>
+<h3 id="误区-4把-extension-和-skill-混为一谈"><a class="header" href="#误区-4把-extension-和-skill-混为一谈">误区 4：把 Extension 和 Skill 混为一谈</a></h3>
+<p>Extension 是<strong>代码模块</strong>（TypeScript/JavaScript），可以注册新工具、新命令、事件处理器和 UI 扩展。Skill 是<strong>指令文档</strong>（Markdown），只能被注入到 system prompt 中。两者的能力边界完全不同。</p>
+<p>很多人看到 "Extension 可以提供 skill 路径" 就以为 Extension 包含 Skill。准确的关系是：Extension 可以<strong>注册额外的 Skill 加载路径</strong>，但 Extension 本身和 Skill 是两种独立的资源类型。</p>
+<h3 id="误区-5低估-typests-的重要性"><a class="header" href="#误区-5低估-typests-的重要性">误区 5：低估 types.ts 的重要性</a></h3>
+<p>agent/src/types.ts 只有几百行，看起来"没什么内容"。但这个文件是整个 agent 系统的骨架。每个类型的每个字段都对应着一个设计决策。比如 <code>AgentLoopConfig</code> 中的 <code>toolExecution</code> 字段 — 为什么需要区分 <code>sequential</code> 和 <code>parallel</code>？因为它直接影响工具 prepare 阶段和 execute 阶段的并发语义（第 9 章详述）。</p>
+<p>正确做法：types.ts 至少读两遍。第一遍建立整体印象，读完几章设计分析后再回来读第二遍 — 你会发现每个字段都有了具体的含义。</p>
+<hr />
+<h3 id="版本演化说明"><a class="header" href="#版本演化说明">版本演化说明</a></h3>
+<blockquote>
+<p>本章文件列表基于 pi-mono v0.66.0 的目录结构。
+文件路径可能随版本变化，但"先读内核、后读产品层"的策略不变。</p>
+</blockquote>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch02-packages.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="ch04-provider-registry.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch02-packages.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="ch04-provider-registry.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="mermaid.min.js"></script>
+        <script src="mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

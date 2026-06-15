@@ -1,0 +1,541 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Extension 系统 — 让产品长出新器官 - pi 的设计艺术：构建生产级 Coding Agent 的架构决策</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/custom.css">
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "ayu" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">pi 的设计艺术：构建生产级 Coding Agent 的架构决策</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/ZhangHanDong/pi-book" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="第-15-章extension-系统--让产品长出新器官"><a class="header" href="#第-15-章extension-系统--让产品长出新器官">第 15 章：Extension 系统 — 让产品长出新器官</a></h1>
+<blockquote>
+<p><strong>定位</strong>：本章解析 pi 的 extension 系统如何在不修改核心代码的前提下扩展产品能力。
+前置依赖：第 10 章（Agent 类）、第 14 章（System Prompt 装配）。
+适用场景：当你想理解"能力外置"的具体实现，或者想为 pi 写 extension。</p>
+</blockquote>
+<h2 id="哪些能力应该内建哪些应该外置"><a class="header" href="#哪些能力应该内建哪些应该外置">哪些能力应该内建，哪些应该外置？</a></h2>
+<p>这是本章的核心设计问题。</p>
+<p>pi 的回答是极端的：<strong>几乎所有产品级能力都外置。</strong> 核心只做三件事 — 调模型、跑循环、管状态（第 8-10 章）。其余能力 — 新工具、新命令、新快捷键、自定义 UI — 全部通过 extension 系统提供。</p>
+<p>Extension 的 API 面（<code>ExtensionUIContext</code> + <code>ExtensionApi</code>）定义了 extension 能触达的系统表面积。让我们看看这个表面积有多大。</p>
+<h2 id="extension-能做什么"><a class="header" href="#extension-能做什么">Extension 能做什么</a></h2>
+<p>Extension 是一个 TypeScript 模块，导出一个工厂函数，接收 <code>ExtensionAPI</code> 对象：</p>
+<pre><code class="language-typescript">// extension 的基本结构
+// extensions/types.ts:1273
+export type ExtensionFactory = (pi: ExtensionAPI) =&gt; void | Promise&lt;void&gt;;
+</code></pre>
+<p>注意这个签名的两个设计选择：工厂函数支持 <code>async</code>（extension 可以在 setup 阶段做 I/O），参数名是 <code>pi</code> 而不是 <code>ctx</code>（强调这是系统级别的扩展点）。</p>
+<p><code>ExtensionAPI</code> 暴露的能力极其丰富。我们不逐一列举全部方法（接口超过 200 行），而是看 5 个最重要的能力维度。</p>
+<h3 id="能力-1事件订阅--观察系统的一切"><a class="header" href="#能力-1事件订阅--观察系统的一切">能力 1：事件订阅 — 观察系统的一切</a></h3>
+<pre><code class="language-typescript">// extensions/types.ts:986-1026（节选 5 个关键事件）
+export interface ExtensionAPI {
+  on(event: "session_start",
+     handler: ExtensionHandler&lt;SessionStartEvent&gt;): void;
+  on(event: "context",
+     handler: ExtensionHandler&lt;ContextEvent, ContextEventResult&gt;): void;
+  on(event: "tool_call",
+     handler: ExtensionHandler&lt;ToolCallEvent, ToolCallEventResult&gt;): void;
+  on(event: "tool_result",
+     handler: ExtensionHandler&lt;ToolResultEvent, ToolResultEventResult&gt;): void;
+  on(event: "input",
+     handler: ExtensionHandler&lt;InputEvent, InputEventResult&gt;): void;
+  // ... 共 26 种事件
+}
+</code></pre>
+<p>事件系统的设计有两层含义。<strong>观察型事件</strong>（如 <code>session_start</code>、<code>agent_end</code>、<code>message_update</code>）让 extension 被动获知系统状态变化。<strong>干预型事件</strong>（如 <code>tool_call</code>、<code>input</code>、<code>context</code>）通过返回值影响系统行为 — <code>tool_call</code> 可以 block 工具执行，<code>input</code> 可以 transform 用户输入，<code>context</code> 可以修改发送给 LLM 的消息列表。</p>
+<p>这个区分体现在 handler 的泛型签名中：</p>
+<pre><code class="language-typescript">// extensions/types.ts:981
+export type ExtensionHandler&lt;E, R = undefined&gt; =
+  (event: E, ctx: ExtensionContext) =&gt; Promise&lt;R | void&gt; | R | void;
+</code></pre>
+<p>当 <code>R = undefined</code> 时，handler 是纯观察型 — 返回值被忽略。当 <code>R</code> 是具体类型时（如 <code>ToolCallEventResult</code>），handler 可以通过返回值干预流程。</p>
+<h3 id="能力-2工具注册--给-llm-新的手"><a class="header" href="#能力-2工具注册--给-llm-新的手">能力 2：工具注册 — 给 LLM 新的手</a></h3>
+<pre><code class="language-typescript">// extensions/types.ts:1032-1035
+registerTool&lt;TParams extends TSchema, TDetails = unknown, TState = any&gt;(
+  tool: ToolDefinition&lt;TParams, TDetails, TState&gt;,
+): void;
+</code></pre>
+<p><code>ToolDefinition</code> 是 extension 系统中最复杂的类型，因为它承载了从 LLM 交互到 UI 渲染的完整工具定义：</p>
+<pre><code class="language-typescript">// extensions/types.ts:369-404（核心字段）
+export interface ToolDefinition&lt;TParams extends TSchema = TSchema,
+                                TDetails = unknown, TState = any&gt; {
+  name: string;
+  description: string;          // 给 LLM 看的描述
+  parameters: TParams;          // TypeBox schema → JSON Schema
+  promptSnippet?: string;       // 注入 system prompt 的单行摘要
+  promptGuidelines?: string[];  // 注入 system prompt 的使用指南
+
+  execute(
+    toolCallId: string,
+    params: Static&lt;TParams&gt;,
+    signal: AbortSignal | undefined,
+    onUpdate: AgentToolUpdateCallback&lt;TDetails&gt; | undefined,
+    ctx: ExtensionContext,
+  ): Promise&lt;AgentToolResult&lt;TDetails&gt;&gt;;
+
+  renderCall?: (...) =&gt; Component;   // 自定义调用时的 UI
+  renderResult?: (...) =&gt; Component; // 自定义结果的 UI
+}
+</code></pre>
+<p>注意 <code>promptSnippet</code> 和 <code>promptGuidelines</code> — 工具不仅有 schema 描述，还能直接向 system prompt 注入使用指南。这让工具的"说明书"和"实现"在同一个定义中完成。</p>
+<h3 id="能力-3命令与快捷键--用户交互的扩展点"><a class="header" href="#能力-3命令与快捷键--用户交互的扩展点">能力 3：命令与快捷键 — 用户交互的扩展点</a></h3>
+<pre><code class="language-typescript">// extensions/types.ts:1042-1061
+registerCommand(name: string,
+  options: Omit&lt;RegisteredCommand, "name" | "sourceInfo"&gt;): void;
+
+registerShortcut(shortcut: KeyId,
+  options: {
+    description?: string;
+    handler: (ctx: ExtensionContext) =&gt; Promise&lt;void&gt; | void;
+  }): void;
+
+registerFlag(name: string,
+  options: {
+    description?: string;
+    type: "boolean" | "string";
+    default?: boolean | string;
+  }): void;
+</code></pre>
+<p>三个注册方法对应三种用户交互通道：斜杠命令（<code>/command</code>）、键盘快捷键、CLI flag。注意 <code>registerCommand</code> 的 handler 接收的是 <code>ExtensionCommandContext</code> — 比普通的 <code>ExtensionContext</code> 多了 <code>newSession()</code>、<code>fork()</code>、<code>navigateTree()</code> 等会话控制方法。这个区分很重要：只有<strong>用户主动发起的命令</strong>才有权做会话级操作，事件 handler 中不能 fork 或切换会话。</p>
+<h3 id="能力-4消息与状态持久化"><a class="header" href="#能力-4消息与状态持久化">能力 4：消息与状态持久化</a></h3>
+<pre><code class="language-typescript">// extensions/types.ts:1078-1093
+sendMessage&lt;T = unknown&gt;(
+  message: Pick&lt;CustomMessage&lt;T&gt;, "customType" | "content" |
+           "display" | "details"&gt;,
+  options?: { triggerTurn?: boolean;
+              deliverAs?: "steer" | "followUp" | "nextTurn" },
+): void;
+
+sendUserMessage(
+  content: string | (TextContent | ImageContent)[],
+  options?: { deliverAs?: "steer" | "followUp" },
+): void;
+
+appendEntry&lt;T = unknown&gt;(customType: string, data?: T): void;
+</code></pre>
+<p>三种消息注入方式形成梯度：<code>sendMessage</code> 发送自定义消息（可控制是否触发 LLM 回复），<code>sendUserMessage</code> 模拟用户输入（总是触发回复），<code>appendEntry</code> 只写入会话文件但不发给 LLM（纯持久化，用于 extension 保存自己的状态）。</p>
+<p><code>deliverAs</code> 参数控制消息在 agent 正在 streaming 时的排队策略：<code>steer</code> 立即注入当前 turn，<code>followUp</code> 等当前 turn 结束后注入。</p>
+<h3 id="能力-5provider-注册--自定义模型接入"><a class="header" href="#能力-5provider-注册--自定义模型接入">能力 5：Provider 注册 — 自定义模型接入</a></h3>
+<pre><code class="language-typescript">// extensions/types.ts:1192-1207
+registerProvider(name: string, config: ProviderConfig): void;
+unregisterProvider(name: string): void;
+</code></pre>
+<p>这是最强大的扩展点之一。Extension 可以注册全新的 model provider（带自定义 baseUrl、API key、甚至 OAuth 流程），也可以覆盖已有 provider 的配置（比如把所有 Anthropic 请求路由到内部代理）。详见第 18 章。</p>
+<h2 id="extensionuicontext--系统表面上的-ui-接口"><a class="header" href="#extensionuicontext--系统表面上的-ui-接口">ExtensionUIContext — 系统表面上的 UI 接口</a></h2>
+<p>除了 <code>ExtensionAPI</code>（在 setup 阶段使用），extension 还通过 <code>ExtensionUIContext</code> 与用户交互。这个接口在每个事件 handler 的 <code>ctx.ui</code> 中可用。</p>
+<pre><code class="language-typescript">// extensions/types.ts:108-175（核心 UI 方法）
+export interface ExtensionUIContext {
+  // 对话式 UI — 阻塞等待用户回应
+  select(title: string, options: string[],
+         opts?: ExtensionUIDialogOptions): Promise&lt;string | undefined&gt;;
+  confirm(title: string, message: string,
+          opts?: ExtensionUIDialogOptions): Promise&lt;boolean&gt;;
+  input(title: string, placeholder?: string,
+        opts?: ExtensionUIDialogOptions): Promise&lt;string | undefined&gt;;
+
+  // 单向通知
+  notify(message: string,
+         type?: "info" | "warning" | "error"): void;
+
+  // 持久 UI 元素 — 自定义系统外观
+  setWidget(key: string,
+    content: string[] | undefined,
+    options?: ExtensionWidgetOptions): void;
+  setFooter(factory: ((tui, theme, footerData) =&gt;
+    Component &amp; { dispose?(): void }) | undefined): void;
+  setHeader(factory: ((tui, theme) =&gt;
+    Component &amp; { dispose?(): void }) | undefined): void;
+}
+</code></pre>
+<p>UI 方法分两类。<strong>对话式方法</strong>（<code>select</code>、<code>confirm</code>、<code>input</code>）返回 Promise，会暂停 extension 的执行直到用户做出选择。它们都支持 <code>AbortSignal</code> 和 <code>timeout</code>（倒计时自动关闭），这样 extension 不会无限阻塞系统。</p>
+<p><strong>持久元素方法</strong>（<code>setWidget</code>、<code>setFooter</code>、<code>setHeader</code>）改变的是系统 UI 的结构。<code>setWidget</code> 可以在编辑器上方或下方插入自定义面板。<code>setFooter</code> 和 <code>setHeader</code> 直接替换系统的页眉页脚。这些方法接受 Component factory（而非 Component 实例），因为 TUI 的组件生命周期由系统管理。</p>
+<p><code>setEditorComponent</code> 是最激进的扩展点 — extension 可以完全替换输入编辑器。类型文件中甚至给出了 Vim mode 的示例实现。</p>
+<h2 id="一个真实的-extension-长什么样"><a class="header" href="#一个真实的-extension-长什么样">一个真实的 Extension 长什么样</a></h2>
+<p>以下是一个 token 统计 extension 的 setup 逻辑，展示了典型的 extension 结构：</p>
+<pre><code class="language-typescript">// 一个真实的 extension 示例
+import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+
+export default async function setup(pi: ExtensionAPI) {
+  let turnCount = 0;
+
+  // 1. 注册事件监听 — 追踪 turn 计数
+  pi.on("turn_end", async (event, ctx) =&gt; {
+    turnCount++;
+    ctx.ui.setStatus("turns", `Turns: ${turnCount}`);
+  });
+
+  // 2. 注册事件监听 — 在 compaction 前保存状态
+  pi.on("session_before_compact", async (event, ctx) =&gt; {
+    pi.appendEntry("turn-counter-state", { turnCount });
+  });
+
+  // 3. 注册命令 — 提供用户交互
+  pi.registerCommand("reset-turns", {
+    description: "Reset the turn counter",
+    handler: async (args, ctx) =&gt; {
+      const confirmed = await ctx.ui.confirm(
+        "Reset?", `Reset turn counter (currently ${turnCount})?`
+      );
+      if (confirmed) {
+        turnCount = 0;
+        ctx.ui.setStatus("turns", `Turns: 0`);
+        ctx.ui.notify("Turn counter reset", "info");
+      }
+    },
+  });
+}
+</code></pre>
+<p>这个例子展示了三个典型模式：用闭包变量维护状态（<code>turnCount</code>），用事件监听驱动行为，用 <code>appendEntry</code> 持久化到会话文件。</p>
+<h2 id="loader--runner--wrapper-三层架构"><a class="header" href="#loader--runner--wrapper-三层架构">Loader → Runner → Wrapper 三层架构</a></h2>
+<p>Extension 系统内部分为三层，各有明确职责。</p>
+<h3 id="loader发现与加载"><a class="header" href="#loader发现与加载">Loader：发现与加载</a></h3>
+<pre><code class="language-typescript">// extensions/loader.ts:373-390
+export async function loadExtensions(
+  paths: string[], cwd: string, eventBus?: EventBus
+): Promise&lt;LoadExtensionsResult&gt; {
+  const extensions: Extension[] = [];
+  const errors: Array&lt;{ path: string; error: string }&gt; = [];
+  const runtime = createExtensionRuntime();
+
+  for (const extPath of paths) {
+    const { extension, error } =
+      await loadExtension(extPath, cwd, resolvedEventBus, runtime);
+    if (error) { errors.push({ path: extPath, error }); continue; }
+    if (extension) { extensions.push(extension); }
+  }
+
+  return { extensions, errors, runtime };
+}
+</code></pre>
+<p>Loader 的关键设计：</p>
+<ol>
+<li>
+<p><strong>串行加载</strong>。Extension 按配置顺序逐个加载，不并行。这保证了注册顺序的确定性 — 先加载的 extension 的事件 handler 先执行。</p>
+</li>
+<li>
+<p><strong>jiti 动态导入</strong>。Extension 是普通的 TypeScript 文件，通过 <code>@mariozechner/jiti</code>（一个 fork 版本，支持 <code>virtualModules</code>）在运行时编译和加载。这意味着 extension 不需要预编译。</p>
+</li>
+<li>
+<p><strong>Virtual Modules</strong>。编译后的 Bun binary 中没有 <code>node_modules</code>，extension 依赖的包通过 <code>virtualModules</code> 映射到 binary 中打包的静态导入：</p>
+</li>
+</ol>
+<pre><code class="language-typescript">// extensions/loader.ts:43-50
+const VIRTUAL_MODULES: Record&lt;string, unknown&gt; = {
+  "@sinclair/typebox": _bundledTypebox,
+  "@mariozechner/pi-agent-core": _bundledPiAgentCore,
+  "@mariozechner/pi-tui": _bundledPiTui,
+  "@mariozechner/pi-ai": _bundledPiAi,
+  "@mariozechner/pi-coding-agent": _bundledPiCodingAgent,
+};
+</code></pre>
+<p>这些 import 必须是静态的（<code>import * as</code>），否则 Bun 不会打包。这是一个不太常见的"静态依赖支撑动态加载"的模式。</p>
+<h3 id="runtime两阶段初始化"><a class="header" href="#runtime两阶段初始化">Runtime：两阶段初始化</a></h3>
+<p>Runtime 是 extension 和核心系统之间的共享状态层。它的设计核心是<strong>两阶段初始化</strong>：</p>
+<pre><code class="language-typescript">// extensions/loader.ts:120-154（简化）
+export function createExtensionRuntime(): ExtensionRuntime {
+  const notInitialized = () =&gt; {
+    throw new Error("Extension runtime not initialized.");
+  };
+
+  const runtime: ExtensionRuntime = {
+    sendMessage: notInitialized,    // 抛异常的 stub
+    sendUserMessage: notInitialized,
+    // ...所有 action 方法都是 throwing stubs
+    flagValues: new Map(),
+    pendingProviderRegistrations: [],
+    registerProvider: (name, config, extensionPath) =&gt; {
+      runtime.pendingProviderRegistrations.push(
+        { name, config, extensionPath }
+      );
+    },
+  };
+  return runtime;
+}
+</code></pre>
+<p>第一阶段（loader 阶段）：runtime 的 action 方法全部是 throwing stubs。Extension 在 <code>setup()</code> 中不能调用 <code>sendMessage()</code> 或 <code>setModel()</code> — 因为此时核心系统还没准备好。但<strong>注册方法</strong>（<code>on()</code>、<code>registerTool()</code>、<code>registerCommand()</code>）可以正常使用，因为它们只是向 <code>Extension</code> 对象的 Map 中添加条目。</p>
+<p>第二阶段（runner 的 <code>bindCore()</code> 阶段）：runner 把真实的 action 实现注入 runtime，替换 throwing stubs。同时 flush 所有 <code>pendingProviderRegistrations</code>。从此刻起，事件 handler 中的 <code>pi.sendMessage()</code> 等方法才可用。</p>
+<p>这种两阶段设计解决了一个经典问题：<strong>extension 的注册代码在系统启动早期执行，但 action 代码需要系统完全就绪后才能执行</strong>。用 throwing stubs 而不是 silent no-op，让开发者在错误使用时立即得到明确的报错。</p>
+<h3 id="wrapper从注册到运行"><a class="header" href="#wrapper从注册到运行">Wrapper：从注册到运行</a></h3>
+<p>Wrapper 层（由 runner 实现）把 extension 注册的工具和命令包装成核心系统能理解的格式。例如，<code>ToolDefinition</code> 注册后会被转化为和内建工具相同的调用接口，在 agent loop 的 tool dispatch 中一视同仁。事件 handler 被收集到统一的 handler map 中，由 runner 在对应的生命周期点逐个调用。</p>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant Config as 配置
+    participant Loader as Loader
+    participant Runtime as Runtime - stubs
+    participant Factory as Extension setup
+    participant Runner as Runner - bindCore
+    participant Core as 核心系统
+
+    Config-&gt;&gt;Loader: extension 路径列表
+    Loader-&gt;&gt;Runtime: createExtensionRuntime()
+    Loader-&gt;&gt;Factory: factory(api)
+    Factory-&gt;&gt;Runtime: on(), registerTool(), registerCommand()
+    Factory--xRuntime: sendMessage() → throw!
+    Loader--&gt;&gt;Runner: { extensions, runtime }
+    Runner-&gt;&gt;Runtime: bindCore() — 替换 stubs
+    Runner-&gt;&gt;Core: flush pending providers
+    Note over Runtime,Core: 此后 action 方法可用
+</code></pre>
+<h2 id="extension-的生命周期"><a class="header" href="#extension-的生命周期">Extension 的生命周期</a></h2>
+<h3 id="加载时机"><a class="header" href="#加载时机">加载时机</a></h3>
+<p>Extension 在 pi 启动的早期阶段加载，在 system prompt 装配之前。这是因为 extension 可能注册新工具（需要出现在 prompt 中）、注册 provider（影响模型选择）、或通过 <code>resources_discover</code> 事件提供额外的 skill/prompt 路径。</p>
+<p>加载顺序：</p>
+<ol>
+<li>解析配置中的 extension 路径</li>
+<li>创建共享 runtime（throwing stubs 阶段）</li>
+<li>串行加载每个 extension，执行 <code>setup()</code></li>
+<li>Runner 调用 <code>bindCore()</code> — 注入真实 action 实现</li>
+<li>触发 <code>session_start</code> 事件</li>
+</ol>
+<h3 id="重载机制"><a class="header" href="#重载机制">重载机制</a></h3>
+<p>用户可以通过 <code>/reload</code> 命令重新加载 extension。重载不是简单的"卸载 + 加载"— 它重新执行整个加载流程（包括 skill、prompt、theme 的重新发现），产生新的 Extension 对象集合，替换旧的。</p>
+<h3 id="状态管理"><a class="header" href="#状态管理">状态管理</a></h3>
+<p>Extension 没有正式的"卸载"钩子 — 没有 <code>teardown()</code> 或 <code>dispose()</code> 方法。如果 extension 需要在退出时清理资源，可以监听 <code>session_shutdown</code> 事件。</p>
+<p>Extension 的状态管理是一个有趣的取舍。Extension 用 JavaScript 闭包维护内存中的状态（如上面例子中的 <code>turnCount</code>），用 <code>appendEntry</code> 持久化到会话文件。但重载会重新执行 <code>setup()</code>，闭包状态会丢失。如果 extension 需要跨重载保持状态，必须在 <code>session_start</code> 事件中从会话 entries 中恢复。</p>
+<h2 id="extension-不能做什么"><a class="header" href="#extension-不能做什么">Extension 不能做什么</a></h2>
+<p>这条边界同样重要：</p>
+<ul>
+<li><strong>不能修改循环逻辑</strong>。循环引擎的 <code>runLoop()</code> 不暴露给 extension</li>
+<li><strong>不能直接修改 Agent 状态</strong>。Extension 通过 <code>ctx.on(event, handler)</code> 观察状态，通过 <code>sendMessage()</code> / <code>sendUserMessage()</code> 注入消息，但不能直接写 <code>state.messages</code></li>
+<li><strong>不能拦截消息变换</strong>。<code>transformContext</code> 和 <code>convertToLlm</code> 管道不对 extension 开放</li>
+<li><strong>Session 是 readonly</strong>。Extension 通过 <code>ReadonlySessionManager</code> 读取会话数据，不能修改已有 entries（只能追加新 entries）</li>
+</ul>
+<pre><code class="language-mermaid">graph TB
+    subgraph Extension["Extension 能触达的表面积"]
+        Tools["注册工具\nregisterTool"]
+        Commands["注册命令\nregisterCommand"]
+        Events["订阅事件\non() — 26 种事件"]
+        Session["访问会话\nsessionManager (readonly)"]
+        UI["UI 交互\nselect / confirm / notify\nsetWidget / setFooter / setHeader"]
+        Models["Provider 管理\nregisterProvider / unregisterProvider"]
+        Keys["快捷键\nregisterShortcut"]
+    end
+    
+    subgraph Core["Extension 不能触达的内核"]
+        Loop["agentLoop\n循环逻辑"]
+        Process["processEvents\n状态归约"]
+        Transform["消息变换管道"]
+    end
+    
+    Extension -.-&gt;|"只通过公开接口"| Core
+    
+    style Extension fill:#e8f5e9
+    style Core fill:#ffcdd2
+</code></pre>
+<h2 id="取舍分析"><a class="header" href="#取舍分析">取舍分析</a></h2>
+<h3 id="得到了什么"><a class="header" href="#得到了什么">得到了什么</a></h3>
+<p><strong>开放但有边界</strong>。Extension 可以加能力（新工具、新命令），可以干预流程（拦截 tool call、transform 用户输入），可以改变 UI（替换编辑器、自定义 footer），甚至可以接入新的模型 provider。但不能改核心规则 — 循环逻辑、状态归约、消息变换管道。这让系统的核心行为是可预测的，同时产品功能是可扩展的。</p>
+<p><strong>类型安全的 API 合约</strong>。整个 extension API 用 TypeScript 严格类型定义，26 种事件每种都有独立的类型和返回值约束。这不是一个"给你个 any，自己造"的 plugin 系统。</p>
+<h3 id="放弃了什么"><a class="header" href="#放弃了什么">放弃了什么</a></h3>
+<p><strong>Extension 的能力上限有限</strong>。有些深度定制（比如自定义的工具执行策略、自定义的消息格式）无法通过 extension 实现，需要 fork 核心代码。这是"安全性 vs 灵活性"的经典取舍。</p>
+<p><strong>没有沙箱</strong>。Extension 运行在和核心系统相同的进程中，一个坏的 extension 可以 crash 整个进程。pi 选择了信任开发者（和审计机制）而不是技术隔离。</p>
+<p><strong>两阶段初始化增加了认知负担</strong>。开发者需要理解"setup 阶段不能调 action 方法"的规则。throwing stubs 的设计让错误变得显式，但这仍然是一个需要学习的概念。</p>
+<hr />
+<h3 id="版本演化说明"><a class="header" href="#版本演化说明">版本演化说明</a></h3>
+<blockquote>
+<p>本章核心分析基于 pi-mono v0.66.0。Extension API 持续扩展中 —
+<code>setWidget</code>、<code>setFooter</code>、<code>setHeader</code>、<code>onTerminalInput</code> 都是近期添加的。
+<code>setEditorComponent</code> 允许完全替换输入编辑器，是最新的扩展点。
+<code>ExtensionUIContext</code> 的接口随用户反馈和 extension 开发者的需求不断增长。</p>
+</blockquote>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch14-system-prompt.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="ch16-skills.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch14-system-prompt.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="ch16-skills.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="mermaid.min.js"></script>
+        <script src="mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>
